@@ -23,11 +23,12 @@
     "check:lhci": "node src/scripts/check-lhci.mjs",
     "release-prep": "node src/scripts/release-prep.mjs",
     "release-prep:json": "node src/scripts/release-prep.mjs --json",
-    "build:inject-version": "node src/scripts/inject-version.mjs"
+    "build:inject-version": "node src/scripts/inject-version.mjs",
+    "build:search-index": "node src/scripts/build-search-index.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^3.1.0",
-    "@astrojs/sitemap": "^3.3.1",
+    "@astrojs/sitemap": "3.3.1",
     "@tailwindcss/vite": "^4.3.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -39,6 +40,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@lhci/cli": "^0.15.1",
     "@types/node": "^26.2.0",
     "astro": "^4.16.19",
     "typescript": "^5.6.3"

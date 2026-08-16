@@ -10,7 +10,7 @@ const { title, subtitle, breadcrumb } = Astro.props as Props;
   <div class="max-w-4xl mx-auto px-4 py-12 md:py-16">
     {breadcrumb && (
       <nav aria-label="面包屑" class="text-sm text-gray-500 mb-3">
-        <a href="/" class="hover:text-primary no-underline">首页</a>
+        <a href="/" class="hover:text-primary no-underline underline underline-offset-4 decoration-gray-400">首页</a>
         <span aria-hidden="true"> / </span>
         <span class="text-gray-700">{breadcrumb}</span>
       </nav>

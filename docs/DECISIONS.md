@@ -127,3 +127,62 @@ index.astro / BaseLayout.astro 通过 `https://cdn.tailwindcss.com` 脚本引入
 
 ### 影响
 仅影响 mdx 渲染链路；同时升级了 style-to-object（2.0.2），其 API 兼容。构建产物无变化。
+
+---
+
+## ADR-007 站内搜索采用零依赖轻量方案（替代 Pagefind）
+
+日期：2026-08-16
+
+### 背景
+AGENTS.md §3 推荐 Pagefind 作为站内搜索方案（Phase 4 后置项）。实际安装 `@pagefind/astro`
+时失败：私有 registry（registry.npmmirror.com）无该包，且未授权访问 npmjs 公共源。
+
+### 选择
+自研零依赖方案：
+- `build-search-index.mjs`：构建后从 dist/ HTML 提取 title / description / h1-h3 / 正文摘要，
+  生成 `search-index.json`（46 页约 45KB，静态文件）。
+- Header 搜索面板：fetch 索引 → 客户端过滤 → 结果下拉（纯内联 JS，无框架、无额外请求）。
+
+### 原因
+保持「零外部依赖」约束；功能等价（标题/描述/标题/正文关键词检索），产物更小；未来若
+registry 可用，可无缝替换为 Pagefind（索引与 UI 解耦）。
+
+### 替代方案
+- Pagefind（@pagefind/astro）——registry 缺包，不可用。
+- 第三方搜索服务（Algolia 等）——需凭据与云端依赖，违背静态优先原则。
+
+### 影响
+Header.astro 新增搜索面板与内联脚本；构建流程新增 `pnpm build:search-index`（独立命令，
+不修改 `pnpm build` 链路）；部署时需同步上传 `dist/search-index.json`。
+
+---
+
+## ADR-008 LHCI 浏览器门禁接入
+
+日期：2026-08-16
+
+### 背景
+无障碍的对比度、焦点可见等视觉项无法静态验证（ADR 前的 check-a11y 只覆盖源码级规则），
+需真实浏览器渲染审计。
+
+### 选择
+安装 `@lhci/cli@0.15.1`（私有 registry 可用），新增 `lighthouserc.json`：静态服务 dist、
+3 个代表页（首页 / distros / tutorials）、门禁性能 ≥0.5、无障碍 ≥0.9、best-practices ≥0.9、
+SEO ≥0.9；`check:lhci` 脚本透传 `lhci autorun`。Chrome 使用系统 chromium
+（chromePath 配置 + `--no-sandbox` 沙盒环境）。
+
+### 原因
+Lighthouse 是唯一需要浏览器渲染的审计项，引入该依赖是必要的例外；其余脚本保持零依赖。
+
+### 影响
+package.json 新增 @lhci/cli devDependency；首次接入发现并修复 2 类真实问题（灰色文字
+对比度不足、链接仅靠颜色区分），3 页全绿（a11y 100）。lhci-reports / .lighthouseci
+已加入 .gitignore。
+
+### 教训
+`pnpm add @lhci/cli` 重解析依赖树时把 `@astrojs/sitemap` 从 3.3.1 升级到 3.7.3
+（`^3.3.1` 范围允许），3.7.3 的 build:done hook 读取 `routes.reduce` 崩溃（astro 4.16
+hook 参数结构不同），导致构建失败且 sitemap 缺失。修复：sitemap 精确锁定 `3.3.1`。
+再次印证 ADR-001 结论：**所有新增/变更依赖必须核对与 astro 4.16 生态的兼容性，
+易变范围版本（^）在重解析时可能被意外升级**。

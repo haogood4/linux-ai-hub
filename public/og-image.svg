@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1e3a8a"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1050" cy="120" r="220" fill="rgba(255,255,255,0.06)"/>
+  <circle cx="150" cy="540" r="260" fill="rgba(255,255,255,0.05)"/>
+  <text x="96" y="268" font-family="Inter, PingFang SC, Noto Sans CJK SC, sans-serif" font-size="76" font-weight="700" fill="#ffffff">TuxAI</text>
+  <text x="96" y="352" font-family="Inter, PingFang SC, Noto Sans CJK SC, sans-serif" font-size="44" font-weight="600" fill="#dbeafe">重新认识你的电脑，从 Linux 开始</text>
+  <text x="96" y="420" font-family="Inter, PingFang SC, Noto Sans CJK SC, sans-serif" font-size="28" fill="#bfdbfe">Linux + AI 开发者平台 · 入门指南 · AI 部署教程 · 工具评测</text>
+  <rect x="96" y="474" width="240" height="64" rx="32" fill="#ffffff"/>
+  <text x="216" y="516" font-family="Inter, PingFang SC, Noto Sans CJK SC, sans-serif" font-size="26" font-weight="600" fill="#1e3a8a" text-anchor="middle">tuxai.cn</text>
+</svg>

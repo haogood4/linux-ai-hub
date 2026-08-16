@@ -17,6 +17,10 @@ pnpm-debug.log*
 .env
 .env.production
 
+# LHCI / Lighthouse 本地报告
+lhci-reports/
+.lighthouseci/
+
 # macOS-specific files
 .DS_Store
 

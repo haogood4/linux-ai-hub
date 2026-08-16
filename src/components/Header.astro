@@ -11,7 +11,7 @@ const links = [
 <header class="sticky top-0 z-40 border-b border-gray-200 bg-white/90 backdrop-blur">
   <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
     <a href="/" class="font-semibold text-lg text-gray-900 hover:text-primary no-underline">
-      <span class="text-primary">Tux</span>AI<span class="text-gray-400 font-normal text-sm ml-1 hidden sm:inline">tuxai.cn</span>
+      <span class="text-primary">Tux</span>AI<span class="text-gray-500 font-normal text-sm ml-1 hidden sm:inline">tuxai.cn</span>
     </a>
 
     <nav aria-label="主导航" class="hidden md:flex items-center gap-6">
@@ -20,35 +20,135 @@ const links = [
       ))}
     </nav>
 
-    <a
-      href="/distros/picker"
-      class="hidden sm:inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white no-underline hover:bg-primary/90 transition-colors"
-    >
-      选择发行版
-    </a>
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="relative" data-search>
+        <button
+          type="button"
+          aria-label="站内搜索"
+          aria-expanded="false"
+          class="hidden sm:inline-flex rounded-lg border border-gray-300 p-2 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+          data-search-toggle
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.3-4.3"></path>
+          </svg>
+        </button>
+        <div
+          class="hidden absolute right-0 top-full mt-2 w-80 max-w-[85vw] rounded-xl border border-gray-200 bg-white shadow-lg p-3"
+          data-search-panel
+        >
+          <label for="search-input" class="sr-only">站内搜索关键词</label>
+          <input
+            id="search-input"
+            type="search"
+            placeholder="搜索教程、工具、命令…"
+            autocomplete="off"
+            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+            data-search-input
+          />
+          <ul class="mt-2 max-h-72 overflow-y-auto divide-y divide-gray-100" data-search-results></ul>
+          <p class="mt-2 text-xs text-gray-500" data-search-status></p>
+        </div>
+      </div>
 
-    <button
-      type="button"
-      aria-label="打开菜单"
-      aria-expanded="false"
-      class="md:hidden rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
-      data-mobile-menu-toggle
-    >
-      菜单
-    </button>
+      <a
+        href="/distros/picker"
+        class="hidden sm:inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white no-underline hover:bg-primary/90 transition-colors"
+      >
+        选择发行版
+      </a>
+
+      <button
+        type="button"
+        aria-label="打开菜单"
+        aria-expanded="false"
+        class="md:hidden rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+        data-mobile-menu-toggle
+      >
+        菜单
+      </button>
+    </div>
   </div>
 </header>
 
-<script>
-  const button = document.querySelector('[data-mobile-menu-toggle]');
-  const nav = document.querySelector('nav[aria-label="主导航"]');
-  if (button && nav) {
-    let open = false;
-    button.addEventListener('click', () => {
-      open = !open;
-      button.setAttribute('aria-expanded', String(open));
-      nav.classList.toggle('hidden', !open);
-      nav.classList.toggle('flex', open);
+<script is:inline>
+  (() => {
+    const menuButton = document.querySelector('[data-mobile-menu-toggle]');
+    const nav = document.querySelector('nav[aria-label="主导航"]');
+    if (menuButton && nav) {
+      let open = false;
+      menuButton.addEventListener('click', () => {
+        open = !open;
+        menuButton.setAttribute('aria-expanded', String(open));
+        nav.classList.toggle('hidden', !open);
+        nav.classList.toggle('flex', open);
+      });
+    }
+
+    const toggle = document.querySelector('[data-search-toggle]');
+    const panel = document.querySelector('[data-search-panel]');
+    const input = document.querySelector('[data-search-input]');
+    const results = document.querySelector('[data-search-results]');
+    const status = document.querySelector('[data-search-status]');
+    if (!toggle || !panel || !input || !results || !status) return;
+
+    let index = null;
+    let indexPromise = null;
+
+    const loadIndex = () => {
+      if (!indexPromise) {
+        indexPromise = fetch('/search-index.json')
+          .then((r) => (r.ok ? r.json() : Promise.reject(new Error('索引加载失败' + r.status))))
+          .then((d) => { index = d; return d; });
+      }
+      return indexPromise;
+    };
+
+    const open = () => {
+      panel.classList.remove('hidden');
+      toggle.setAttribute('aria-expanded', 'true');
+      loadIndex().catch(() => { status.textContent = '搜索索引加载失败，请稍后重试。'; });
+      input.focus();
+    };
+    const close = () => {
+      panel.classList.add('hidden');
+      toggle.setAttribute('aria-expanded', 'false');
+    };
+
+    toggle.addEventListener('click', () => (panel.classList.contains('hidden') ? open() : close()));
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('[data-search]')) close();
     });
-  }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') close();
+    });
+
+    const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    input.addEventListener('input', () => {
+      const q = input.value.trim().toLowerCase();
+      if (!q) { results.innerHTML = ''; status.textContent = ''; return; }
+      if (!index) { status.textContent = '索引加载中…'; return; }
+      const hit = (s) => (s || '').toLowerCase().includes(q);
+      const matched = index.entries
+        .filter((e) => hit(e.title) || hit(e.description) || hit(e.headings.join(' ')) || hit(e.text))
+        .slice(0, 8);
+      if (matched.length === 0) {
+        results.innerHTML = '';
+        status.textContent = `没有找到与「${esc(input.value.trim())}」相关的内容。`;
+        return;
+      }
+      status.textContent = `找到 ${matched.length} 条结果`;
+      results.innerHTML = matched
+        .map(
+          (e) =>
+            `<li><a class="block px-2 py-2 rounded-lg hover:bg-gray-50 no-underline" href="${esc(e.url)}">
+              <span class="block text-sm font-medium text-gray-900">${esc(e.title)}</span>
+              <span class="block text-xs text-gray-500 truncate">${esc(e.headings[0] || e.description || '')}</span>
+            </a></li>`,
+        )
+        .join('');
+    });
+  })();
 </script>

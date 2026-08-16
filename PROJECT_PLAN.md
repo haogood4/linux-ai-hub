@@ -54,9 +54,11 @@
 - [x] `/blog` 深度文章（3 篇）
 - [x] `/faq` 常见问题（含 FAQPage 结构化数据）
 - [x] `/not-for-you` 诚实警示页（哪些人不适合 Linux）
-- [x] SEO 完善（metadata、sitemap、robots、404 页）
-- [x] 自检脚本：check-links / check:completion（含构建产物统计）
-- [ ] Plausible 接入
+- [x] SEO 完善（metadata、sitemap、robots、404 页、OG 分享图、favicon）
+- [x] 自检脚本：check-links / check:completion / check-distros / check:a11y / check:lhci / release-prep / inject-version / search-index
+- [x] 站内搜索：轻量零依赖方案（Pagefind 因私有 registry 缺包未接入，功能等价：Header 搜索面板 + search-index.json）
+- [x] Lighthouse CI 门禁（@lhci/cli + lighthouserc.json，3 页全绿）
+- [ ] Plausible 接入（需站点凭据）
 
 ## 4. 里程碑
 
@@ -65,7 +67,7 @@
 | M0 基础可用 | 首页 + 3 个核心页面可访问，构建通过 | 2026-08 中 |
 | M1 MVP | Phase 1-2 全部页面 + 安装风险提示齐全 | 2026-09 初 |
 | M2 内容增强 | Phase 3 AI 教程 4 篇 + 学习路径 | 2026-09 底 |
-| M3 上线 | 部署、SEO、Plausible、Pagefind | 2026-10 |
+| M3 上线 | 部署、SEO、Plausible、站内搜索 | 2026-10 |
 
 ## 5. 验收标准
 

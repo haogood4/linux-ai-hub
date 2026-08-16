@@ -54,6 +54,14 @@
 | 全路由可达性验证 | ✅ | 47 页均至少一个站内入链 |
 | audit 脚本增强 | ✅ | 递归统计源文件/构建 HTML，distros 集合纳入核查 |
 | 静态检查零警告基线 | ✅ | `pnpm astro check` 0 errors / 0 warnings / 0 hints |
+| 自检脚本补齐（distros / inject-version） | ✅ | `check:distros`（含 live 在线验证）+ `build:inject-version`，修复 Fedora 官方文档死链 |
+| 自检脚本补齐（release-prep / a11y / lhci） | ✅ | 发布核查 + WCAG 静态审计 + LHCI 门禁壳，修复首页 h3 跳级 |
+| OG 社交分享图 | ✅ | `public/og-image.png`（1200×630，rsvg-convert 生成），BaseLayout 注入 og:image / twitter:image |
+| favicon 显式引用 | ✅ | BaseLayout `<link rel="icon">`（svg + ico 双声明） |
+| 站内搜索（零依赖方案） | ✅ | `build:search-index` 生成 46 页索引 + Header 搜索面板；Pagefind 因 registry 缺包跳过 |
+| LHCI 浏览器门禁接入 | ✅ | @lhci/cli + lighthouserc.json，3 页全绿（perf/bp/seo 100，a11y 100）；修复对比度与链接下划线问题 |
+| 对比度 / 链接可辨识修复 | ✅ | gray-400→500、not-for-you red-600、footer/面包屑/正文链接下划线 |
+| 文档体系补齐 | ✅ | GIT_RULES.md、CHANGELOG.md、README 重写（清除 Astro 模板残留）、SCRIPTS.md 同步 |
 
 ## 验收提醒
 
