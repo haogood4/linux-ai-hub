@@ -20,6 +20,8 @@
 - 发行版选择器：5 问加权评分制（用途 / 经验 / 偏好 / 显卡 / 迁移来源），推荐 + 备选
 - AEO：llms.txt（AI 爬虫可消费的站点索引）
 - 工程化：GitHub Actions CI（build + 类型检查 + 全部自检脚本 + LHCI 门禁 + 产物/llms.txt 链接断言）、docs/DEPLOYMENT.md 部署指南
+- 移动端搜索入口修复（此前 <640px 不可用）+ 面板关闭焦点归还 + aria-live 结果播报
+- JSON-LD WebSite 增加 image 字段
 - 文档体系：AGENTS.md、PROJECT_PLAN.md、docs/DECISIONS.md（ADR-001~008）、docs/TASKS.md、docs/SCRIPTS.md、GIT_RULES.md
 
 ### 修复

@@ -70,6 +70,9 @@
 | 部署文档 | ✅ | docs/DEPLOYMENT.md：Caddyfile（gzip + 安全头 + 404 兜底）、rsync 增量备份、Fail2ban、防火墙、发布检查单 |
 | LHCI 入 CI | ✅ | 4→5 代表页（+picker、terminal-game）；check-lhci 支持 CHROME_PATH 覆盖；CI 门禁全绿 |
 | llms.txt 防漂移 | ✅ | CI 断言 llms.txt 内 23 个站内链接均指向真实产物 |
+| 移动端搜索入口 | ✅ | 搜索按钮此前在 <640px 隐藏（功能缺失），改为全断点可见；面板关闭焦点归还（Escape）+ aria-live 结果播报 |
+| JSON-LD 补强 | ✅ | WebSite 增加 image（og-image.png）；Organization 已有 logo；搜索为前端过滤无服务端 URL，不添加 SearchAction |
+| terminal-game 动态 a11y 审计 | ✅ | 输出区与分数区 aria-live、输入 aria-label、重置后焦点管理均已在 |
 
 ## 验收提醒
 

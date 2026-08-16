@@ -26,7 +26,7 @@ const links = [
           type="button"
           aria-label="站内搜索"
           aria-expanded="false"
-          class="hidden sm:inline-flex rounded-lg border border-gray-300 p-2 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+          class="inline-flex rounded-lg border border-gray-300 p-2 text-gray-700 hover:border-primary hover:text-primary transition-colors"
           data-search-toggle
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -48,7 +48,7 @@ const links = [
             data-search-input
           />
           <ul class="mt-2 max-h-72 overflow-y-auto divide-y divide-gray-100" data-search-results></ul>
-          <p class="mt-2 text-xs text-gray-500" data-search-status></p>
+          <p class="mt-2 text-xs text-gray-500" data-search-status aria-live="polite"></p>
         </div>
       </div>
 
@@ -111,9 +111,10 @@ const links = [
       loadIndex().catch(() => { status.textContent = '搜索索引加载失败，请稍后重试。'; });
       input.focus();
     };
-    const close = () => {
+    const close = (focusToggle = false) => {
       panel.classList.add('hidden');
       toggle.setAttribute('aria-expanded', 'false');
+      if (focusToggle) toggle.focus();
     };
 
     toggle.addEventListener('click', () => (panel.classList.contains('hidden') ? open() : close()));
@@ -121,7 +122,7 @@ const links = [
       if (!e.target.closest('[data-search]')) close();
     });
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') close();
+      if (e.key === 'Escape') close(true);
     });
 
     const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
