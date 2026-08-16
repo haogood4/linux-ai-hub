@@ -1,0 +1,98 @@
+---
+name: Arch Linux
+family: arch
+tagline: 滚动更新、完全掌控，Wiki 是最大的财富
+difficulty: 高
+desktop: 自选（可装任意桌面环境）
+stability: 中（需自己维护）
+updateCycle: 持续滚动更新
+supportCycle: 无版本概念，持续支持
+requirements: 4 GB 内存（建议 8 GB）、20 GB 磁盘、64 位 CPU
+officialUrl: https://archlinux.org/download/
+installGuideUrl: https://wiki.archlinux.org/title/Installation_guide
+wikiUrl: https://wiki.archlinux.org
+communityUrl: https://bbs.archlinux.org
+date: 2026-08-16
+---
+# Arch Linux 完整指南
+
+## 一句话认识 Arch
+
+极简起点 + 滚动更新的发行版：安装时只有命令行，装什么、怎么装全由你决定；之后**永远不用重装系统**，持续滚动到最新。它的 [Arch Wiki](https://wiki.archlinux.org) 是 Linux 界公认最详尽的中文友好文档库。
+
+## 适合谁 / 不适合谁
+
+**适合：**
+- 想真正理解 Linux 组成（引导、分区、桌面）的学习者
+- 喜欢「系统由我组装」的掌控感
+- 需要最新软件版本、又不想用发行版「半年等一次」的开发者
+
+**不适合：**
+- 新手第一次接触 Linux（建议先 Ubuntu 或 Mint，装过一次再回来）
+- 想要「开箱即用」、没时间维护的人
+- 系统必须「永远不出问题」的生产环境（滚动更新有翻车可能）
+
+## 系统要求与安装前准备
+
+- 4 GB 内存（建议 8 GB）、20 GB 磁盘、64 位 CPU
+- **安装全程命令行 + 分区操作**：风险较高，务必提前备份，并准备好另一台能上网的设备查 Wiki
+- 官方提供 `archinstall` 脚本可简化安装（见下），但建议第一次至少手动装一遍理解流程
+
+## 下载与安装步骤
+
+1. 官网下载 ISO，制作启动盘，U 盘启动进入命令行
+2. 新手推荐用 `archinstall` 脚本：执行后按提示选（镜像源、语言、桌面环境 KDE/GNOME、显卡驱动、用户密码）
+3. 手动安装（学习向）：联网 → `pacman -Syy` → 分区（`fdisk`）→ `pacstrap` 基础包 → `arch-chroot` 配置 → 装引导（grub）→ 重启
+   - 详细步骤在[官方安装指南](https://wiki.archlinux.org/title/Installation_guide)，中文版完整
+4. 装完第一次启动：`sudo pacman -Syu` 更新系统，再装桌面环境（如 `sudo pacman -S gnome`）
+
+## 第一次启动：初始化清单
+
+- [ ] `sudo pacman -Syu` 全量更新（装完第一件事）
+- [ ] 装 AUR 助手：`sudo pacman -S --needed git base-devel` 后安装 yay（见 FAQ）
+- [ ] 中文输入法：`sudo pacman -S fcitx5 fcitx5-chinese-addons`
+- [ ] 配置 `pacman.conf` 的 `Color` 和并行下载（可选）
+- [ ] 定期看 Arch 首页的「重大更新通知」，滚动更新前先读
+
+## 常用命令速查（pacman + yay）
+
+| 操作 | 命令 |
+|------|------|
+| 安装软件 | `sudo pacman -S 包名` |
+| 卸载软件 | `sudo pacman -R 包名` |
+| 搜索软件 | `pacman -Ss 关键词` |
+| 更新整个系统 | `sudo pacman -Syu` |
+| 列出已装包 | `pacman -Q` |
+| 从 AUR 安装 | `yay -S 包名`（或 `paru -S`） |
+
+> 参数是短横线风格，大小写敏感——去玩[Arch 系小游戏](/terminal-game/arch)把 `-S / -R / -Ss / -Q / -Syu` 一次记住。
+
+## 安装后推荐软件
+
+- **AUR 助手**：yay（社区仓库，什么软件都有，如微信、Chrome、QQ）
+- **桌面**：GNOME 或 KDE（`sudo pacman -S gnome` / `sudo pacman -S plasma`）
+- **浏览器**：Firefox（`sudo pacman -S firefox`）或 Chrome（yay -S google-chrome）
+- **开发**：Git、VS Code（`sudo pacman -S code`）、Docker（`sudo pacman -S docker`）
+- **AI 推理**：Ollama（`curl -fsSL https://ollama.com/install.sh | sh`，官方支持 Arch）
+
+## 常见问题与坑
+
+**Q：AUR 是什么？装 yay 安全吗？**
+AUR 是 Arch 的社区软件仓库，几万软件都在上面。yay 是常用客户端：
+```bash
+sudo pacman -S --needed git base-devel
+git clone https://aur.archlinux.org/yay-bin.git && cd yay-bin && makepkg -si
+```
+AUR 包由社区维护、无人审查，装前看一眼 PKGBUILD 和评论数，优先装带 `-bin` 的预编译版。
+
+**Q：为什么不能用 `pacman -Sy` 单独更新索引？**
+`-Sy` 单独用会造成「索引新、软件旧」的不一致，安装时可能损坏依赖。正确姿势永远是 `sudo pacman -Syu` 整系统更新。
+
+**Q：滚动更新翻车了怎么办？**
+常见自救：`sudo pacman -Syu` 出问题后，用 USB 启动盘进 live 环境把 `/` 挂载后回滚；或装 `snap-pac` + `grub-btrfs` 做快照。建议新手先装 btrfs 文件系统，出问题能回滚。
+
+## 官方资源与社区
+
+- [官网下载](https://archlinux.org/download/) · [官方安装指南](https://wiki.archlinux.org/title/Installation_guide)
+- [Arch Wiki（中文）](https://wiki.archlinux.org/title/主页) · [官方论坛](https://bbs.archlinux.org)
+- 本站：[虚拟机体验](/try/virtualbox)（建议先在虚拟机练装一次）· [哪些人不适合 Linux](/not-for-you)

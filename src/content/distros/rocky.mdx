@@ -1,0 +1,97 @@
+---
+name: Rocky Linux / AlmaLinux
+family: redhat
+tagline: 服务器与企业，RHEL 的免费兼容替代
+difficulty: 中
+desktop: GNOME（可装）
+stability: 极高
+updateCycle: 跟随 RHEL 生命周期（约 3 年小版本，10 年支持）
+supportCycle: 每大版本 10 年
+requirements: 服务器 1 GB 内存（建议 2 GB+）、20 GB 磁盘
+officialUrl: https://rockylinux.org/download
+installGuideUrl: https://docs.rockylinux.org/guides/installation/
+wikiUrl: https://docs.rockylinux.org
+communityUrl: https://forums.rockylinux.org
+date: 2026-08-16
+---
+# Rocky Linux / AlmaLinux 完整指南
+
+## 一句话认识 Rocky
+
+RHEL（Red Hat Enterprise Linux）源码重建的免费发行版，与 RHEL **二进制兼容**：企业里怎么配 RHEL，这里就怎么配。Rocky 与 AlmaLinux 两者选其一即可（二选一，功能等价），本指南以 Rocky 为例，命令对 Alma 完全通用。
+
+## 适合谁 / 不适合谁
+
+**适合：**
+- 企业服务器、生产环境运维
+- 备考 RHCE 等红帽认证、想学企业 Linux 的人
+- 需要长期支持（10 年）的稳定环境
+
+**不适合：**
+- 桌面日常使用（软件仓库比 Fedora 旧很多，桌面生态一般）
+- 需要最新软件版本的人
+
+## 系统要求与安装前准备
+
+- 服务器：1 GB 内存起步（建议 2 GB+）、20 GB 磁盘
+- 图形安装器与 Fedora 同源（Anaconda），桌面环境可选装
+- 生产环境安装**务必提前备份**，并在测试机验证后再上生产
+
+## 下载与安装步骤
+
+1. 官网下载 **Boot ISO**（网络安装，约 1 GB）或 **Minimal ISO**（最小化）
+2. 制作启动盘（服务器多为 U 盘或 IPMI 虚拟光驱挂载）
+3. 安装器要点：软件选择选「Minimal」（最小化，之后按需装）；分区用「自动」
+4. 设置 root 密码，创建管理用户并加入 wheel 组
+5. 装完重启，`sudo dnf update` 全量更新
+
+## 第一次启动：初始化清单（服务器）
+
+- [ ] `sudo dnf update` 更新系统
+- [ ] 装 EPEL 仓库：`sudo dnf install epel-release`（CentOS 生态的重要扩展源，见 FAQ）
+- [ ] 开防火墙：`sudo systemctl enable --now firewalld`，只放行必要端口
+- [ ] 加固 SSH：`/etc/ssh/sshd_config` 禁用 root 登录、改默认端口（可选）
+- [ ] 装 Fail2ban 防暴力破解：`sudo dnf install fail2ban`
+- [ ] 配置自动安全更新：`sudo dnf install dnf-automatic && sudo systemctl enable --now dnf-automatic.timer`
+
+## 常用命令速查（dnf）
+
+| 操作 | 命令 |
+|------|------|
+| 安装软件 | `sudo dnf install 包名` |
+| 卸载软件 | `sudo dnf remove 包名` |
+| 搜索软件 | `dnf search 关键词` |
+| 检查更新（不装） | `sudo dnf check-update` |
+| 升级系统 | `sudo dnf upgrade` |
+| 查已装包 | `dnf list installed` |
+| 查软件来自哪个仓库 | `dnf info 包名` |
+
+> dnf 与 Fedora 同源，玩[Red Hat 系小游戏](/terminal-game/redhat)练手。
+
+## 安装后推荐软件（服务器场景）
+
+- **Web**：Nginx（`sudo dnf install nginx`）、Apache
+- **容器**：Docker（需先加 Docker 官方仓库）或 Podman（`sudo dnf install podman`，系统自带）
+- **数据库**：MariaDB / PostgreSQL（官方源）
+- **监控**：htop、cockpit（`sudo dnf install cockpit`，网页管理面板，新手友好）
+- **AI 推理**：Ollama 官方支持 RHEL 系（`curl -fsSL https://ollama.com/install.sh | sh`）
+
+## 常见问题与坑
+
+**Q：EPEL 是什么？一定要装吗？**
+EPEL（Extra Packages for Enterprise Linux）是红帽生态的社区扩展仓库，软件比默认源丰富得多。装：`sudo dnf install epel-release`。很多软件（如 htop、fail2ban）默认源没有，装了 EPEL 才有。
+
+**Q：Rocky 和 AlmaLinux 怎么选？**
+两者都是 RHEL 免费克隆，理念和兼容性基本一致：Rocky 由 CentOS 创始团队维护，Alma 由 CloudLinux 公司支持。选哪个都不影响生产使用，跟随团队口碑与社区活跃度即可。
+
+**Q：SELinux 是什么？能关吗？**
+SELinux 是红帽系默认的安全强制访问控制，**建议保持开启**（默认 enforcing）。遇到「权限被拒但权限看起来没问题」的怪问题时，先 `ausearch -m avc` 查 SELinux 日志，而不是直接关闭。需要豁免可在 `/etc/selinux/config` 调为 permissive 调试。
+
+**Q：CentOS 7 老用户迁移要注意什么？**
+CentOS 7 已停止维护（2024-06）。迁移到 Rocky/Alma：`dnf` 命令与 yum 兼容，配置目录结构基本一致；建议先在测试机跑一遍应用，注意 Python 版本差异（RHEL 系默认 Python 3.9+）。
+
+## 官方资源与社区
+
+- [Rocky 官网下载](https://rockylinux.org/download) · [Rocky 文档](https://docs.rockylinux.org)
+- [Rocky 论坛](https://forums.rockylinux.org) · [AlmaLinux 官网](https://almalinux.org)
+- 本站：[服务器与 AI 部署学习路径](/paths) · [硬件兼容](/hardware) · [哪些人不适合 Linux](/not-for-you)

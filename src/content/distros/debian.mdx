@@ -1,0 +1,94 @@
+---
+name: Debian
+family: debian
+tagline: 稳定到极致，装一次用很多年
+difficulty: 中
+desktop: 自选（安装器可选 GNOME / KDE / Xfce 等）
+stability: 极高
+updateCycle: 约每 2-3 年大版本
+supportCycle: 每版本约 3-5 年
+requirements: 2 GB 内存（桌面建议 4 GB）、15 GB 磁盘
+officialUrl: https://www.debian.org/distrib/
+installGuideUrl: https://www.debian.org/releases/stable/installmanual
+wikiUrl: https://wiki.debian.org
+communityUrl: https://www.debian.org/social_contract
+date: 2026-08-16
+---
+# Debian 完整指南
+
+## 一句话认识 Debian
+
+**纯社区维护**（无商业公司主导）、以「自由软件」为第一原则的老牌发行版，Ubuntu 的根基。它的哲学是「稳定优先」：软件版本比新潮的慢一截，但几乎不出事，很多服务器一跑就是十年。
+
+## 适合谁 / 不适合谁
+
+**适合：**
+- 追求「装一次用很多年」的稳定性用户
+- 服务器管理员（Debian 是云服务器最常见的系统之一）
+- 反感商业公司主导、重视自由软件理念的人
+
+**不适合：**
+- 需要最新软件版本的人（软件仓库较保守）
+- 新硬件用户（内核相对旧，最新笔记本驱动可能缺失）
+
+## 系统要求与安装前准备
+
+- 桌面：4 GB 内存、15 GB 磁盘；纯服务器：512 MB - 2 GB 即可
+- 默认 ISO 不带专有驱动，老 N 卡/无线网卡可能需装 non-free 固件包
+- **安装涉及分区**：务必提前备份数据
+
+## 下载与安装步骤
+
+1. 官网下载：桌面用户选 **live 版**（可先试再装），或标准安装版
+2. 版本选择：**stable**（当前稳定版，推荐）；testing / unstable 是测试通道，桌面日常不建议
+3. 制作启动盘，U 盘启动
+4. 安装器选中文；桌面环境新手选 **GNOME** 或 **Xfce**（老机器）
+5. 分区建议：新手选「向导 - 使用整个磁盘」；服务器注意 LVM 配置
+6. 安装过程中会问是否启用 root 密码，建议设置并牢记
+
+## 第一次启动：初始化清单
+
+- [ ] `sudo apt update && sudo apt upgrade` 更新系统
+- [ ] 装非自由固件（如有无线/显卡问题）：在 `/etc/apt/sources.list` 加 `non-free-firmware` 组件后 `sudo apt update`
+- [ ] 中文输入法：`sudo apt install fcitx5 fcitx5-chinese-addons`
+- [ ] 装常用基础包：`sudo apt install curl wget git`
+- [ ] 配置防火墙（服务器）：`sudo apt install ufw && sudo ufw enable`
+
+## 常用命令速查（apt）
+
+| 操作 | 命令 |
+|------|------|
+| 安装软件 | `sudo apt install 包名` |
+| 卸载软件 | `sudo apt remove 包名` |
+| 搜索软件 | `apt search 关键词` |
+| 刷新索引 | `sudo apt update` |
+| 升级软件 | `sudo apt upgrade` |
+| 系统级升级 | `sudo apt full-upgrade` |
+
+> 和 Ubuntu 同派系，玩[Debian 系小游戏](/terminal-game/debian)即可掌握。
+
+## 安装后推荐软件
+
+- **服务器**：Nginx（`sudo apt install nginx`）、Docker（官方源）、Fail2ban（`sudo apt install fail2ban`，防暴力破解）
+- **桌面**：LibreOffice、Firefox（live 版已带）、VLC（`sudo apt install vlc`）
+- **监控**：htop（`sudo apt install htop`，实时看 CPU/内存）
+- **AI 推理**：Ollama 官方支持 Debian 系（`curl -fsSL https://ollama.com/install.sh | sh`）
+
+## 常见问题与坑
+
+**Q：stable / testing / unstable 选哪个？**
+- stable：普通用户与服务器唯一推荐，软件旧但稳
+- testing：接近下一版，软件较新，翻车概率中等
+- unstable（sid）：滚动通道，适合有经验的玩家，不适合日常
+
+**Q：无线网卡没驱动怎么办？**
+多半是缺 non-free 固件。按上面初始化清单第 2 步启用 `non-free-firmware` 组件后重装固件包；或用有线临时联网。
+
+**Q：Debian 和 Ubuntu 怎么选？**
+想要「问题搜得到答案、AI 工具官方支持最好」选 Ubuntu；想要「最纯粹、最稳、不想被商业公司带节奏」选 Debian。两者命令完全通用，之后换系统零成本。
+
+## 官方资源与社区
+
+- [官网下载](https://www.debian.org/distrib/) · [安装手册（中文）](https://www.debian.org/releases/stable/installmanual)
+- [Debian Wiki](https://wiki.debian.org) · [Debian 社区契约](https://www.debian.org/social_contract)
+- 本站：[安装指南](/try/install) · [服务器与 AI 部署学习路径](/paths) · [哪些人不适合 Linux](/not-for-you)

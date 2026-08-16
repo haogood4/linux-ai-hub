@@ -1,0 +1,93 @@
+---
+name: Ubuntu
+family: debian
+tagline: 最流行、生态最全，新手与 AI 实践的首选
+difficulty: 低
+desktop: GNOME（默认）
+stability: 高（LTS 版 5 年支持）
+updateCycle: LTS 每 2 年 / 常规版每 6 个月
+supportCycle: LTS 5 年（Ubuntu Pro 可延至 10 年）
+requirements: 4 GB 内存（建议 8 GB）、25 GB 磁盘、2 GHz 双核 CPU
+officialUrl: https://ubuntu.com/download/desktop
+installGuideUrl: https://ubuntu.com/tutorials/install-ubuntu-desktop
+wikiUrl: https://wiki.ubuntu.com
+communityUrl: https://forum.ubuntu.org.cn
+date: 2026-08-16
+---
+# Ubuntu 完整指南
+
+## 一句话认识 Ubuntu
+
+基于 Debian 的独立发行版（由 Canonical 公司维护），是**全球装机量最大的桌面 Linux**。大多数软件、教程、AI 工具（Ollama、Docker、PyTorch）的官方文档都以 Ubuntu 为默认环境——这意味着你遇到问题时，几乎一定能搜到现成答案。
+
+## 适合谁 / 不适合谁
+
+**适合：**
+- 第一次接触 Linux 的新手
+- 想在本地跑 AI（Ollama、Stable Diffusion）的实践者
+- 想要「装好就能用」、不太想折腾的人
+
+**不适合：**
+- 主要打游戏的用户（反作弊问题，见[哪些人不适合 Linux](/not-for-you)）
+- 对「系统里自带多少软件」有洁癖、喜欢极简的人（可考虑 Arch）
+
+## 系统要求与安装前准备
+
+- 官方建议：4 GB 内存（**实际体验建议 8 GB**）、25 GB 磁盘、2 GHz 双核 CPU
+- 安装会**擦除或分区硬盘**：装之前务必把重要数据备份到移动硬盘或网盘
+- 先下载 [Ubuntu ISO](https://ubuntu.com/download/desktop)（约 5 GB），再用 [Rufus](https://rufus.ie/zh/)（Windows）或 [balenaEtcher](https://etcher.balena.io/) 制作启动 U 盘
+
+## 下载与安装步骤
+
+1. 官网下载 ISO：选 **LTS 版**（24.04 LTS 等），不要选半年一更的常规版——LTS 稳定且支持 5 年
+2. 制作启动盘后，U 盘启动电脑（开机按 F12/ESC 等选启动项，各品牌不同）
+3. 安装器建议：语言选中文；勾选「为显卡等硬件安装第三方软件」（开源驱动优先）
+4. 分区方式：新手选「**清除整个磁盘并安装 Ubuntu**」即可；想保留 Windows 请用[双系统教程](/try/dual-boot)
+5. 创建用户时**记住密码**，后面装软件、更新系统都要用
+
+## 第一次启动：初始化清单
+
+- [ ] 打开「软件更新器」完成系统更新
+- [ ] 打开「设置 → 显示」调整分辨率与缩放（笔记本高分屏建议 200%）
+- [ ] 安装中文输入法：设置 → 键盘 → 输入源 → 添加「智能拼音」
+- [ ] 开启系统自动更新与每日备份（设置 → 系统 → 备份）
+- [ ] 到「软件中心」装常用软件（Firefox 已预装）
+
+## 常用命令速查（apt）
+
+| 操作 | 命令 |
+|------|------|
+| 安装软件 | `sudo apt install 包名` |
+| 卸载软件 | `sudo apt remove 包名` |
+| 搜索软件 | `apt search 关键词` |
+| 刷新软件索引 | `sudo apt update` |
+| 升级所有软件 | `sudo apt upgrade` |
+| 列出已装包 | `apt list --installed` |
+
+> 想记住这些命令？去玩[Debian 系命令行小游戏](/terminal-game/debian)，10 题过关就熟了。
+
+## 安装后推荐软件
+
+- **浏览器**：Firefox（预装）/ Chromium
+- **办公**：LibreOffice（预装）/ 网页版 Office
+- **AI 推理**：Ollama（[本站教程](/tutorials/ollama-local-deploy)）
+- **开发**：VS Code（官网 .deb 包）、Git（`sudo apt install git`）
+- **通讯**：微信（官网 Linux 版）、Telegram（软件中心）
+- **影音**：VLC（`sudo apt install vlc`）
+
+## 常见问题与坑
+
+**Q：snap 是什么？为什么装软件会走 snap？**
+Ubuntu 的软件中心默认通过 snap 安装应用。snap 是 Canonical 的容器化安装格式，与 apt 并存。一般不用管，直接搜软件名安装即可。
+
+**Q：装完没有声音 / 分辨率不对？**
+多为新硬件驱动问题。先运行「软件更新器」让系统更新到最新，再重启；仍不行可在设置 → 关于 → 系统信息里查看硬件型号，到官方论坛搜索。
+
+**Q：需要装杀毒软件吗？**
+桌面 Ubuntu 一般不需要。保持系统更新、不运行来历不明的脚本即可。
+
+## 官方资源与社区
+
+- [官网下载](https://ubuntu.com/download/desktop) · [官方安装教程](https://ubuntu.com/tutorials/install-ubuntu-desktop)
+- [官方 Wiki](https://wiki.ubuntu.com) · [中文论坛](https://forum.ubuntu.org.cn)
+- 本站：[安装指南](/try/install) · [虚拟机体验](/try/virtualbox) · [发行版选择器](/distros/picker)

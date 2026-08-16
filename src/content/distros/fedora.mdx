@@ -1,0 +1,96 @@
+---
+name: Fedora
+family: redhat
+tagline: 技术尝鲜，Red Hat 的上游试验田
+difficulty: 中
+desktop: GNOME（默认，另有 KDE / Xfce 等版本）
+stability: 中高
+updateCycle: 每 6 个月大版本（支持约 13 个月）
+supportCycle: 每个版本约 13 个月
+requirements: 4 GB 内存（建议 8 GB）、25 GB 磁盘、双核 CPU
+officialUrl: https://fedoraproject.org/workstation/download
+installGuideUrl: https://docs.fedoraproject.org/en-US/quick-docs/creating-usb-media/
+wikiUrl: https://docs.fedoraproject.org
+communityUrl: https://discussion.fedoraproject.org
+date: 2026-08-16
+---
+# Fedora 完整指南
+
+## 一句话认识 Fedora
+
+Red Hat（RHEL 的母公司）主导的社区发行版，**新内核、新工具链来得最早**。GNOME 桌面体验最完整，KDE 版本（Fedora KDE）口碑也很好。它是「新而不乱」的平衡点：比 Debian 激进，比 Arch 省心。
+
+## 适合谁 / 不适合谁
+
+**适合：**
+- 想第一时间体验新内核/新工具链的开发者
+- 喜欢 GNOME 桌面的用户（Fedora 是 GNOME 体验最好的发行版之一）
+- 想为将来用 RHEL 打基础的人（命令同源 dnf）
+
+**不适合：**
+- 想要「装一次用五年」的人（Fedora 每个版本只支持 13 个月，需持续升级）
+- 需要 N 卡最新驱动开箱即用的用户（NVIDIA 驱动需手动装，见下文）
+
+## 系统要求与安装前准备
+
+- 4 GB 内存（建议 8 GB）、25 GB 磁盘、双核 CPU
+- **安装涉及分区**：务必备份数据
+- 新笔记本/新硬件用户注意：Fedora 内核新，对新硬件支持通常比老系统好
+
+## 下载与安装步骤
+
+1. 官网下载 **Workstation**（桌面版），想用 KDE 选 Fedora KDE Plasma Desktop
+2. 制作启动盘（balenaEtcher），U 盘启动
+3. 安装器（Anaconda）：选中文，磁盘分区选「自动」即可
+4. 创建用户并勾选「设为管理员」
+5. 装完首次启动先运行「软件」更新系统
+
+## 第一次启动：初始化清单
+
+- [ ] 「设置 → 软件更新」完成系统更新
+- [ ] 装 NVIDIA 驱动（N 卡用户）：`sudo dnf install akmod-nvidia`（需先启用 RPM Fusion，见 FAQ）
+- [ ] 中文输入法：设置 → 键盘 → 添加「智能拼音」或「五笔」
+- [ ] 安装 GNOME 扩展：浏览器装 [GNOME Shell Integration](https://extensions.gnome.org)，可加「平铺窗口」等插件
+- [ ] 开启自动更新（设置 → 系统 → 自动更新）
+
+## 常用命令速查（dnf）
+
+| 操作 | 命令 |
+|------|------|
+| 安装软件 | `sudo dnf install 包名` |
+| 卸载软件 | `sudo dnf remove 包名` |
+| 搜索软件 | `dnf search 关键词` |
+| 检查更新（不装） | `sudo dnf check-update` |
+| 升级系统 | `sudo dnf upgrade` |
+| 列出已装包 | `dnf list installed` |
+
+> dnf 是 Red Hat 系命令，去玩[Red Hat 系小游戏](/terminal-game/redhat)练手。
+
+## 安装后推荐软件
+
+- **浏览器**：Firefox（预装）
+- **办公**：LibreOffice（软件中心安装）
+- **开发**：VS Code（官网 RPM 包）、Git（`sudo dnf install git`）、Docker（`sudo dnf install docker-ce` 需先加 Docker 官方源）
+- **影音**：VLC（`sudo dnf install vlc`，需 RPM Fusion）
+- **微信**：软件中心搜「WeChat」或装 Flatpak 版
+
+## 常见问题与坑
+
+**Q：RPM Fusion 是什么？怎么装？**
+Fedora 默认只带完全自由的软件，很多常用包（VLC、NVIDIA 驱动、解码器）在第三方仓库 **RPM Fusion**：
+```bash
+sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+```
+装完后 `sudo dnf install vlc` 就能用了。
+
+**Q：Fedora 需要每年升级两次，麻烦吗？**
+不麻烦。新版本发布后终端里 `sudo dnf upgrade --refresh && sudo dnf system-upgrade download --releasever=XX && sudo dnf system-upgrade reboot` 即可在线升级，或等图形界面提示一键升级。
+
+**Q：装 NVIDIA 驱动失败怎么办？**
+先确认系统更新到最新，再执行 `sudo dnf install akmod-nvidia`；重启后若仍黑屏，在启动菜单选旧内核进入，把问题发到 [Fedora 讨论区](https://discussion.fedoraproject.org)（记得附上显卡型号）。
+
+## 官方资源与社区
+
+- [官网下载](https://fedoraproject.org/workstation/download) · [官方文档](https://docs.fedoraproject.org)
+- [讨论区](https://discussion.fedoraproject.org) · [中文社区（FZUG）](https://zh.fedoracommunity.org)
+- 本站：[虚拟机体验](/try/virtualbox) · [硬件兼容](/hardware) · [学习路径](/paths)

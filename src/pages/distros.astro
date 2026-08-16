@@ -5,6 +5,7 @@ import PageHeader from '@/components/PageHeader.astro';
 const distros = [
   {
     name: 'Ubuntu',
+    slug: 'ubuntu',
     tag: '最流行、生态最全',
     positioning: '基于 Debian 的主流发行版，软件生态和中文资料最丰富',
     audience: '新手首选；几乎所有官方教程的默认平台',
@@ -14,9 +15,11 @@ const distros = [
     update: 'LTS 每 2 年 / 常规版每 6 个月',
     reason: '遇到问题最容易被搜到解决方案，AI 工具（Ollama、Docker）官方支持最好',
     url: 'https://ubuntu.com/download/desktop',
+    game: '/terminal-game/debian',
   },
   {
     name: 'Linux Mint',
+    slug: 'mint',
     tag: '最像 Windows 的桌面',
     positioning: '基于 Ubuntu，桌面（Cinnamon）对老用户更友好',
     audience: '从 Windows 迁移的用户、想要传统任务栏体验的人',
@@ -26,9 +29,11 @@ const distros = [
     update: '跟随 Ubuntu LTS',
     reason: '上手几乎没有适应成本，预装常用软件，适合作为「离开 Windows 的第一步」',
     url: 'https://linuxmint.com/download.php',
+    game: '/terminal-game/debian',
   },
   {
     name: 'Fedora',
+    slug: 'fedora',
     tag: '技术尝鲜、接近上游',
     positioning: 'Red Hat 的上游社区版，新特性来得早',
     audience: '想体验新技术、愿意偶尔折腾的开发者',
@@ -38,9 +43,11 @@ const distros = [
     update: '每 6 个月大版本',
     reason: '内核与工具链新，AI 开发工具跟进快，适合开发者日常使用',
     url: 'https://fedoraproject.org/workstation/download',
+    game: '/terminal-game/redhat',
   },
   {
     name: 'Arch Linux',
+    slug: 'arch',
     tag: '滚动更新、完全掌控',
     positioning: '极简起点 + 滚动更新，一切由你组装',
     audience: '想要完全掌控系统、愿意阅读文档的学习者',
@@ -50,9 +57,11 @@ const distros = [
     update: '持续滚动更新',
     reason: '官方 Wiki 极详尽，学到的东西最多；不适合想「开箱即用」的用户',
     url: 'https://archlinux.org/download/',
+    game: '/terminal-game/arch',
   },
   {
     name: 'Debian',
+    slug: 'debian',
     tag: '稳定到极致',
     positioning: 'Ubuntu 的根基，社区维护的经典发行版',
     audience: '追求稳定、倾向「装一次用很多年」的用户与服务器管理员',
@@ -62,9 +71,11 @@ const distros = [
     update: '约每 2-3 年大版本',
     reason: '软件相对保守但极其稳定，很多服务器长期运行 Debian',
     url: 'https://www.debian.org/distrib/',
+    game: '/terminal-game/debian',
   },
   {
     name: 'Rocky Linux / AlmaLinux',
+    slug: 'rocky',
     tag: '服务器与企业',
     positioning: 'RHEL 的免费兼容替代（Rocky 与 Alma 二选一即可）',
     audience: '企业服务器、需要 RHEL 兼容环境的运维',
@@ -74,6 +85,7 @@ const distros = [
     update: '跟随 RHEL 生命周期',
     reason: '与 Red Hat 企业版兼容，证书考试、企业运维环境常用',
     url: 'https://rockylinux.org/download',
+    game: '/terminal-game/redhat',
   },
 ];
 
@@ -124,9 +136,17 @@ const compare = {
             <div><dt class="text-gray-500 inline">更新频率：</dt><dd class="inline text-gray-800">{d.update}</dd></div>
           </dl>
           <p class="text-sm text-gray-600 mb-4"><strong class="text-gray-800">推荐理由：</strong>{d.reason}</p>
-          <a href={d.url} target="_blank" rel="noopener noreferrer" class="inline-block rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white no-underline hover:bg-primary/90 transition-colors">
-            访问官网
-          </a>
+          <div class="flex flex-wrap gap-3">
+            <a href={d.url} target="_blank" rel="noopener noreferrer" class="inline-block rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white no-underline hover:bg-primary/90 transition-colors">
+              访问官网
+            </a>
+            <a href={d.game} class="inline-block rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white no-underline hover:bg-primary/90 transition-colors">
+              🎮 练习游戏
+            </a>
+            <a href={`/distros/${d.slug}`} class="inline-block rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 no-underline hover:bg-gray-50 transition-colors">
+              详细了解 →
+            </a>
+          </div>
         </article>
       ))}
     </div>

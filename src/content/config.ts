@@ -47,4 +47,24 @@ const blog = defineCollection({
   }),
 });
 
-export const collections = { tutorials, paths, tools, blog };
+const distros = defineCollection({
+  type: 'content',
+  schema: z.object({
+    name: z.string(),
+    family: z.enum(['debian', 'arch', 'redhat']),
+    tagline: z.string(),
+    difficulty: z.string(),
+    desktop: z.string(),
+    stability: z.string(),
+    updateCycle: z.string(),
+    supportCycle: z.string(),
+    requirements: z.string(),
+    officialUrl: z.string().url(),
+    installGuideUrl: z.string().url(),
+    wikiUrl: z.string().url().optional(),
+    communityUrl: z.string().url().optional(),
+    date: z.coerce.date(),
+  }),
+});
+
+export const collections = { tutorials, paths, tools, blog, distros };

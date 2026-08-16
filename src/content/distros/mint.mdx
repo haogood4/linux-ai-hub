@@ -1,0 +1,92 @@
+---
+name: Linux Mint
+family: debian
+tagline: 最像 Windows 的桌面，迁移成本最低
+difficulty: 低
+desktop: Cinnamon（默认，另有 MATE / Xfce）
+stability: 高（基于 Ubuntu LTS）
+updateCycle: 跟随 Ubuntu LTS
+supportCycle: 约 5 年
+requirements: 2 GB 内存（建议 4 GB）、20 GB 磁盘、双核 CPU
+officialUrl: https://linuxmint.com/download.php
+installGuideUrl: https://linuxmint-installation-guide.readthedocs.io
+wikiUrl: https://linuxmint.com/documentation.php
+communityUrl: https://forums.linuxmint.com
+date: 2026-08-16
+---
+# Linux Mint 完整指南
+
+## 一句话认识 Linux Mint
+
+基于 Ubuntu 的发行版，默认桌面 **Cinnamon** 长得很像 Windows 的任务栏 + 开始菜单布局，预装了浏览器、办公软件、影音播放器，**开箱即用**。它移除了 Ubuntu 默认的 snap 商店，软件来源更简单，老电脑也跑得动。
+
+## 适合谁 / 不适合谁
+
+**适合：**
+- 从 Windows 迁移、不想适应新界面的用户
+- 配置较老的电脑（选 Xfce 版）
+- 想要「装完就不用管」体验的人
+
+**不适合：**
+- 需要 Ubuntu 最新内核特性/新硬件的用户（Mint 默认内核比 Ubuntu 保守）
+- 想深度定制系统的人（建议 Arch）
+
+## 系统要求与安装前准备
+
+- Cinnamon 版：4 GB 内存、20 GB 磁盘；Xfce 版：2 GB 内存即可流畅
+- 官方默认不带专有驱动，但提供「驱动管理器」一键安装
+- **安装涉及分区与格式化**：务必备份重要数据
+
+## 下载与安装步骤
+
+1. 官网下载 **Cinnamon** 版（新手首选）；内存 ≤ 4 GB 的老机器选 **Xfce** 版
+2. 制作启动盘（推荐 balenaEtcher），U 盘启动电脑
+3. 安装器与 Ubuntu 类似：选中文、勾选第三方驱动与多媒体解码
+4. 分区：新手选整盘安装；保留 Windows 参考[双系统教程](/try/dual-boot)
+5. 装完进入桌面后，先打开「更新管理器」完成系统更新
+
+## 第一次启动：初始化清单
+
+- [ ] 「更新管理器」→ 编辑 → 首选项，把「自动刷新」改为每天
+- [ ] 设置中文输入法：系统设置 → 键盘 → 输入法
+- [ ] 打开「驱动管理器」安装显卡等硬件驱动（如需要）
+- [ ] 设置里开启「系统快照」Timeshift 自动备份（Mint 特色功能，强烈建议）
+
+## 常用命令速查（apt，与 Ubuntu 相同）
+
+| 操作 | 命令 |
+|------|------|
+| 安装软件 | `sudo apt install 包名` |
+| 卸载软件 | `sudo apt remove 包名` |
+| 搜索软件 | `apt search 关键词` |
+| 刷新索引 | `sudo apt update` |
+| 升级软件 | `sudo apt upgrade` |
+
+> 命令与 Ubuntu 完全一样，去玩[Debian 系小游戏](/terminal-game/debian)练习。
+
+## 安装后推荐软件
+
+- **系统快照**：Timeshift（预装，防「升级翻车」，类比 Windows 还原点）
+- **办公**：LibreOffice（预装）
+- **影音**：VLC、Celluloid（软件管理器安装）
+- **微信 / 钉钉**：软件管理器搜索官方 Linux 版
+- **截图**：Flameshot（`sudo apt install flameshot`，比默认截图好用）
+
+## 常见问题与坑
+
+**Q：为什么 Mint 不用 snap？**
+Mint 团队移除了 snap 以保持系统精简和自主可控。需要 snap 应用可自行安装 snapd，但一般用不到。
+
+**Q：Cinnamon / MATE / Xfce 三个版怎么选？**
+- Cinnamon：默认，界面最像 Windows，功能最全
+- Xfce：最轻量，老电脑首选
+- MATE：介于两者之间，喜欢传统 GNOME 2 风格的人会喜欢
+
+**Q：更新管理器一直提示内核更新，要装吗？**
+建议装。Mint 的内核更新经过测试才推送，比 Ubuntu 更保守，翻车概率低。
+
+## 官方资源与社区
+
+- [官网下载](https://linuxmint.com/download.php) · [官方安装指南](https://linuxmint-installation-guide.readthedocs.io)
+- [官方文档](https://linuxmint.com/documentation.php) · [英文论坛](https://forums.linuxmint.com)
+- 本站：[安装指南](/try/install) · [虚拟机体验](/try/virtualbox) · [哪些人不适合 Linux](/not-for-you)
