@@ -73,6 +73,8 @@
 | 移动端搜索入口 | ✅ | 搜索按钮此前在 <640px 隐藏（功能缺失），改为全断点可见；面板关闭焦点归还（Escape）+ aria-live 结果播报 |
 | JSON-LD 补强 | ✅ | WebSite 增加 image（og-image.png）；Organization 已有 logo；搜索为前端过滤无服务端 URL，不添加 SearchAction |
 | terminal-game 动态 a11y 审计 | ✅ | 输出区与分数区 aria-live、输入 aria-label、重置后焦点管理均已在 |
+| 真实浏览器交互测试 | ✅ | agent-browser 实测：搜索（输入→结果→跳转）、picker（5 问→Ubuntu+Mint 推荐）、终端游戏（答错/答对判分）全部通过 |
+| dev 搜索索引修复 | ✅ | 索引仅生成 dist 导致 dev 模式搜索 404；改为双输出 dist + public（gitignore），SCRIPTS.md 注明 dev 依赖 |
 
 ## 验收提醒
 

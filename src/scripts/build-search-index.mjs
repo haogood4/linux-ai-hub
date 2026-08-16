@@ -8,6 +8,7 @@
  *
  * 提取内容：title / description / h1-h3 标题 / 正文纯文本（截断）。
  * 排除：404 页、/not-for-you 不参与？保留全部普通页面。
+ * 输出：dist/search-index.json（生产）+ public/search-index.json（供 dev server 服务；gitignore）。
  *
  * 用法：
  *   pnpm build:search-index        # 构建后生成索引
@@ -82,7 +83,9 @@ const out = {
   total: entries.length,
   entries,
 };
-writeFileSync(join(DIST, 'search-index.json'), JSON.stringify(out));
+const payload = JSON.stringify(out);
+writeFileSync(join(DIST, 'search-index.json'), payload);
+writeFileSync(join(ROOT, 'public', 'search-index.json'), payload);
 
-if (jsonMode) console.log(JSON.stringify({ ok: true, total: entries.length, bytes: Buffer.byteLength(JSON.stringify(out)) }));
-else console.log(`[search-index] 已生成 search-index.json：${entries.length} 页，${(Buffer.byteLength(JSON.stringify(out)) / 1024).toFixed(1)} KB`);
+if (jsonMode) console.log(JSON.stringify({ ok: true, total: entries.length, bytes: Buffer.byteLength(payload) }));
+else console.log(`[search-index] 已生成 search-index.json：${entries.length} 页，${(Buffer.byteLength(payload) / 1024).toFixed(1)} KB（dist/ + public/）`);

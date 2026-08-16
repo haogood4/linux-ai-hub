@@ -22,6 +22,8 @@
 - 工程化：GitHub Actions CI（build + 类型检查 + 全部自检脚本 + LHCI 门禁 + 产物/llms.txt 链接断言）、docs/DEPLOYMENT.md 部署指南
 - 移动端搜索入口修复（此前 <640px 不可用）+ 面板关闭焦点归还 + aria-live 结果播报
 - JSON-LD WebSite 增加 image 字段
+- dev 模式搜索 404 修复：search-index.json 双输出（dist 生产 + public dev 服务）
+- 真实浏览器交互验证：搜索 / 选择器 / 终端游戏全流程通过
 - 文档体系：AGENTS.md、PROJECT_PLAN.md、docs/DECISIONS.md（ADR-001~008）、docs/TASKS.md、docs/SCRIPTS.md、GIT_RULES.md
 
 ### 修复

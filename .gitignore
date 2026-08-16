@@ -19,6 +19,7 @@ pnpm-debug.log*
 
 # LHCI / Lighthouse 本地报告
 lhci-reports/
+public/search-index.json
 .lighthouseci/
 
 # macOS-specific files
