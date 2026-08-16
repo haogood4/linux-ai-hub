@@ -1,4 +1,5 @@
----
+--- 
+const pathname = Astro.url.pathname.replace(/\/$/, '') || '/';
 const links = [
   { href: '/what-is-linux', label: 'Linux 是什么' },
   { href: '/distros', label: '发行版推荐' },
@@ -14,9 +15,13 @@ const links = [
       <span class="text-primary">Tux</span>AI<span class="text-gray-500 font-normal text-sm ml-1 hidden sm:inline">tuxai.cn</span>
     </a>
 
-    <nav aria-label="主导航" class="hidden md:flex items-center gap-6">
+    <nav aria-label="主导航" id="mobile-nav" class="hidden md:flex items-center gap-6">
       {links.map(({ href, label }) => (
-        <a href={href} class="text-sm text-gray-600 hover:text-primary no-underline">{label}</a>
+        <a
+          href={href}
+          aria-current={pathname === href ? 'page' : undefined}
+          class="text-sm text-gray-600 hover:text-primary no-underline"
+        >{label}</a>
       ))}
     </nav>
 
@@ -63,6 +68,7 @@ const links = [
         type="button"
         aria-label="打开菜单"
         aria-expanded="false"
+        aria-controls="mobile-nav"
         class="md:hidden rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
         data-mobile-menu-toggle
       >

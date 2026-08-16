@@ -5,6 +5,8 @@
 > Windows / macOS 软件替代方案、AI 工具（Ollama 等）本地部署教程、GPU 与硬件选购、Linux 社区导航。
 > 网站立场：不贬低其他系统，面向新手友好，安装类内容均包含数据备份风险提示。
 
+Updated: 2026-08-16
+
 ## 入门
 
 - [Linux 是什么](https://tuxai.cn/what-is-linux): 面向零基础读者的 Linux 概念解释

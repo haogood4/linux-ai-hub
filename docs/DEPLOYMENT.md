@@ -33,6 +33,7 @@ tuxai.cn {
         X-Content-Type-Options "nosniff"
         Referrer-Policy "strict-origin-when-cross-origin"
         Permissions-Policy "geolocation=(), microphone=(), camera=()"
+        Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; base-uri 'self'; form-action 'self'"
     }
 
     # SPA 无需 fallback：站点为全静态多页；404 由 Astro 生成的 404.html 兜底
@@ -46,6 +47,7 @@ tuxai.cn {
 
 说明：
 - `try_files` 兜底让未知路径返回自定义 404 页（HTTP 404 状态由 `file_server` 对缺失文件处理后经 `handle_errors` 呈现）。
+- 站点无外部资源（系统字体栈、零 CDN/第三方脚本），CSP `'self'` 可直接生效；日后接入 Plausible 需在 `script-src` 与 `connect-src` 追加其域名。
 - 纯静态站点不需要 systemd 服务；Caddy 自身由 systemd 管理（`systemctl enable --now caddy`）。
 - 若日后接入 Plausible 自托管，另行配置反向代理，不影响本站点。
 
