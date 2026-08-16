@@ -1,0 +1,114 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+
+const groups = [
+  {
+    title: '重度游戏玩家',
+    flag: '🚫 强烈建议先别换',
+    points: [
+      '部分竞技网游使用内核级反作弊（如 Valorant 的 Vanguard），明确不支持 Linux，装了也进不去游戏',
+      'Proton 兼容层能玩很多 Steam 游戏，但个别游戏存在性能差异、闪退或联机问题',
+      '游戏外设（键盘、手柄、耳机）的厂商控制软件大多只有 Windows 版',
+    ],
+    advice: '想尝试 Linux 可以用双系统或虚拟机，玩游戏时切回 Windows；或者干脆继续用 Windows。',
+  },
+  {
+    title: '离不开特定行业软件的用户',
+    flag: '⚠️ 先确认替代方案再换',
+    points: [
+      '网银 U 盾、部分银行/证券客户端只有 Windows 版',
+      '财务税务软件（如部分金蝶、用友版本）和开票工具普遍仅支持 Windows',
+      '专业 CAD 与工程设计：AutoCAD、SolidWorks 等无官方 Linux 版',
+      'Adobe 全家桶（Photoshop、Premiere 等）无官方 Linux 版，替代品（GIMP、Kdenlive）有学习成本',
+    ],
+    advice: '先到[软件替代方案](/alternatives)核对一遍你每天用的软件，再决定是否迁移。',
+  },
+  {
+    title: '完全不想接触命令行的人',
+    flag: '💡 有解法：网页 AI 帮你代写命令',
+    points: [
+      '日常上网、办公、看视频可以全程图形界面，没问题',
+      '装驱动、排查网络、看报错等场景，教程和社区普遍以命令行事',
+      '遇到问题时，大部分解决方案都以「打开终端」开头',
+    ],
+    advice: '现在的解法：遇到看不懂的命令，把需求或报错信息直接粘贴给网页 AI（如 DeepSeek、豆包、ChatGPT 等，多数免费可用），让它解释含义并给出可直接复制的命令，粘贴到终端执行即可。绝大多数日常操作不需要理解命令，也能顺利完成。建议先用虚拟机体验一周，把「问 AI → 复制 → 粘贴」的模式跑顺，再决定是否正式安装。',
+  },
+  {
+    title: '依赖特殊硬件的用户',
+    flag: '⚠️ 购机/换机前先查兼容',
+    points: [
+      '个别新发布显卡、无线网卡的内核驱动可能滞后数周至数月',
+      '笔记本的指纹、多指触控板手势、厂商电源管理等特殊功能，Linux 下可能不完全可用',
+      '部分打印机、扫描仪、采集卡只有 Windows 驱动',
+    ],
+    advice: '购买前用「硬件型号 + Linux」搜索确认支持情况，参考本站[硬件兼容指南](/hardware)。',
+  },
+  {
+    title: '需要厂商官方支持的用户',
+    flag: '⚠️ 习惯会不同',
+    points: [
+      'Linux 上的多数软件没有付费技术支持，解决问题靠官方文档、社区论坛和搜索引擎',
+      '企业软件（如部分安全软件、视频会议硬件终端）可能只支持 Windows',
+    ],
+    advice: '企业或学校环境有 IT 统一管理时，先问清 IT 是否支持 Linux，再考虑迁移。',
+  },
+];
+---
+<BaseLayout
+  title="哪些人不适合用 Linux？先看这里 | TuxAI"
+  description="实事求是：重度游戏玩家、依赖行业软件、不想碰命令行等场景，暂时不建议换 Linux。换系统前先对照这份清单。"
+>
+  <PageHeader
+    breadcrumb="换机前必读"
+    title="哪些人不适合用 Linux？"
+    subtitle="我们做的是 Linux 推广，但必须先说清楚：Linux 不是万能的。以下场景换到 Linux 会明显不方便，请先对照确认，再决定要不要继续。"
+  />
+
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="mb-10 rounded-xl border border-amber-300 bg-amber-50 p-6">
+      <h2 class="text-lg font-bold text-amber-900 mb-2">一句话结论</h2>
+      <p class="text-amber-800 leading-relaxed">
+        主要打游戏、必须用特定行业软件的人，<strong>建议暂缓换 Linux</strong>；
+        完全不想碰命令行的人不用慌——网页 AI 可以帮你解释和代写命令，门槛已经大幅降低。
+        这不是 Linux 的失败，而是「用系统应该适配需求，而不是让需求迁就系统」。
+      </p>
+    </div>
+
+    <div class="space-y-6">
+      {groups.map((g) => (
+        <section class="rounded-xl border border-gray-200 bg-white p-6 md:p-8">
+          <div class="flex flex-wrap items-center gap-3 mb-3">
+            <h2 class="text-xl font-bold">{g.title}</h2>
+            <span class={`rounded-full px-3 py-1 text-xs font-medium ${
+              g.flag.startsWith('🚫')
+                ? 'bg-red-100 text-red-700'
+                : 'bg-amber-100 text-amber-800'
+            }`}>{g.flag}</span>
+          </div>
+          <ul class="space-y-2 mb-4">
+            {g.points.map((p) => (
+              <li class="flex gap-3 text-gray-700 leading-relaxed">
+                <span aria-hidden="true" class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+                <span>{p}</span>
+              </li>
+            ))}
+          </ul>
+          <p class="text-sm text-gray-600 bg-gray-50 rounded-lg p-4">{g.advice}</p>
+        </section>
+      ))}
+    </div>
+
+    <div class="mt-10 rounded-xl border border-gray-200 bg-white p-6">
+      <h2 class="text-lg font-bold mb-3">换系统前，先做这三件事</h2>
+      <ol class="list-decimal list-inside space-y-2 text-gray-700 leading-relaxed">
+        <li>把每天必用的软件列一张清单，逐一核对 Linux 替代方案（<a href="/alternatives" class="text-primary no-underline hover:underline">替代方案清单</a>）</li>
+        <li>用<strong>虚拟机</strong>体验一周，确认日常操作能接受（<a href="/try/virtualbox" class="text-primary no-underline hover:underline">虚拟机教程</a>）</li>
+        <li>确认硬件兼容，备份数据后再考虑正式安装（<a href="/hardware" class="text-primary no-underline hover:underline">硬件兼容指南</a>）</li>
+      </ol>
+      <p class="mt-4 text-sm text-gray-500">
+        如果这三点都通过了，欢迎回来——<a href="/paths" class="text-primary no-underline hover:underline">学习路径</a>已经为你排好了顺序。
+      </p>
+    </div>
+  </div>
+</BaseLayout>

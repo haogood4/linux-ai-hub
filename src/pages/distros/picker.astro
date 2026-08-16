@@ -67,6 +67,10 @@ const distroMeta = {
             <span><strong>服务器 / 学习运维</strong><span class="block text-sm text-gray-600">长期稳定运行的服务</span></span>
           </label>
           <label class="flex items-start gap-3 cursor-pointer">
+            <input type="radio" name="purpose" value="gaming" class="mt-1 accent-blue-600" />
+            <span><strong class="text-red-600">以玩游戏为主</strong><span class="block text-sm text-gray-600">反作弊与部分游戏不兼容 Linux，建议先看提醒</span></span>
+          </label>
+          <label class="flex items-start gap-3 cursor-pointer">
             <input type="radio" name="purpose" value="old" class="mt-1 accent-blue-600" />
             <span><strong>老电脑焕发新生</strong><span class="block text-sm text-gray-600">配置较低，希望流畅运行</span></span>
           </label>
@@ -144,6 +148,22 @@ const distroMeta = {
       if (!purpose || !experience || !preference) {
         result.innerHTML = '<p class="rounded-lg bg-amber-50 border border-amber-200 text-amber-800 p-4 text-sm">请先完成三个问题的选择。</p>';
         result.classList.remove('hidden');
+        return;
+      }
+      if (purpose === 'gaming') {
+        result.innerHTML =
+          `<div class="rounded-xl border-2 border-red-300 bg-red-50 p-6 md:p-8">` +
+          `<p class="text-sm font-medium text-red-700 mb-2">🚫 暂时不建议换 Linux</p>` +
+          `<h2 class="text-2xl font-bold text-red-900 mb-3">以打游戏为主，先别换</h2>` +
+          `<ul class="space-y-2 text-sm text-red-800 mb-4 list-disc list-inside">` +
+          `<li>部分竞技网游使用内核级反作弊，明确不支持 Linux</li>` +
+          `<li>Proton 兼容层能玩很多 Steam 游戏，但存在性能与联机差异</li>` +
+          `<li>游戏外设控制软件大多只有 Windows 版</li>` +
+          `</ul>` +
+          `<a href="/not-for-you" class="inline-block rounded-lg bg-red-600 px-5 py-2.5 font-medium text-white no-underline hover:bg-red-700 transition-colors">查看完整「不适合 Linux 人群」清单</a>` +
+          `</div>`;
+        result.classList.remove('hidden');
+        result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         return;
       }
       const key = rules[purpose]?.[experience]?.[preference];
