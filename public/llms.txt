@@ -1,0 +1,47 @@
+# TuxAI — Linux AI Hub
+
+> TuxAI 是面向开发者和新手的 Linux 入门与 AI 部署平台（https://tuxai.cn，默认中文）。
+> 核心内容：Linux 是什么、为什么选 Linux、发行版选择与对比、零风险安装（虚拟机 / Live USB / 双系统）、
+> Windows / macOS 软件替代方案、AI 工具（Ollama 等）本地部署教程、GPU 与硬件选购、Linux 社区导航。
+> 网站立场：不贬低其他系统，面向新手友好，安装类内容均包含数据备份风险提示。
+
+## 入门
+
+- [Linux 是什么](https://tuxai.cn/what-is-linux): 面向零基础读者的 Linux 概念解释
+- [为什么选择 Linux](https://tuxai.cn/why-linux): 免费、开源、安全、稳定、可定制、适合开发与 AI
+- [哪些人不适合用 Linux](https://tuxai.cn/not-for-you): 诚实清单：游戏反作弊、行业软件、外设依赖等限制
+
+## 发行版
+
+- [发行版推荐](https://tuxai.cn/distros): Ubuntu、Linux Mint、Fedora、Arch Linux、Debian、Rocky Linux 对比
+- [发行版选择器](https://tuxai.cn/distros/picker): 5 问交互式选择器（用途 / 经验 / 偏好 / 显卡 / 迁移来源）
+- [Ubuntu](https://tuxai.cn/distros/ubuntu): 最流行、生态最全，AI 工具官方支持最好
+- [Linux Mint](https://tuxai.cn/distros/mint): 桌面最接近 Windows，迁移适应成本最低
+- [Fedora](https://tuxai.cn/distros/fedora): 技术新、内核新，适合开发者尝鲜
+- [Arch Linux](https://tuxai.cn/distros/arch): 滚动更新、完全掌控，需要投入学习时间
+- [Debian](https://tuxai.cn/distros/debian): 极致稳定，装一次用很多年
+- [Rocky Linux](https://tuxai.cn/distros/rocky): 服务器与企业环境，与 RHEL 兼容
+
+## 安装与迁移
+
+- [Live USB 本机安装](https://tuxai.cn/try/install): 制作启动盘并安装（含备份风险提示）
+- [双系统安装](https://tuxai.cn/try/dual-boot): Windows / Linux 共存（含分区风险提示）
+- [虚拟机体验](https://tuxai.cn/try/virtualbox): VirtualBox 零风险尝试
+- [软件替代方案](https://tuxai.cn/alternatives): 常用 Windows / macOS 软件的 Linux 替代品
+
+## 学习路径
+
+- [学习路径](https://tuxai.cn/paths): 入门 / 进阶 / AI 实践三档学习路线
+
+## AI 部署与工具
+
+- [AI 教程库](https://tuxai.cn/tutorials): Ollama 本地部署教程（llama.cpp / vLLM / Stable Diffusion 等规划中）
+- [工具评测](https://tuxai.cn/tools): Ollama、Docker、VS Code、Blender 等 14 个工具在 Linux 上的表现
+- [硬件兼容](https://tuxai.cn/hardware): GPU 选购、驱动、本地跑 AI 的硬件建议
+
+## 其他
+
+- [深度文章](https://tuxai.cn/blog): 为什么 AI 生态默认跑在 Linux 上、零风险尝试 Linux、发行版怎么选
+- [常见问题](https://tuxai.cn/faq): 新手最常问的 9 个问题
+- [社区入口](https://tuxai.cn/community): 中英文社区导航与提问礼仪
+- [命令闯关游戏](https://tuxai.cn/terminal-game): apt / pacman / dnf 三派系交互式练习
