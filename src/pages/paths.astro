@@ -1,45 +1,9 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHeader from '@/components/PageHeader.astro';
+import { getCollection } from 'astro:content';
 
-const paths = [
-  {
-    level: '入门',
-    goal: '第一次接触 Linux，能安装、能日常使用、遇到问题知道去哪问',
-    duration: '1–2 周',
-    audience: '从未用过 Linux 的普通用户 / Windows 用户',
-    steps: [
-      { href: '/what-is-linux', label: '了解 Linux 是什么', note: '先建立基本认知，10 分钟' },
-      { href: '/distros', label: '挑选第一个发行版', note: '对比六大发行版，选适合你的' },
-      { href: '/distros/picker', label: '用选择器快速匹配', note: '回答三个问题获得推荐' },
-      { href: '/try/virtualbox', label: '在虚拟机里先试水', note: '零风险体验，不用动现有系统' },
-      { href: '/try/install', label: '正式安装（Live USB）', note: '安装前务必备份数据' },
-      { href: '/faq', label: '熟悉常见问题', note: '装完系统后从这里开始排障' },
-    ],
-  },
-  {
-    level: '进阶',
-    goal: '掌握命令行与开发环境，能在 Linux 上写代码、跑服务',
-    duration: '2–4 周',
-    audience: '开发者 / 想系统学习命令行的人',
-    steps: [
-      { href: '/tutorials/linux-zero-to-ubuntu', label: '从零上手 Ubuntu（教程）', note: '覆盖安装后配置、包管理、常用命令' },
-      { href: '/alternatives', label: '迁移你的开发工具', note: 'IDE、容器、命令行工具的 Linux 版对照' },
-      { href: '/why-linux', label: '理解 Linux 的开发优势', note: '为什么服务器和 AI 训练都在 Linux 上' },
-    ],
-  },
-  {
-    level: 'AI 实践',
-    goal: '在 Linux 上跑通本地大模型与 AI 工具链，走向「生产 AI 模型」',
-    duration: '1–2 周（按教程）',
-    audience: 'AI 开发者 / 想私有化部署大模型的爱好者',
-    steps: [
-      { href: '/hardware', label: '评估你的硬件', note: 'GPU、内存、驱动的兼容性检查' },
-      { href: '/tutorials/ollama-local-deploy', label: 'Ollama 本地部署教程', note: '一行命令跑起大模型，最简单的一步' },
-      { href: '/tutorials', label: '跟进后续 AI 教程', note: 'llama.cpp、vLLM、Docker GPU、Stable Diffusion 已在规划中' },
-    ],
-  },
-];
+const paths = (await getCollection('paths')).sort((a, b) => a.data.order - b.data.order);
 ---
 <BaseLayout
   title="学习路径：从零开始玩转 Linux + AI | TuxAI"
@@ -54,16 +18,16 @@ const paths = [
   <div class="max-w-4xl mx-auto px-4 py-12">
     <div class="space-y-10">
       {paths.map((p) => (
-        <section aria-labelledby={`path-${p.level}`} class="rounded-xl border border-gray-200 bg-white p-6 md:p-8">
+        <section aria-labelledby={`path-${p.slug}`} class="rounded-xl border border-gray-200 bg-white p-6 md:p-8">
           <div class="flex flex-wrap items-baseline gap-3 mb-1">
-            <h2 id={`path-${p.level}`} class="text-2xl font-bold">{p.level}</h2>
-            <span class="text-sm text-gray-500">预计 {p.duration}</span>
+            <h2 id={`path-${p.slug}`} class="text-2xl font-bold">{p.data.title}</h2>
+            <span class="text-sm text-gray-500">预计 {p.data.duration}</span>
           </div>
-          <p class="text-gray-600 mb-2"><strong class="text-gray-800">目标：</strong>{p.goal}</p>
-          <p class="text-sm text-gray-500 mb-6">适合：{p.audience}</p>
+          <p class="text-gray-600 mb-2"><strong class="text-gray-800">目标：</strong>{p.data.goal}</p>
+          <p class="text-sm text-gray-500 mb-6">适合：{p.data.audience}</p>
 
           <ol class="space-y-3">
-            {p.steps.map((s, i) => (
+            {p.data.steps.map((s, i) => (
               <li class="flex gap-4">
                 <span aria-hidden="true" class="shrink-0 mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
                   {i + 1}
@@ -75,6 +39,8 @@ const paths = [
               </li>
             ))}
           </ol>
+
+          <p class="mt-6 text-sm text-gray-500">{p.body}</p>
         </section>
       ))}
     </div>

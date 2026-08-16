@@ -51,7 +51,7 @@ const { questions, partyName } = Astro.props as Props;
   <div data-game-bar class="h-full bg-green-500 transition-all duration-300" style="width: 0%" />
 </div>
 
-<script define:vars={{ questions }}>
+<script is:inline define:vars={{ questions }}>
   const output = document.querySelector('[data-game-output]');
   const input = document.querySelector('[data-game-input]');
   const scoreEl = document.querySelector('[data-game-score]');

@@ -46,6 +46,14 @@
 | `check-links` 死链检查 | ✅ | `pnpm check:links`，654 站内链接 0 死链 |
 | `audit-completion` 完成度核查 | ✅ | `pnpm check:completion`（命令名避开 pnpm 保留字） |
 | FAQ FAQPage JSON-LD | ✅ | 结构化数据注入 BaseLayout jsonLd prop |
+| 发行版独立详情页 | ✅ | 6 篇 MDX（Ubuntu/Mint/Fedora/Arch/Debian/Rocky），档案卡+风险提示+游戏入口 |
+| 包管理器命令行游戏 | ✅ | 三派系独立关卡 + 同页命令对照表 + 隐藏提示按钮 |
+| distros 列表页游戏按钮 | ✅ | 每个发行版卡片「🎮 练习游戏」直连对应派系关卡 |
+| 学习路径数据化 | ✅ | paths 集合 3 篇 MDX（入门/进阶/AI 实践），/paths 消费集合 |
+| 首页内容地图 | ✅ | 博客/工具/游戏/FAQ/硬件/社区六大入口 |
+| 全路由可达性验证 | ✅ | 47 页均至少一个站内入链 |
+| audit 脚本增强 | ✅ | 递归统计源文件/构建 HTML，distros 集合纳入核查 |
+| 静态检查零警告基线 | ✅ | `pnpm astro check` 0 errors / 0 warnings / 0 hints |
 
 ## 验收提醒
 

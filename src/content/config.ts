@@ -19,6 +19,16 @@ const paths = defineCollection({
     description: z.string(),
     level: z.enum(['入门', '进阶', '高级']).default('入门'),
     order: z.number().int().default(0),
+    goal: z.string(),
+    duration: z.string(),
+    audience: z.string(),
+    steps: z.array(
+      z.object({
+        href: z.string(),
+        label: z.string(),
+        note: z.string(),
+      }),
+    ),
   }),
 });
 

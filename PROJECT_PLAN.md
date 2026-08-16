@@ -33,6 +33,7 @@
 - [x] `/distros` 发行版推荐（含适用人群）
 - [x] `/distros/picker` 发行版选择器（静态表单 + 建议结果 + 游戏拦截）
 - [x] `/alternatives` 软件替代方案
+- [x] 发行版独立详情页 `/distros/{ubuntu,mint,fedora,arch,debian,rocky}`（档案卡 + 安装步骤 + 命令速查 + 专属避坑 FAQ）
 
 ### Phase 2 — 安装与迁移（完成）
 - [x] `/try/install` 本机安装（Live USB，含备份风险提示）
@@ -45,7 +46,8 @@
 - [ ] 教程：llama.cpp / vLLM 推理
 - [ ] 教程：Docker + GPU 容器
 - [ ] 教程：Stable Diffusion 部署
-- [x] `/paths` 学习路径聚合页
+- [x] `/paths` 学习路径聚合页（paths 集合 3 档路线）
+- [x] `/terminal-game` 包管理器命令行游戏（Debian/Arch/Red Hat 三派系独立关卡 + 命令对照表）
 
 ### Phase 4 — 社区与增长
 - [x] `/community` 社区入口
@@ -53,7 +55,7 @@
 - [x] `/faq` 常见问题（含 FAQPage 结构化数据）
 - [x] `/not-for-you` 诚实警示页（哪些人不适合 Linux）
 - [x] SEO 完善（metadata、sitemap、robots、404 页）
-- [x] 自检脚本：check-links / check:completion
+- [x] 自检脚本：check-links / check:completion（含构建产物统计）
 - [ ] Plausible 接入
 
 ## 4. 里程碑

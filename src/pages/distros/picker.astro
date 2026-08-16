@@ -127,7 +127,7 @@ const distroMeta = {
   </div>
 </BaseLayout>
 
-<script define:vars={{ distroMeta }}>
+<script is:inline define:vars={{ distroMeta }}>
   const rules = {
     desktop: { new: { stable: 'mint', new: 'fedora', control: 'mint' }, some: { stable: 'mint', new: 'fedora', control: 'ubuntu' }, expert: { stable: 'debian', new: 'arch', control: 'arch' } },
     dev: { new: { stable: 'ubuntu', new: 'fedora', control: 'ubuntu' }, some: { stable: 'ubuntu', new: 'fedora', control: 'arch' }, expert: { stable: 'debian', new: 'arch', control: 'arch' } },
