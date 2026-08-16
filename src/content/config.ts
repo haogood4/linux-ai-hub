@@ -16,7 +16,6 @@ const paths = defineCollection({
   type: 'content',
   schema: z.object({
     title: z.string(),
-    slug: z.string(),
     description: z.string(),
     level: z.enum(['入门', '进阶', '高级']).default('入门'),
     order: z.number().int().default(0),
@@ -27,7 +26,6 @@ const tools = defineCollection({
   type: 'content',
   schema: z.object({
     name: z.string(),
-    slug: z.string(),
     category: z.string(),
     description: z.string(),
     platforms: z.array(z.string()).default([]),
@@ -38,4 +36,15 @@ const tools = defineCollection({
   }),
 });
 
-export const collections = { tutorials, paths, tools };
+const blog = defineCollection({
+  type: 'content',
+  schema: z.object({
+    title: z.string(),
+    author: z.string().default('TuxAI'),
+    date: z.coerce.date(),
+    tags: z.array(z.string()).default([]),
+    excerpt: z.string(),
+  }),
+});
+
+export const collections = { tutorials, paths, tools, blog };

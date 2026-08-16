@@ -37,6 +37,9 @@
 | 修复 Node 26 下 mdx 构建失败 | ✅ | style-to-js 2.0.2 override（ADR-006） |
 | 导航/Footer/首页链接覆盖新页面 | ✅ | Footer 移除 `#` 占位死链 |
 | 全路由验证 | ✅ | 18 路由全部 200 |
+| `/tools` 工具评测页 | ✅ | 14 个真实工具 × 4 分类 + 详情页 |
+| `/blog` 深度文章 | ✅ | 索引 + 详情页，首篇《为什么 AI 生态默认跑在 Linux 上》 |
+| Header/Footer 导航覆盖新页面 | ✅ | Header 6 项 / Footer 5 项 |
 
 ## 验收提醒
 

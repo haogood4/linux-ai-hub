@@ -1,0 +1,49 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const tools = await getCollection('tools');
+  return tools.map((t) => ({ params: { slug: t.slug }, props: { tool: t } }));
+}
+
+const { tool } = Astro.props;
+const { Content } = await render(tool);
+const { name, description, platforms, license, officialUrl } = tool.data;
+---
+<BaseLayout
+  title={`${name} 评测：功能、许可与使用建议 | TuxAI`}
+  description={description}
+>
+  <article class="max-w-3xl mx-auto px-4 py-12">
+    <nav aria-label="面包屑" class="text-sm text-gray-500 mb-4">
+      <a href="/" class="hover:text-primary no-underline">首页</a>
+      <span aria-hidden="true"> / </span>
+      <a href="/tools" class="hover:text-primary no-underline">工具评测</a>
+      <span aria-hidden="true"> / </span>
+      <span class="text-gray-700">{name}</span>
+    </nav>
+
+    <header class="mb-8">
+      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-3">{name}</h1>
+      <p class="text-gray-600 mb-4">{description}</p>
+      <div class="flex flex-wrap gap-2 text-xs">
+        <span class="rounded-full bg-gray-100 text-gray-600 px-2.5 py-0.5">许可：{license}</span>
+        <span class="rounded-full bg-gray-100 text-gray-600 px-2.5 py-0.5">平台：{platforms.join(' / ')}</span>
+        <a href={officialUrl} target="_blank" rel="noopener noreferrer" class="rounded-full bg-primary/10 text-primary px-2.5 py-0.5 no-underline hover:bg-primary/20 transition-colors">
+          官方网站 <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </header>
+
+    <div class="prose-linux">
+      <Content />
+    </div>
+
+    <nav aria-label="页尾导航" class="mt-12 border-t border-gray-200 pt-6">
+      <a href="/tools" class="inline-block rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 no-underline hover:bg-gray-100 transition-colors">
+        ← 返回工具评测
+      </a>
+    </nav>
+  </article>
+</BaseLayout>
