@@ -17,6 +17,12 @@
     "check:distros": "node src/scripts/check-distros.mjs",
     "check:distros:json": "node src/scripts/check-distros.mjs --json",
     "check:distros:live": "node src/scripts/check-distros.mjs --check-live",
+    "check:a11y": "node src/scripts/check-a11y.mjs",
+    "check:a11y:json": "node src/scripts/check-a11y.mjs --json",
+    "check:a11y:dist": "node src/scripts/check-a11y.mjs --scan dist",
+    "check:lhci": "node src/scripts/check-lhci.mjs",
+    "release-prep": "node src/scripts/release-prep.mjs",
+    "release-prep:json": "node src/scripts/release-prep.mjs --json",
     "build:inject-version": "node src/scripts/inject-version.mjs"
   },
   "dependencies": {
