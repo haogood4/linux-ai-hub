@@ -3,6 +3,12 @@
   "permission": {
     "bash": {
       "*": "ask",
+      "pnpm *": "allow",
+      "node *": "allow",
+      "curl *": "allow",
+      "python3 *": "allow",
+      "ls *": "allow",
+      "sleep *": "allow",
       "git status*": "allow",
       "git log*": "allow",
       "git diff*": "allow",
@@ -11,6 +17,9 @@
       "git add*": "allow",
       "git commit*": "allow",
       "git push*": "allow"
+    },
+    "external_directory": {
+      "/tmp/opencode/**": "allow"
     }
   }
 }
