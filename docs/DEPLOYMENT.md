@@ -25,7 +25,7 @@ rsync -az --delete dist/ deploy@SERVER:/var/www/tuxai.cn/
 ```caddy
 tuxai.cn {
     root * /var/www/tuxai.cn
-    encode gzip
+    encode zstd gzip
     file_server
 
     header {
