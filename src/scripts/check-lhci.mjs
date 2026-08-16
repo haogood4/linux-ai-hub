@@ -12,6 +12,7 @@
  *   pnpm check:lhci                      # 检测并运行 LHCI
  *   pnpm check:lhci --json               # JSON 输出（检测结果）
  *   pnpm check:lhci --dry                # 仅检测，不运行
+ *   CHROME_PATH=/usr/bin/google-chrome pnpm check:lhci   # 覆盖 Chrome 路径（CI 场景）
  *
  * 退出码：
  *   0 = LHCI 已运行且通过 / --dry 下环境就绪
@@ -20,7 +21,7 @@
  *
  * 约束：Node ESM、零外部依赖。
  */
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
@@ -54,7 +55,28 @@ if (dry) {
 }
 
 const args = ['autorun', ...process.argv.slice(2).filter((a) => !a.startsWith('--json') && a !== '--dry' && a !== '--scan')];
-const run = spawnSync('lhci', args, { stdio: 'inherit', shell: true, cwd: ROOT, timeout: 600000 });
+
+let configArg = [];
+let tmpConfig = null;
+const chromePath = process.env.CHROME_PATH;
+if (chromePath) {
+  const cfgFile = ['lighthouserc.json', 'lighthouserc.js', 'lighthouserc.cjs', '.lighthouserc.json'].find((f) => existsSync(join(ROOT, f)));
+  const raw = readFileSync(join(ROOT, cfgFile), 'utf8');
+  const cfg = JSON.parse(raw);
+  cfg.ci.collect.settings = { ...(cfg.ci.collect.settings || {}), chromePath };
+  tmpConfig = join(ROOT, '.lighthouserc.ci.json');
+  writeFileSync(tmpConfig, JSON.stringify(cfg, null, 2));
+  configArg = ['--config=' + tmpConfig];
+  if (!jsonMode) console.log(`[check-lhci] CHROME_PATH=${chromePath}（临时配置 ${tmpConfig}）`);
+}
+
+const run = spawnSync('lhci', [...configArg, ...args], { stdio: 'inherit', shell: true, cwd: ROOT, timeout: 600000 });
+
+if (tmpConfig) {
+  try {
+    unlinkSync(tmpConfig);
+  } catch {}
+}
 
 if (jsonMode) console.log(JSON.stringify({ ok: run.status === 0, ready: true }));
 process.exit(run.status === 0 ? 0 : 1);

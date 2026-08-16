@@ -4,6 +4,8 @@
 
 站点：https://tuxai.cn（构建中）
 
+[![CI](https://github.com/haogood4/linux-ai-hub/actions/workflows/ci.yml/badge.svg)](https://github.com/haogood4/linux-ai-hub/actions/workflows/ci.yml)
+
 ## 核心原则
 
 - 面向新手友好，不贬低其他系统
@@ -48,7 +50,7 @@
 | `pnpm check:links` | 死链检查 |
 | `pnpm check:distros` / `check:distros:live` | 发行版核查 / 官方链接在线验证 |
 | `pnpm check:a11y` | 无障碍静态审计（WCAG 静态规则） |
-| `pnpm check:lhci` | Lighthouse CI 门禁（需 lighthouserc.json + Chrome） |
+| `pnpm check:lhci` | Lighthouse CI 门禁（需 lighthouserc.json + Chrome；CI 用 `CHROME_PATH` 覆盖） |
 | `pnpm release-prep` | 发布就绪度核查 |
 | `pnpm build:inject-version` | 构建版本注入（dist/version.json + meta） |
 | `pnpm build:search-index` | 生成站内搜索索引 |
@@ -62,6 +64,7 @@
 - `docs/DECISIONS.md` — 技术决策记录（ADR-001~006）
 - `docs/TASKS.md` — 任务状态
 - `docs/SCRIPTS.md` — 脚本使用文档
+- `docs/DEPLOYMENT.md` — 部署指南（Caddy + 备份 + 防火墙）
 - `GIT_RULES.md` — Git 操作规则
 
 ## 重要提醒

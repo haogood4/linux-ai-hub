@@ -50,6 +50,9 @@ jobs:
       - name: Release readiness
         run: pnpm release-prep --skip-git
 
+      - name: Lighthouse CI gate
+        run: CHROME_PATH=/usr/bin/google-chrome pnpm check:lhci
+
       - name: Verify build artifacts
         run: |
           test -f dist/search-index.json || { echo "search-index.json missing"; exit 1; }

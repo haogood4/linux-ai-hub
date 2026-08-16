@@ -5,7 +5,8 @@
       "url": [
         "http://localhost/index.html",
         "http://localhost/distros/index.html",
-        "http://localhost/tutorials/index.html"
+        "http://localhost/tutorials/index.html",
+        "http://localhost/distros/picker/index.html"
       ],
       "numberOfRuns": 1,
       "settings": {
