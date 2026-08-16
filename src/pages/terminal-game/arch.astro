@@ -1,0 +1,40 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import TerminalGame from '@/components/TerminalGame.astro';
+import PkgCompareTable from '@/components/PkgCompareTable.astro';
+
+const questions = [
+  { q: '在 Arch Linux 上安装 git', accept: ['pacman -s git', 'pacman -sy git'], explain: 'sudo pacman -S git。注意是 -S 大写，参数风格和 apt/dnf 完全不同。' },
+  { q: '在 Arch 上卸载 vim', accept: ['pacman -r vim'], explain: 'sudo pacman -R vim 卸载。R 大写。' },
+  { q: '在 Arch 上搜索包 ffmpeg', accept: ['pacman -ss ffmpeg'], explain: 'pacman -Ss ffmpeg 搜索。-S 后跟小写 s 是搜索，跟大写 S 是安装——大小写别混。' },
+  { q: '在 Arch 上把整个系统更新到最新（一条命令搞定）', accept: ['pacman -syu'], explain: 'sudo pacman -Syu：-S 安装、-y 刷新索引、-u 升级，一条命令完成。Arch 没有单独的 upgrade 命令。' },
+  { q: '在 Arch 上列出所有已安装的包', accept: ['pacman -q'], explain: 'pacman -Q 列出已装包（大写 Q）。' },
+  { q: '在 Arch 上从 AUR 安装 google-chrome（AUR 工具用 yay，写法兼容 pacman）', accept: ['yay -s google-chrome', 'yay -syu google-chrome', 'paru -s google-chrome'], explain: 'yay -S google-chrome（或 paru -S）。AUR 是 Arch 的社区仓库，yay 完全兼容 pacman 的命令写法。' },
+  { q: '在 Manjaro（Arch 系）上安装 spotify', accept: ['pacman -s spotify'], explain: 'sudo pacman -S spotify。Manjaro 属于 Arch 系，命令一样；只是它的软件更新比 Arch 慢几周，更保守。' },
+  { q: '在 EndeavourOS（Arch 系）上安装 docker', accept: ['pacman -s docker'], explain: 'sudo pacman -S docker。EndeavourOS 也是 Arch 系，直接认 pacman。' },
+  { q: '哪条命令是「跨发行版通用」的安装方式？（Flatpak 或 Snap 二选一，包名随便写一个）', accept: ['flatpak install vlc', 'flatpak install org.videolan.vlc', 'snap install vlc', 'snap install firefox'], explain: 'flatpak install 包名 或 snap install 包名，三个派系写法都一样，换发行版不用改。' },
+  { q: '「pacman」和「yay」属于哪个派系？（输入 debian / arch / redhat 之一）', accept: ['arch'], explain: 'pacman 和 yay 都属于 Arch 系。yay 是 AUR 工具，pacman 是官方包管理器。' },
+];
+---
+<BaseLayout
+  title="Arch 系（pacman / yay）命令行闯关游戏 | TuxAI"
+  description="终端风格小游戏：10 道 pacman 命令题（安装/卸载/搜索/升级 + AUR），Arch、Manjaro、EndeavourOS 通用。命令对照表同页展示。"
+>
+  <PageHeader
+    breadcrumb="游戏 · Arch 系"
+    title="Arch 系闯关：pacman 与 yay"
+    subtitle="只学一派，别混。本页全部题目围绕 pacman（Arch / Manjaro / EndeavourOS 通用）与 AUR 工具 yay，命令对照表就在下方。"
+  />
+
+  <div class="max-w-3xl mx-auto px-4 py-12">
+    <TerminalGame questions={questions} partyName="Arch 系 (pacman)" />
+    <PkgCompareTable highlight="arch" />
+
+    <div class="mt-8 flex items-center justify-between">
+      <a href="/terminal-game/debian" class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 no-underline hover:bg-gray-100 transition-colors">← 学 Debian 系 (apt)</a>
+      <a href="/terminal-game" class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 no-underline hover:bg-gray-100 transition-colors">入口页</a>
+      <a href="/terminal-game/redhat" class="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white no-underline hover:bg-primary/90 transition-colors">学 Red Hat 系 (dnf) →</a>
+    </div>
+  </div>
+</BaseLayout>

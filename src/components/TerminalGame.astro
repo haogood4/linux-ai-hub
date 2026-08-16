@@ -1,0 +1,154 @@
+---
+interface Props {
+  questions: Array<{ q: string; accept: string[]; explain: string }>;
+  partyName: string;
+}
+const { questions, partyName } = Astro.props as Props;
+---
+<div class="rounded-xl overflow-hidden border border-gray-800 bg-[#0d1117] shadow-lg">
+  <div class="flex items-center gap-2 px-4 py-2.5 bg-[#161b22] border-b border-gray-800">
+    <span class="h-3 w-3 rounded-full bg-red-500" aria-hidden="true" />
+    <span class="h-3 w-3 rounded-full bg-yellow-500" aria-hidden="true" />
+    <span class="h-3 w-3 rounded-full bg-green-500" aria-hidden="true" />
+    <span class="ml-2 text-xs text-gray-400 font-mono">user@tuxai — {partyName} 教学终端</span>
+  </div>
+
+  <div class="px-4 py-4 font-mono text-sm md:text-[15px] leading-relaxed">
+    <div class="min-h-[240px] space-y-1.5 text-gray-300" data-game-output aria-live="polite">
+      <p><span class="text-green-400">tuxai</span><span class="text-gray-500">@</span><span class="text-cyan-400">linux</span><span class="text-gray-500">:~$</span> <span class="text-gray-100">echo 欢迎来到 {partyName} 闯关！</span></p>
+      <p class="text-gray-400">一共 {questions.length} 题，答对 +10 分，答错会给出正确答案和讲解。</p>
+      <p class="text-gray-400">提示：命令可以带 sudo 或不带；下方对照表就在本页，随时对照。</p>
+    </div>
+    <div class="flex items-center gap-2 mt-2">
+      <span class="text-green-400 shrink-0"><span class="text-gray-500">tuxai@</span>linux<span class="text-gray-500">:~$</span></span>
+      <input
+        data-game-input
+        type="text"
+        autocomplete="off"
+        spellcheck="false"
+        aria-label="输入命令"
+        class="flex-1 bg-transparent outline-none text-gray-100 placeholder-gray-500 font-mono"
+        placeholder="输入命令后回车…"
+      />
+      <span class="w-2 h-4 bg-green-400 animate-pulse shrink-0" aria-hidden="true" />
+    </div>
+  </div>
+</div>
+
+<div class="mt-4 flex items-center justify-between text-sm text-gray-600" aria-live="polite">
+  <span data-game-score>得分：0</span>
+  <span data-game-progress>第 1 / {questions.length} 题</span>
+  <div class="flex items-center gap-2">
+    <button data-game-hint class="rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-amber-50 hover:border-amber-300 transition-colors">
+      💡 隐藏提示（点击展开）
+    </button>
+    <button data-game-reset class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium hover:bg-gray-100 transition-colors">
+      重新开始
+    </button>
+  </div>
+</div>
+<div class="mt-2 h-1.5 rounded-full bg-gray-200 overflow-hidden">
+  <div data-game-bar class="h-full bg-green-500 transition-all duration-300" style="width: 0%" />
+</div>
+
+<script define:vars={{ questions }}>
+  const output = document.querySelector('[data-game-output]');
+  const input = document.querySelector('[data-game-input]');
+  const scoreEl = document.querySelector('[data-game-score]');
+  const progressEl = document.querySelector('[data-game-progress]');
+  const barEl = document.querySelector('[data-game-bar]');
+  const resetBtn = document.querySelector('[data-game-reset]');
+  const hintBtn = document.querySelector('[data-game-hint]');
+
+  let idx = 0;
+  let score = 0;
+  let hinted = false;
+
+  function normalize(cmd) {
+    return cmd
+      .toLowerCase()
+      .replace(/^sudo\s+/, '')
+      .replace(/\s+-y\b/g, '')
+      .replace(/\s+--yes\b/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function print(html) {
+    const p = document.createElement('p');
+    p.innerHTML = html;
+    output.appendChild(p);
+  }
+
+  function ask() {
+    if (idx >= questions.length) {
+      input.disabled = true;
+      hintBtn.disabled = true;
+      const ratio = score / (questions.length * 10);
+      const rank = ratio >= 0.9 ? '🏆 派系大师' : ratio >= 0.6 ? '🎖 熟练用户' : ratio >= 0.3 ? '📖 入门学徒' : '🧭 建议多对照本页命令表';
+      print('<span class="text-green-400">—— 闯关完成 ——</span>');
+      print(`<span class="text-gray-100">最终得分：${score} / ${questions.length * 10}，称号：${rank}</span>`);
+      print('<span class="text-gray-400">本派系的命令都写在下方对照表里，收藏随时查。想挑战其他派系？回到入口页选择。</span>');
+      return;
+    }
+    const q = questions[idx];
+    hinted = false;
+    hintBtn.disabled = false;
+    print(`<span class="text-yellow-300">Q${idx + 1}. ${escapeHtml(q.q)}</span>`);
+    updateHud();
+  }
+
+  function updateHud() {
+    scoreEl.textContent = `得分：${score}`;
+    progressEl.textContent = `第 ${Math.min(idx + 1, questions.length)} / ${questions.length} 题`;
+    barEl.style.width = `${(Math.min(idx, questions.length - 1) / questions.length) * 100}%`;
+  }
+
+  function submit(cmd) {
+    print(`<span class="text-green-400">tuxai</span><span class="text-gray-500">@</span><span class="text-cyan-400">linux</span><span class="text-gray-500">:~$</span> <span class="text-gray-100">${escapeHtml(cmd)}</span>`);
+    const q = questions[idx];
+    if (q.accept.includes(normalize(cmd))) {
+      if (!hinted) score += 10;
+      print(hinted
+        ? `<span class="text-green-400">✔ 正确（本题用过提示，不计分，当前 ${score} 分）</span>`
+        : `<span class="text-green-400">✔ 正确 +10（当前 ${score} 分）</span>`);
+    } else {
+      print(`<span class="text-red-400">✘ 不对。正确答案：<span class="text-green-300">${escapeHtml(q.accept[0])}</span></span>`);
+      print(`<span class="text-gray-400">${escapeHtml(q.explain)}</span>`);
+    }
+    idx++;
+    ask();
+  }
+
+  hintBtn.addEventListener('click', () => {
+    if (idx >= questions.length) return;
+    const q = questions[idx];
+    hinted = true;
+    hintBtn.disabled = true;
+    print(`<span class="text-cyan-300">💡 提示（已展开，本题答对不计分）：${escapeHtml(q.accept[0])}</span>`);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && input.value.trim()) {
+      submit(input.value.trim());
+      input.value = '';
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    idx = 0;
+    score = 0;
+    input.disabled = false;
+    output.innerHTML = '';
+    print(`<span class="text-gray-100">已重新开始，共 ${questions.length} 题。</span>`);
+    ask();
+    input.focus();
+  });
+
+  ask();
+  input.focus();
+</script>

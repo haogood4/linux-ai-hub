@@ -1,0 +1,61 @@
+---
+interface Props {
+  highlight?: 'debian' | 'arch' | 'redhat' | null;
+}
+const { highlight = null } = Astro.props as Props;
+
+const rows = [
+  { op: '安装', debian: 'sudo apt install 包', arch: 'sudo pacman -S 包', redhat: 'sudo dnf install 包' },
+  { op: '卸载', debian: 'sudo apt remove 包', arch: 'sudo pacman -R 包', redhat: 'sudo dnf remove 包' },
+  { op: '搜索', debian: 'apt search 关键词', arch: 'pacman -Ss 关键词', redhat: 'dnf search 关键词' },
+  { op: '刷新索引', debian: 'sudo apt update', arch: 'pacman -Sy（一般随 -Syu）', redhat: 'sudo dnf check-update' },
+  { op: '升级系统', debian: 'sudo apt upgrade', arch: 'sudo pacman -Syu', redhat: 'sudo dnf upgrade' },
+  { op: '已装列表', debian: 'apt list --installed', arch: 'pacman -Q', redhat: 'dnf list installed' },
+];
+
+type Party = 'debian' | 'arch' | 'redhat';
+
+const cols: Array<{ key: Party; name: string; members: string; cmd: string; cls: string }> = [
+  { key: 'debian', name: 'Debian 系', members: 'Debian / Ubuntu / Mint', cmd: 'apt', cls: 'bg-green-50' },
+  { key: 'arch', name: 'Arch 系', members: 'Arch / Manjaro / EndeavourOS', cmd: 'pacman', cls: 'bg-cyan-50' },
+  { key: 'redhat', name: 'Red Hat 系', members: 'Fedora / RHEL / Rocky', cmd: 'dnf（旧 yum）', cls: 'bg-amber-50' },
+];
+
+const fieldMap: Record<Party, keyof (typeof rows)[number]> = { debian: 'debian', arch: 'arch', redhat: 'redhat' };
+---
+<section class="mt-12" aria-labelledby="pkg-table-title">
+  <h2 id="pkg-table-title" class="text-2xl font-bold mb-2">三派系命令对照表</h2>
+  <p class="text-gray-600 text-sm mb-4">
+    记住一句话：<strong>派系决定命令</strong>。发行版可以换，认准它属于哪个派系，命令就八九不离十。
+    {highlight && <span class="text-gray-500">本页为 <strong>{cols.find((c) => c.key === highlight)?.name}</strong>，其列已高亮。</span>}
+  </p>
+  <div class="overflow-x-auto rounded-xl border border-gray-200">
+    <table class="w-full text-sm text-left">
+      <thead>
+        <tr class="bg-gray-50 border-b border-gray-200">
+          <th scope="col" class="px-4 py-3 font-semibold">操作</th>
+          {cols.map((c) => (
+            <th scope="col" class={`px-4 py-3 font-semibold ${highlight === c.key ? c.cls : ''}`}>
+              {c.name}（{c.members}）<br />
+              <span class={`font-normal ${highlight === c.key ? 'font-bold' : 'text-gray-500'}`}>{c.cmd}</span>
+              {highlight === c.key && <span class="block text-xs mt-1 text-gray-600">← 本页在学</span>}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r, i) => (
+          <tr class={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+            <th scope="row" class="px-4 py-3 font-medium whitespace-nowrap">{r.op}</th>
+            {cols.map((c) => (
+              <td class={`px-4 py-3 font-mono text-[13px] ${highlight === c.key ? c.cls : ''}`}>{r[fieldMap[c.key]]}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p class="mt-3 text-xs text-gray-500">
+    跨发行版通用：<code class="font-mono bg-gray-100 rounded px-1.5 py-0.5">flatpak install 包</code> / <code class="font-mono bg-gray-100 rounded px-1.5 py-0.5">snap install 包</code>——三个派系写法完全一样。涉及系统级操作一律加 <code class="font-mono bg-gray-100 rounded px-1.5 py-0.5">sudo</code>。
+  </p>
+</section>

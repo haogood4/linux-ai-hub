@@ -1,0 +1,40 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import TerminalGame from '@/components/TerminalGame.astro';
+import PkgCompareTable from '@/components/PkgCompareTable.astro';
+
+const questions = [
+  { q: '在 Ubuntu 上安装 git', accept: ['apt install git'], explain: 'sudo apt install git。apt 是 Debian 系的包管理器。' },
+  { q: '在 Linux Mint 上安装 firefox', accept: ['apt install firefox'], explain: 'sudo apt install firefox。Mint 基于 Ubuntu，同样用 apt——发行版不同，命令不变。' },
+  { q: '在 Debian 上安装 nginx', accept: ['apt install nginx'], explain: 'sudo apt install nginx。Debian、Ubuntu、Mint、Pop!_OS 全部认 apt。' },
+  { q: '在 Ubuntu 上卸载 vim', accept: ['apt remove vim'], explain: 'sudo apt remove vim。卸载用 remove，和安装一样简单。' },
+  { q: '在 Debian 上搜索包 ffmpeg', accept: ['apt search ffmpeg'], explain: 'apt search ffmpeg。搜索用 search，不需要 sudo。' },
+  { q: '在 Ubuntu 上刷新软件索引（只更新软件列表，不升级软件）', accept: ['apt update'], explain: 'sudo apt update 只是刷新索引；升级软件是 apt upgrade。这两条是新手最容易混的。' },
+  { q: '在 Ubuntu 上把已装软件升级到新版本', accept: ['apt upgrade', 'apt full-upgrade', 'apt dist-upgrade'], explain: 'sudo apt upgrade 升级已装软件。习惯流程：先 apt update 再 apt upgrade，两条连着用。' },
+  { q: '在 Linux Mint 上列出所有已安装的包', accept: ['apt list --installed'], explain: 'apt list --installed 列出已装包。Mint 也一样。' },
+  { q: '哪条命令是「跨发行版通用」的安装方式？（Flatpak 或 Snap 二选一，包名随便写一个）', accept: ['flatpak install vlc', 'flatpak install org.videolan.vlc', 'snap install vlc', 'snap install firefox'], explain: 'flatpak install 包名 或 snap install 包名，在 Debian、Arch、Red Hat 系上写法都一样。' },
+  { q: '「apt」这个命令属于哪个派系？（输入 debian / arch / redhat 之一）', accept: ['debian'], explain: 'apt 属于 Debian 系。它的家族成员：Debian、Ubuntu、Linux Mint、Pop!_OS 等。' },
+];
+---
+<BaseLayout
+  title="Debian 系（apt）命令行闯关游戏 | TuxAI"
+  description="终端风格小游戏：10 道 apt 命令题（安装/卸载/搜索/升级），Debian、Ubuntu、Mint 通用。命令对照表同页展示，边玩边查。"
+>
+  <PageHeader
+    breadcrumb="游戏 · Debian 系"
+    title="Debian 系闯关：apt"
+    subtitle="只学一派，别混。本页全部题目都围绕 apt（Debian / Ubuntu / Mint / Pop!_OS 通用），命令对照表就在下方，随时对照。"
+  />
+
+  <div class="max-w-3xl mx-auto px-4 py-12">
+    <TerminalGame questions={questions} partyName="Debian 系 (apt)" />
+    <PkgCompareTable highlight="debian" />
+
+    <div class="mt-8 flex items-center justify-between">
+      <a href="/terminal-game/arch" class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 no-underline hover:bg-gray-100 transition-colors">← 学 Arch 系 (pacman)</a>
+      <a href="/terminal-game" class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 no-underline hover:bg-gray-100 transition-colors">入口页</a>
+      <a href="/terminal-game/redhat" class="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white no-underline hover:bg-primary/90 transition-colors">学 Red Hat 系 (dnf) →</a>
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,40 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import TerminalGame from '@/components/TerminalGame.astro';
+import PkgCompareTable from '@/components/PkgCompareTable.astro';
+
+const questions = [
+  { q: '在 Fedora 上安装 git', accept: ['dnf install git'], explain: 'sudo dnf install git。Fedora 用 dnf，它是 Red Hat 系当前的包管理器。' },
+  { q: '在 Rocky Linux 上安装 nginx', accept: ['dnf install nginx'], explain: 'sudo dnf install nginx。Rocky、RHEL、Fedora 都是 dnf。企业服务器上这条命令最常见。' },
+  { q: '在 Fedora 上卸载 vim', accept: ['dnf remove vim'], explain: 'sudo dnf remove vim。卸载用 remove，和 apt 的语义相同。' },
+  { q: '在 RHEL 上搜索包 ffmpeg', accept: ['dnf search ffmpeg'], explain: 'dnf search ffmpeg。搜索用 search，不需要 sudo。' },
+  { q: '在 Fedora 上把系统更新到最新', accept: ['dnf upgrade', 'dnf update'], explain: 'sudo dnf upgrade（或 dnf update，在老版本中两者等效）。Red Hat 系用一条命令同时刷新索引和升级。' },
+  { q: '在 Rocky Linux 上检查可用的软件更新（不安装，只检查）', accept: ['dnf check-update'], explain: 'sudo dnf check-update 只检查不安装。Debian 系的对应是 apt update，但语义不完全一样——别混。' },
+  { q: '在 Fedora 上列出所有已安装的包', accept: ['dnf list installed'], explain: 'dnf list installed 列出已装包。注意：apt 是 apt list --installed，pacman 是 pacman -Q——三条命令各不相同。' },
+  { q: '「yum」是老版本的什么命令？（新版本都换成了它）', accept: ['dnf'], explain: 'yum 是 dnf 的前身，命令语义基本一致。现在 Fedora、Rocky、RHEL 8+ 都用 dnf。' },
+  { q: '哪条命令是「跨发行版通用」的安装方式？（Flatpak 或 Snap 二选一，包名随便写一个）', accept: ['flatpak install vlc', 'flatpak install org.videolan.vlc', 'snap install vlc', 'snap install firefox'], explain: 'flatpak install 包名 或 snap install 包名，三个派系写法都一样，换发行版不用改。' },
+  { q: '「dnf」这个命令属于哪个派系？（输入 debian / arch / redhat 之一）', accept: ['redhat', 'red-hat', 'red hat'], explain: 'dnf 属于 Red Hat 系（Fedora、RHEL、Rocky）。别和 Debian 系的 apt 混了。' },
+];
+---
+<BaseLayout
+  title="Red Hat 系（dnf）命令行闯关游戏 | TuxAI"
+  description="终端风格小游戏：10 道 dnf 命令题（安装/卸载/搜索/升级/检查更新），Fedora、RHEL、Rocky 通用。命令对照表同页展示。"
+>
+  <PageHeader
+    breadcrumb="游戏 · Red Hat 系"
+    title="Red Hat 系闯关：dnf"
+    subtitle="只学一派，别混。本页全部题目围绕 dnf（Fedora / RHEL / Rocky 通用，yum 是它的老名字），命令对照表就在下方。"
+  />
+
+  <div class="max-w-3xl mx-auto px-4 py-12">
+    <TerminalGame questions={questions} partyName="Red Hat 系 (dnf)" />
+    <PkgCompareTable highlight="redhat" />
+
+    <div class="mt-8 flex items-center justify-between">
+      <a href="/terminal-game/debian" class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 no-underline hover:bg-gray-100 transition-colors">← 学 Debian 系 (apt)</a>
+      <a href="/terminal-game" class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 no-underline hover:bg-gray-100 transition-colors">入口页</a>
+      <a href="/terminal-game/arch" class="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white no-underline hover:bg-primary/90 transition-colors">学 Arch 系 (pacman) →</a>
+    </div>
+  </div>
+</BaseLayout>

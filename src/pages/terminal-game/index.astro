@@ -1,0 +1,81 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import PkgCompareTable from '@/components/PkgCompareTable.astro';
+
+const parties = [
+  {
+    href: '/terminal-game/debian',
+    name: 'Debian 系',
+    cmd: 'apt',
+    members: 'Debian / Ubuntu / Linux Mint / Pop!_OS',
+    desc: '新手最多、教程最全的派系。Ubuntu 系软件和中文资料最丰富，遇到问题最容易被搜到答案。',
+    color: 'border-green-200 hover:border-green-400',
+    tag: '推荐新手先玩',
+  },
+  {
+    href: '/terminal-game/arch',
+    name: 'Arch 系',
+    cmd: 'pacman / yay',
+    members: 'Arch / Manjaro / EndeavourOS',
+    desc: '参数风格最特别（-S / -R / -Syu），还有社区仓库 AUR。适合喜欢掌控、愿意折腾的进阶用户。',
+    color: 'border-cyan-200 hover:border-cyan-400',
+    tag: '进阶玩法',
+  },
+  {
+    href: '/terminal-game/redhat',
+    name: 'Red Hat 系',
+    cmd: 'dnf（旧 yum）',
+    members: 'Fedora / RHEL / Rocky / CentOS Stream',
+    desc: '企业服务器的主力。如果你以后要管服务器、进运维，这个派系最值得提前熟悉。',
+    color: 'border-amber-200 hover:border-amber-400',
+    tag: '企业/服务器向',
+  },
+];
+---
+<BaseLayout
+  title="包管理器命令行闯关游戏：apt / pacman / dnf | TuxAI"
+  description="终端风格闯关游戏，分三个派系独立页面：Debian 系 apt、Arch 系 pacman/yay、Red Hat 系 dnf。每页 10 题 + 命令对照表同页展示，新手不混。"
+>
+  <PageHeader
+    breadcrumb="游戏"
+    title="包管理器命令行闯关游戏"
+    subtitle="三个派系的命令不一样，新手最容易混。所以我们做了三个独立关卡——一次只学一派。每页的命令对照表就在游戏下方，边玩边查。"
+  />
+
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {parties.map((p) => (
+        <a href={p.href} class={`block rounded-xl border-2 bg-white p-6 hover:shadow-md transition-all no-underline ${p.color}`}>
+          <p class="text-xs font-medium text-gray-500 mb-2">{p.tag}</p>
+          <h2 class="text-xl font-bold text-gray-900 mb-1">{p.name}</h2>
+          <p class="font-mono text-sm text-primary mb-3">{p.cmd}</p>
+          <p class="text-xs text-gray-500 mb-3">{p.members}</p>
+          <p class="text-sm text-gray-600 leading-relaxed">{p.desc}</p>
+          <p class="mt-4 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white">开始闯关 →</p>
+        </a>
+      ))}
+    </div>
+
+    <p class="mt-8 text-sm text-gray-500">
+      不知道怎么选？<a href="/distros" class="text-primary no-underline hover:underline">发行版推荐</a>页有六大发行版对比；如果你还没装 Linux，先去<a href="/terminal-game/debian" class="text-primary no-underline hover:underline">Debian 系</a>玩——它是新手最友好的派系。
+    </p>
+
+    <PkgCompareTable />
+
+    <div class="mt-10 rounded-xl border border-gray-200 bg-white p-6">
+      <h2 class="text-xl font-bold mb-3">为什么分三个派系？</h2>
+      <p class="text-gray-700 text-sm leading-relaxed mb-4">
+        Linux 的发行版按「出身」分成三个大家族，每个家族的安装、卸载、升级命令都不一样：
+      </p>
+      <ul class="space-y-2 text-sm text-gray-700 leading-relaxed">
+        <li class="flex gap-3"><span aria-hidden="true" class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-green-500" /><span><strong>Debian 系</strong>：apt。Ubuntu、Mint 都是它的子孙，新手首选。</span></li>
+        <li class="flex gap-3"><span aria-hidden="true" class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-500" /><span><strong>Arch 系</strong>：pacman。短参数风格，配 AUR 社区仓库（yay）。</span></li>
+        <li class="flex gap-3"><span aria-hidden="true" class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" /><span><strong>Red Hat 系</strong>：dnf（旧 yum）。企业服务器的主力。</span></li>
+      </ul>
+      <p class="mt-4 text-sm text-gray-600">
+        但三个派系有<strong>一样的地方</strong>：都是「包管理器 + install / remove / search / upgrade」的逻辑；Flatpak 和 Snap 在三个派系上写法完全一样；系统级操作都要加 <code class="font-mono bg-gray-100 rounded px-1.5 py-0.5">sudo</code>。
+      </p>
+    </div>
+  </div>
+</BaseLayout>
