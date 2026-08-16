@@ -107,3 +107,23 @@ index.astro / BaseLayout.astro 通过 `https://cdn.tailwindcss.com` 脚本引入
 
 ### 影响
 后续需要高交互组件时，评估引入 @astrojs/react（react 19 已安装）或按需恢复 svelte；新增依赖须核对与 astro 4.16 / vite 5.4 的 peer 兼容性。
+
+## Decision: ADR-006 修复 Node 26 下 mdx 构建失败（style-to-js interop）
+
+日期：2026-08-16
+
+### 背景
+安装 @astrojs/mdx 后，构建在解析带 style 属性的元素时崩溃：`styleToJs is not a function`。最小复现确认与内容无关，任何 .mdx 文件都失败。
+
+### 选择
+在 pnpm-workspace.yaml 增加 overrides：`style-to-js: 2.0.2`（连带 style-to-object 升级到 2.0.2）。
+
+### 原因
+根因是 Node 26 的 CJS-ESM interop：hast-util-to-estree@3.1.3 依赖的 style-to-js@1.0.0 用 `exports["default"]`（字符串 key）导出，Node 26 的 cjs-module-lexer 未能识别该命名导出，`import default` 返回整个 module.exports 对象导致调用失败。style-to-js@2.0.2 提供 ESM 入口（dist/index.mjs），无 interop 问题。
+
+### 替代方案
+- 升级 vite/esbuild：esbuild 0.21.5 的 interop 正常，问题出在 Node 运行时，无效。
+- pnpm patch style-to-js 改导出语法：可行但维护成本高。
+
+### 影响
+仅影响 mdx 渲染链路；同时升级了 style-to-object（2.0.2），其 API 兼容。构建产物无变化。

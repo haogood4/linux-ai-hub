@@ -28,6 +28,15 @@
 | 修复 mdx 死链 + 安装 @astrojs/mdx | ✅ | astro 升级 4.16.19 修复集合类型生成 |
 | 域名 tuxai.cn 品牌落地 | ✅ | site 配置 / Header / Footer / 页面 title |
 | 全路由链接验证 | ✅ | 11 路由全部 200 |
+| `/paths` 学习路径页 | ✅ | 三档路径聚合，消除 Header 404 |
+| `/hardware` 硬件兼容页 | ✅ | GPU/网卡/外设清单 + AI 选购建议 |
+| `/faq` 常见问题页 | ✅ | 9 条新手 FAQ（details 折叠） |
+| `/community` 社区入口页 | ✅ | 中英文社区导航 + 提问礼仪 |
+| Ollama 本地部署教程 | ✅ | 首个 AI 教程，含 API 调用与风险提示 |
+| SEO：robots + sitemap + canonical/OG | ✅ | @astrojs/sitemap 3.3.1，16 页全部收录 |
+| 修复 Node 26 下 mdx 构建失败 | ✅ | style-to-js 2.0.2 override（ADR-006） |
+| 导航/Footer/首页链接覆盖新页面 | ✅ | Footer 移除 `#` 占位死链 |
+| 全路由验证 | ✅ | 18 路由全部 200 |
 
 ## 验收提醒
 

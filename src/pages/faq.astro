@@ -1,0 +1,71 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+
+const faqs = [
+  {
+    q: '安装 Linux 会丢数据吗？',
+    a: '安装操作本身不会主动删除数据，但分区、格式化等步骤如果操作失误，可能导致数据丢失。因此官方教程都强调：安装前务必备份重要数据到移动硬盘或网盘。',
+  },
+  {
+    q: 'Linux 是免费的吗？会不会有隐藏收费？',
+    a: '主流发行版（Ubuntu、Linux Mint、Debian、Fedora、Arch 等）都是免费下载、免费使用的，没有隐藏收费。部分企业版（如 RHEL）面向企业收费，但对个人开发者有免费选项（Rocky Linux 等社区发行版完全免费）。',
+  },
+  {
+    q: '我能保留 Windows 同时装 Linux 吗？',
+    a: '可以。双系统（dual-boot）让你开机时选择进入哪个系统。但分区操作有风险，务必提前备份，并参考本站双系统指南：/try/dual-boot。',
+  },
+  {
+    q: '我常用的软件在 Linux 上有吗？',
+    a: '办公、浏览器、设计、开发等绝大多数常用软件都有替代品或官方 Linux 版。完整清单见「软件替代方案」：/alternatives。',
+  },
+  {
+    q: 'Linux 能玩游戏吗？',
+    a: '能，但体验因游戏而异。Steam 支持 Linux，并通过 Proton 兼容层运行大量 Windows 游戏；部分带反作弊系统的竞技网游（如部分国服游戏）不支持 Linux，这类游戏需要双系统或继续使用 Windows。',
+  },
+  {
+    q: 'Linux 会中病毒吗？',
+    a: 'Linux 同样存在安全风险，但针对桌面 Linux 的恶意软件远少于 Windows，且开源审查、权限模型和包管理器机制降低了风险。仍需保持系统更新、不从不明来源安装软件、不随意运行未知脚本。',
+  },
+  {
+    q: '跑 AI 必须用 Linux 吗？',
+    a: '不是必须，但推荐。主流 AI 框架（PyTorch、Ollama、vLLM 等）对 Linux 支持最完整，NVIDIA 驱动与 CUDA 在 Linux 上最稳定，大多数服务器和 AI 教程默认基于 Linux 环境。在 Windows 上也可以跑 AI（如 WSL2），但遇到问题时 Linux 上的资料更多。',
+  },
+  {
+    q: '我的电脑比较老，还能装 Linux 吗？',
+    a: '通常可以。轻量级发行版（如 Linux Mint Xfce、Debian）对老旧硬件很友好，能让旧电脑重新流畅起来。',
+  },
+  {
+    q: '遇到问题该去哪里求助？',
+    a: '先在本站教程库和 FAQ 里搜索；然后可以到官方论坛、Reddit 的 r/linux 与各发行版子版块、Stack Exchange 的 Unix & Linux 提问。提问时说明发行版、版本和报错信息，通常很快能得到帮助。详见「社区入口」：/community。',
+  },
+];
+---
+<BaseLayout
+  title="常见问题 FAQ | TuxAI"
+  description="关于 Linux 的常见问题：数据安全、费用、双系统、软件兼容、游戏、病毒、AI 部署，一站式解答新手的顾虑。"
+>
+  <PageHeader
+    breadcrumb="FAQ"
+    title="常见问题"
+    subtitle="新手最常见的顾虑与解答。如果这里没有你的问题，可以到社区入口提问。"
+  />
+
+  <div class="max-w-3xl mx-auto px-4 py-12">
+    <div class="space-y-4">
+      {faqs.map((f) => (
+        <details class="group rounded-xl border border-gray-200 bg-white p-5 open:border-primary/40">
+          <summary class="cursor-pointer list-none flex items-center justify-between gap-4 font-medium text-gray-900">
+            {f.q}
+            <span aria-hidden="true" class="text-primary transition-transform group-open:rotate-45">+</span>
+          </summary>
+          <p class="mt-3 text-sm leading-relaxed text-gray-700">{f.a}</p>
+        </details>
+      ))}
+    </div>
+
+    <p class="mt-10 text-sm text-gray-500">
+      本页内容保持保守描述，具体行为以你使用的发行版官方文档为准。
+    </p>
+  </div>
+</BaseLayout>

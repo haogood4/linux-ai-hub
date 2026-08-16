@@ -1,0 +1,89 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+
+const checklist = [
+  {
+    title: '显卡（GPU）',
+    items: [
+      { chip: 'NVIDIA', detail: 'AI 场景首选：CUDA 生态成熟，Ollama、PyTorch 官方支持。安装专有驱动后即可使用。', ok: '驱动需手动安装，官方 deb 包较简单' },
+      { chip: 'AMD', detail: '开源驱动（Mesa/amdgpu）内核自带，开箱即用；AI 推理（ROCm）支持范围持续扩大，部分模型工具已可用。', ok: 'ROCm 对部分型号支持有限，先查官方列表' },
+      { chip: 'Intel 核显', detail: '开源驱动成熟，办公、影音、轻量推理没问题。', ok: '显存受限，不适合大模型训练' },
+    ],
+  },
+  {
+    title: '无线网卡与蓝牙',
+    items: [
+      { chip: 'Intel', detail: '多数发行版开箱即用，兼容性口碑较好。', ok: '—' },
+      { chip: 'Realtek / 其他', detail: '部分较新型号内核暂未支持，可能需要安装驱动或用 USB 网卡过渡。', ok: '购买前搜一下「型号 + Linux」确认支持情况' },
+    ],
+  },
+  {
+    title: '外设',
+    items: [
+      { chip: '键鼠 / 显示器', detail: '标准设备即插即用，多数无需驱动。', ok: '—' },
+      { chip: '打印机 / 扫描仪', detail: '主流品牌多数有驱动或开源替代，个别老型号不支持。', ok: '先在发行版官网查兼容列表' },
+    ],
+  },
+];
+
+const gpuAdvice = [
+  '显存（VRAM）优先：本地跑大模型时，显存决定能跑的模型规模。7B 参数量化模型通常需要 6–8GB 显存，更大的模型需要更多。',
+  'NVIDIA 是 AI 生态事实标准：大多数推理框架（Ollama、llama.cpp、vLLM、PyTorch）对 NVIDIA 支持最完整，CUDA 驱动问题排查资料最多。',
+  '内存（RAM）至少 16GB：CPU 推理和系统流畅度都依赖内存，32GB 更从容。',
+  '先查兼容再买：购买前用「显卡/网卡型号 + Linux」搜索，查看官方支持列表与社区反馈，可以避开大部分坑。',
+];
+---
+<BaseLayout
+  title="硬件兼容：哪些电脑适合装 Linux / 跑 AI | TuxAI"
+  description="Linux 硬件兼容性检查清单：显卡、网卡、外设注意事项，以及本地跑大模型的硬件选购建议（显存、内存、NVIDIA vs AMD）。"
+>
+  <PageHeader
+    breadcrumb="安装前准备"
+    title="硬件兼容性"
+    subtitle="多数电脑都能正常安装 Linux——现代内核自带大量驱动。真正需要留意的是显卡、无线网卡这两类设备；如果你的目标是跑 AI 模型，硬件选择会直接影响体验。"
+  />
+
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="space-y-10">
+      {checklist.map((cat) => (
+        <section>
+          <h2 class="text-2xl font-bold mb-4">{cat.title}</h2>
+          <div class="space-y-3">
+            {cat.items.map((item) => (
+              <div class="rounded-xl border border-gray-200 bg-white p-5">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">{item.chip}</span>
+                  {item.ok !== '—' && (
+                    <span class="text-sm text-gray-500">注意：{item.ok}</span>
+                  )}
+                </div>
+                <p class="text-gray-700 text-sm leading-relaxed">{item.detail}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+
+      <section class="rounded-xl border border-gray-200 bg-white p-6 md:p-8">
+        <h2 class="text-2xl font-bold mb-4">本地跑 AI：硬件选购建议</h2>
+        <ul class="space-y-3">
+          {gpuAdvice.map((a) => (
+            <li class="flex gap-3 text-gray-700 leading-relaxed">
+              <span aria-hidden="true" class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+              <span>{a}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="rounded-xl border border-amber-200 bg-amber-50 p-6">
+        <h2 class="text-lg font-bold text-amber-900 mb-2">先检查，再决定</h2>
+        <p class="text-sm text-amber-800 leading-relaxed">
+          不确定自己的硬件是否兼容？可以先在 Live USB / 虚拟机里跑一遍，或直接问社区（
+          <a href="/community" class="underline">社区入口</a>）。涉及安装与分区前，请务必备份重要数据。
+        </p>
+      </section>
+    </div>
+  </div>
+</BaseLayout>

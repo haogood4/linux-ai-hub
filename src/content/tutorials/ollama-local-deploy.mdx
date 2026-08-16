@@ -1,0 +1,123 @@
+---
+title: 在 Linux 上跑起第一个本地大模型：Ollama 入门
+slug: ollama-local-deploy
+author: TuxAI
+date: 2026-08-16
+tags: [ai, ollama, 大模型, 本地部署, 入门]
+estimatedReadTime: 15
+environment: [服务器, GPU]
+---
+# 在 Linux 上跑起第一个本地大模型：Ollama 入门
+
+## 写在前面
+
+Ollama 是目前最简单、最流行的本地大模型运行工具之一：安装一条命令，拉取模型一条命令，对话直接在终端里进行。它也是从「了解 Linux」走向「在 Linux 上生产 AI」的最短路径。
+
+本教程适用于已有 Linux 环境（虚拟机、双系统或服务器均可）的用户。如果你还没有 Linux，先看[安装指南](/try/install)。
+
+## 环境要求
+
+- 一个 Linux 系统（Ubuntu / Debian / Fedora 等主流发行版均可）
+- 内存：建议 8GB 以上；纯 CPU 推理时，内存越大跑得越流畅
+- GPU（可选但推荐）：NVIDIA 显卡 + 官方驱动，可以大幅提升速度
+
+> 没有 NVIDIA 显卡也能用：Ollama 支持纯 CPU 推理，只是速度慢一些，适合先体验。
+
+## 第一步：安装 Ollama
+
+官方提供了 Linux 一键安装脚本（安装到用户目录，无需 sudo）：
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+安装完成后确认版本：
+
+```bash
+ollama --version
+```
+
+> 如果你不习惯直接执行管道脚本，也可以从 [Ollama 官方下载页](https://ollama.com/download/linux) 下载 `.deb` 或 `.rpm` 包安装。
+
+## 第二步：拉取并运行第一个模型
+
+下面以 Llama 3.2 8B（Meta 开源，通用能力强）为例：
+
+```bash
+ollama run llama3.2
+```
+
+首次运行会自动下载模型（体积数 GB，取决于网络速度），之后直接进入对话界面：
+
+```text
+>>> 用一句话介绍 Linux
+```
+
+输入 `/bye` 退出对话。
+
+### 中文用户推荐
+
+如果你主要用中文交流，Qwen（通义千问）系列中文表现友好：
+
+```bash
+ollama run qwen2.5
+```
+
+## 第三步：验证 GPU 加速（有 NVIDIA 显卡时）
+
+确认驱动已安装：
+
+```bash
+nvidia-smi
+```
+
+能看到显卡信息表即说明驱动正常。Ollama 会自动检测 GPU 并优先使用，无需额外配置。运行中的模型会显示 GPU 显存占用：
+
+```bash
+nvidia-smi
+```
+
+如果 `nvidia-smi` 提示找不到命令，说明需要安装 NVIDIA 驱动——Ubuntu 可以在「软件与更新 → 附加驱动」里勾选官方驱动，重启后生效。
+
+## 常用命令速查
+
+| 命令 | 作用 |
+|------|------|
+| `ollama list` | 查看已下载的模型 |
+| `ollama pull llama3.2` | 只下载模型，不进入对话 |
+| `ollama rm llama3.2` | 删除模型，释放磁盘空间 |
+| `ollama stop` | 停止当前运行的模型 |
+
+## 通过 API 调用（进阶）
+
+Ollama 自带 HTTP API，默认监听 `http://localhost:11434`，供你自己的程序调用：
+
+```bash
+curl http://localhost:11434/api/generate -d '{
+  "model": "llama3.2",
+  "prompt": "用一句话介绍 Linux"
+}'
+```
+
+许多工具（如 Open WebUI、VS Code 插件）都支持把地址填成 `http://localhost:11434` 直接使用。
+
+> 注意：默认只监听本机（localhost），不要随意改成 `0.0.0.0` 对外暴露——本地推理的意义之一就是数据不出机器。如需远程访问，请配合 SSH 隧道或反向代理，并做好访问控制。
+
+## 常见问题
+
+**模型跑得很慢？**
+纯 CPU 推理慢是正常的。可以换更小的模型（如 `llama3.2:1b`），或升级硬件、使用 GPU。
+
+**磁盘空间不够？**
+模型文件较大，检查 `ollama list` 里不需要的模型并 `ollama rm` 删除。
+
+**Ollama 是免费的吗？**
+Ollama 本身免费开源。模型遵循各自的开放许可（如 Llama 使用 Meta 的社区许可、Qwen 使用 Apache 2.0），商用前请查看对应模型主页的许可说明。
+
+## 下一步
+
+- 跑通 Ollama 后，可以试试图形界面：部署 Open WebUI（教程整理中）
+- 进阶玩法：llama.cpp 量化推理、vLLM 高吞吐服务（教程整理中）
+- 需要更专业的硬件搭配？看[硬件兼容指南](/hardware)
+
+> 提示：涉及系统安装、驱动、分区等操作前，请务必备份重要数据。

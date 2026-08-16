@@ -9,7 +9,7 @@
 ## 2. 技术栈（以现有项目为准）
 
 - **Framework**: Astro 4.16（静态优先，SSG）
-- **Interactivity**: Svelte 5（@astrojs/svelte 6.0.2，仅高交互区域，当前无 .svelte 组件）
+- **Interactivity**: 纯 Astro（无 Svelte，ADR-005）
 - **Styling**: Tailwind CSS 4（@tailwindcss/vite 插件，CSS-first 配置，`src/styles/global.css` 中 @theme 定义）
 - **Fonts**: 系统字体栈（Inter 自托管 subset 后置）
 - **Content**: MDX（`src/content/tutorials` 等）+ Git
@@ -20,38 +20,38 @@
 
 ## 3. 阶段规划
 
-### Phase 0 — 基础搭建（进行中）
+### Phase 0 — 基础搭建（完成）
 - [x] Astro + Tailwind + Svelte 集成，依赖版本冲突修复（zod、@astrojs/svelte）
 - [x] 首页 `/`（Hero + 路径引导 + 迁移 CTA）
 - [x] 全局 Layout / Header / Footer / 移动端菜单
-- [ ] 内容集合配置 `src/content/config.ts`
-- [ ] `PROJECT_PLAN.md` / `docs/DECISIONS.md` / `docs/TASKS.md` 就绪
+- [x] 内容集合配置 `src/content/config.ts`
+- [x] `PROJECT_PLAN.md` / `docs/DECISIONS.md` / `docs/TASKS.md` 就绪
 
-### Phase 1 — 核心科普页面（MVP 必需）
+### Phase 1 — 核心科普页面（完成）
 - [ ] `/what-is-linux` Linux 是什么
 - [ ] `/why-linux` 为什么选择 Linux
 - [ ] `/distros` 发行版推荐（含适用人群）
 - [ ] `/distros/picker` 发行版选择器（静态表单 + 建议结果）
 - [ ] `/alternatives` 软件替代方案
 
-### Phase 2 — 安装与迁移
+### Phase 2 — 安装与迁移（完成）
 - [ ] `/try/install` 本机安装（Live USB，含备份风险提示）
 - [ ] `/try/dual-boot` 双系统（含分区风险提示）
 - [ ] `/try/virtualbox` 虚拟机尝试
-- [ ] `/hardware` 硬件兼容（GPU 选购、驱动）
+- [x] `/hardware` 硬件兼容（GPU 选购、驱动）
 
 ### Phase 3 — AI 部署内容
-- [ ] 教程：Ollama 本地部署
+- [x] 教程：Ollama 本地部署
 - [ ] 教程：llama.cpp / vLLM 推理
 - [ ] 教程：Docker + GPU 容器
 - [ ] 教程：Stable Diffusion 部署
-- [ ] `/paths` 学习路径聚合页
+- [x] `/paths` 学习路径聚合页
 
 ### Phase 4 — 社区与增长
-- [ ] `/community` 社区入口
+- [x] `/community` 社区入口
 - [ ] `/blog` 深度文章
-- [ ] `/faq` 常见问题
-- [ ] SEO 完善（metadata、sitemap、robots）
+- [x] `/faq` 常见问题
+- [x] SEO 完善（metadata、sitemap、robots）
 - [ ] Plausible 接入
 
 ## 4. 里程碑

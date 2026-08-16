@@ -21,6 +21,13 @@ const {
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site ?? 'https://tuxai.cn').toString()} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site ?? 'https://tuxai.cn').toString()} />
+    <meta property="og:site_name" content="TuxAI" />
+    <meta name="twitter:card" content="summary" />
   </head>
   <body class="min-h-screen flex flex-col">
     <Header />
