@@ -65,6 +65,9 @@
 | 选择器扩展 5 问 + 评分制 | ✅ | 新增显卡 / 迁移来源两问；穷举规则表改为 5 维加权评分（weights），平局并列展示备选 |
 | 首页 JSON-LD 结构化数据 | ✅ | WebSite + Organization @graph（FAQ 页已有 FAQPage） |
 | build 链一次到位 | ✅ | `pnpm build` 串联 search-index + inject-version，AGENTS.md §16 脚本表同步补全 |
+| AEO：llms.txt | ✅ | 面向 AI 爬虫的站点索引（20 个关键页面），preview 验证 200 |
+| GitHub Actions CI | ✅ | push/PR 触发：build + astro check + 6 自检脚本 + 产物断言；修复 pnpm 11 allowBuilds 配置后全绿（40s） |
+| 部署文档 | ✅ | docs/DEPLOYMENT.md：Caddyfile（gzip + 安全头 + 404 兜底）、rsync 增量备份、Fail2ban、防火墙、发布检查单 |
 
 ## 验收提醒
 

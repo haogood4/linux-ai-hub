@@ -18,6 +18,8 @@
 - 站内搜索：零依赖方案（build-search-index 挂入 build 链 + Header 搜索面板）
 - 自检脚本：check:completion、check:links、check:distros、check:a11y、check:lhci（LHCI 浏览器门禁，3 代表页全绿）、release-prep、build:inject-version、build:search-index
 - 发行版选择器：5 问加权评分制（用途 / 经验 / 偏好 / 显卡 / 迁移来源），推荐 + 备选
+- AEO：llms.txt（AI 爬虫可消费的站点索引）
+- 工程化：GitHub Actions CI（build + 类型检查 + 全部自检脚本 + 产物断言）、docs/DEPLOYMENT.md 部署指南
 - 文档体系：AGENTS.md、PROJECT_PLAN.md、docs/DECISIONS.md（ADR-001~008）、docs/TASKS.md、docs/SCRIPTS.md、GIT_RULES.md
 
 ### 修复
@@ -28,6 +30,7 @@
 - Fedora 官方安装文档死链、首页 heading 跳级（h3 → h2）
 - 灰色文字对比度不足（gray-400→500）、链接仅靠颜色区分（补下划线）
 - @lhci/cli 安装触发 @astrojs/sitemap 意外升级导致构建崩溃（锁定 3.3.1）
+- CI 首次运行失败：pnpm 11 依赖构建脚本白名单配置错误（pnpm-workspace.yaml allowBuilds 重复键 + 占位值），修正为布尔映射
 
 ### 技术决策
 
