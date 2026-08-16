@@ -79,6 +79,7 @@
 | 外链可达性核查 | ✅ | 60 个外部站点链接 54 直连可达，其余（wiki.archlinux/rockylinux/docs.docker）抖动后 200；Reddit 国内不可达已加提示 |
 | 内容占位符扫描 | ✅ | 无占位/施工中残留 |
 | 部署缓存建议 | ✅ | Caddyfile 增加图片/图标 1 天缓存；JSON 索引不缓存（每次构建更新）；压缩升级为 zstd + gzip |
+| **上线部署（新网虚拟主机）** | ✅ 2026-08-17 | 香港机房免备案；SFTP 上传 dist → 临时地址验证全站 200 → 域名实名通过（NS 生效）→ 绑定 tuxai.cn（自动解析+A 记录 91.110.206.229）→ TrustAsia DV 证书自动签发 → **https://tuxai.cn 全站 46 页 HTTPS 200**。部署脚本 src/scripts/deploy-vhost.sh（零依赖，SSH_ASKPASS 传密码）。⚠️ 空间 2026-09-16 到期需续费；证书 2026-11-14 到期需续签 |
 | sitemap 完整性 | ✅ | 46 条目 = 47 页 − 404（正确排除），无缺失无多余 |
 | 内容真实性核查 | ✅ | ollama 教程命令/模型名/API 端口全部正确，事实表述保守；terminal-game 三派系 30 题命令全部正确（normalize 小写匹配设计合理） |
 

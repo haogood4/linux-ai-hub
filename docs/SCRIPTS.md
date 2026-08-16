@@ -14,6 +14,7 @@
 | `check-a11y.mjs` | `pnpm check:a11y` / `check:a11y:json` / `check:a11y:dist` | 无障碍静态审计：html lang、img alt、表单 label、heading 层级、空链接/空按钮；`--scan dist` 扫构建产物 | 人类可读 / JSON |
 | `check-lhci.mjs` | `pnpm check:lhci` | LHCI 门禁：检测 lighthouserc 配置与 @lhci/cli，就绪则透传 `lhci autorun`，未就绪输出接入步骤 | 人类可读 / JSON |
 | `build-search-index.mjs` | `pnpm build:search-index` | 站内搜索索引：从 dist HTML 提取 title/描述/标题/正文，生成 dist/search-index.json（生产）与 public/search-index.json（dev server 服务，已 gitignore；Pagefind 因私有 registry 缺包的零依赖替代方案）；已挂入 `pnpm build` 链。注：`pnpm dev` 的搜索功能依赖该索引，首次开发前需先 `pnpm build`（或已 build 过） | 人类可读 / JSON |
+| `deploy-vhost.sh` | `DEPLOY_VHOST_PWD='…' ./src/scripts/deploy-vhost.sh` | 部署到新网虚拟主机（生产环境）：build → SFTP 上传 dist → 验证状态码；密码在面板生成（24h 有效）；`--skip-build` 仅重传 | 人类可读 |
 
 ## 注意事项
 
