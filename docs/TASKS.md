@@ -41,6 +41,11 @@
 | `/blog` 深度文章 | ✅ | 索引 + 详情页，首篇《为什么 AI 生态默认跑在 Linux 上》 |
 | Header/Footer 导航覆盖新页面 | ✅ | Header 6 项 / Footer 5 项 |
 | `/not-for-you` 诚实警示页 | ✅ | 5 类不适合人群 + 换机前三件事 + picker 游戏拦截 |
+| `/404` 自定义页面 | ✅ | 快捷入口 + 首页引导，noindex |
+| 博客扩充 | ✅ | 3 篇：《AI 生态跑在 Linux》《零风险尝试三种方式》《发行版怎么选》 |
+| `check-links` 死链检查 | ✅ | `pnpm check:links`，654 站内链接 0 死链 |
+| `audit-completion` 完成度核查 | ✅ | `pnpm check:completion`（命令名避开 pnpm 保留字） |
+| FAQ FAQPage JSON-LD | ✅ | 结构化数据注入 BaseLayout jsonLd prop |
 
 ## 验收提醒
 

@@ -28,16 +28,16 @@
 - [x] `PROJECT_PLAN.md` / `docs/DECISIONS.md` / `docs/TASKS.md` 就绪
 
 ### Phase 1 — 核心科普页面（完成）
-- [ ] `/what-is-linux` Linux 是什么
-- [ ] `/why-linux` 为什么选择 Linux
-- [ ] `/distros` 发行版推荐（含适用人群）
-- [ ] `/distros/picker` 发行版选择器（静态表单 + 建议结果）
-- [ ] `/alternatives` 软件替代方案
+- [x] `/what-is-linux` Linux 是什么
+- [x] `/why-linux` 为什么选择 Linux
+- [x] `/distros` 发行版推荐（含适用人群）
+- [x] `/distros/picker` 发行版选择器（静态表单 + 建议结果 + 游戏拦截）
+- [x] `/alternatives` 软件替代方案
 
 ### Phase 2 — 安装与迁移（完成）
-- [ ] `/try/install` 本机安装（Live USB，含备份风险提示）
-- [ ] `/try/dual-boot` 双系统（含分区风险提示）
-- [ ] `/try/virtualbox` 虚拟机尝试
+- [x] `/try/install` 本机安装（Live USB，含备份风险提示）
+- [x] `/try/dual-boot` 双系统（含分区风险提示）
+- [x] `/try/virtualbox` 虚拟机尝试
 - [x] `/hardware` 硬件兼容（GPU 选购、驱动）
 
 ### Phase 3 — AI 部署内容
@@ -49,9 +49,11 @@
 
 ### Phase 4 — 社区与增长
 - [x] `/community` 社区入口
-- [ ] `/blog` 深度文章
-- [x] `/faq` 常见问题
-- [x] SEO 完善（metadata、sitemap、robots）
+- [x] `/blog` 深度文章（3 篇）
+- [x] `/faq` 常见问题（含 FAQPage 结构化数据）
+- [x] `/not-for-you` 诚实警示页（哪些人不适合 Linux）
+- [x] SEO 完善（metadata、sitemap、robots、404 页）
+- [x] 自检脚本：check-links / check:completion
 - [ ] Plausible 接入
 
 ## 4. 里程碑

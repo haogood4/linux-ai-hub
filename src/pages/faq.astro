@@ -44,10 +44,21 @@ const faqs = [
     a: '先在本站教程库和 FAQ 里搜索；然后可以到官方论坛、Reddit 的 r/linux 与各发行版子版块、Stack Exchange 的 Unix & Linux 提问。提问时说明发行版、版本和报错信息，通常很快能得到帮助。详见「社区入口」：/community。',
   },
 ];
+
+const faqJsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+});
 ---
 <BaseLayout
   title="常见问题 FAQ | TuxAI"
   description="关于 Linux 的常见问题：数据安全、费用、双系统、软件兼容、游戏、病毒、AI 部署，一站式解答新手的顾虑。"
+  jsonLd={faqJsonLd}
 >
   <PageHeader
     breadcrumb="FAQ"

@@ -1,0 +1,35 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+const quickLinks = [
+  { href: '/what-is-linux', label: 'Linux 是什么' },
+  { href: '/distros', label: '发行版推荐' },
+  { href: '/tutorials', label: '教程库' },
+  { href: '/tools', label: '工具评测' },
+  { href: '/paths', label: '学习路径' },
+  { href: '/faq', label: '常见问题' },
+];
+---
+<BaseLayout
+  title="页面不存在（404）| TuxAI"
+  description="您访问的页面不存在或已被移动。"
+  noindex
+>
+  <div class="max-w-2xl mx-auto px-4 py-20 text-center">
+    <p class="text-7xl font-black text-gray-200 mb-4" aria-hidden="true">404</p>
+    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3">这个页面不存在</h1>
+    <p class="text-gray-600 mb-8">
+      链接可能已失效，或者地址输错了。别担心，常用的入口都在下面：
+    </p>
+    <nav aria-label="快捷入口" class="flex flex-wrap justify-center gap-3 mb-8">
+      {quickLinks.map((l) => (
+        <a href={l.href} class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 no-underline hover:bg-gray-100 transition-colors">
+          {l.label}
+        </a>
+      ))}
+    </nav>
+    <a href="/" class="inline-block rounded-lg bg-primary px-6 py-3 font-medium text-white no-underline hover:bg-primary/90 transition-colors">
+      回到首页
+    </a>
+  </div>
+</BaseLayout>
