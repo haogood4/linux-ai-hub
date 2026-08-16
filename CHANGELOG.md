@@ -24,6 +24,8 @@
 - JSON-LD WebSite 增加 image 字段
 - dev 模式搜索 404 修复：search-index.json 双输出（dist 生产 + public dev 服务）
 - 真实浏览器交互验证：搜索 / 选择器 / 终端游戏全流程通过
+- 移动端菜单修复（375px 下链接横排重叠 → 竖排）
+- 社区页 Reddit 条目加可达性提示；部署文档增加静态资源缓存建议
 - 文档体系：AGENTS.md、PROJECT_PLAN.md、docs/DECISIONS.md（ADR-001~008）、docs/TASKS.md、docs/SCRIPTS.md、GIT_RULES.md
 
 ### 修复

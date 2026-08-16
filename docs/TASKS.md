@@ -75,6 +75,10 @@
 | terminal-game 动态 a11y 审计 | ✅ | 输出区与分数区 aria-live、输入 aria-label、重置后焦点管理均已在 |
 | 真实浏览器交互测试 | ✅ | agent-browser 实测：搜索（输入→结果→跳转）、picker（5 问→Ubuntu+Mint 推荐）、终端游戏（答错/答对判分）全部通过 |
 | dev 搜索索引修复 | ✅ | 索引仅生成 dist 导致 dev 模式搜索 404；改为双输出 dist + public（gitignore），SCRIPTS.md 注明 dev 依赖 |
+| 移动端菜单修复 | ✅ | 实测 375px：菜单打开后导航链接横排重叠（flex-row）；修复为竖排（flex-col），几何断言通过 |
+| 外链可达性核查 | ✅ | 60 个外部站点链接 54 直连可达，其余（wiki.archlinux/rockylinux/docs.docker）抖动后 200；Reddit 国内不可达已加提示 |
+| 内容占位符扫描 | ✅ | 无占位/施工中残留 |
+| 部署缓存建议 | ✅ | Caddyfile 增加图片/图标 1 天缓存；JSON 索引不缓存（每次构建更新） |
 
 ## 验收提醒
 

@@ -39,6 +39,10 @@ tuxai.cn {
     # SPA 无需 fallback：站点为全静态多页；404 由 Astro 生成的 404.html 兜底
     try_files {path} {path}/ /404.html
 
+    # 静态资源缓存：图片/图标文件名不变，可短缓存；JSON（search-index/version）每次构建更新，不缓存
+    @static path *.png *.svg *.ico
+    header @static Cache-Control "public, max-age=86400"
+
     log {
         output file /var/log/caddy/tuxai.cn.log
     }
