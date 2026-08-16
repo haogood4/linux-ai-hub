@@ -60,3 +60,15 @@ jobs:
           test -f dist/sitemap-index.xml || { echo "sitemap missing"; exit 1; }
           test -f dist/llms.txt || { echo "llms.txt missing"; exit 1; }
           node -e "const i=JSON.parse(require('fs').readFileSync('dist/search-index.json')); if (i.total < 40) { console.error('search index too small:', i.total); process.exit(1); } console.log('search-index pages:', i.total)"
+          node -e "
+            const fs = require('fs');
+            const txt = fs.readFileSync('dist/llms.txt', 'utf8');
+            const urls = [...txt.matchAll(/\((https?:\/\/[^)]+)\)/g)].map((m) => m[1]).filter((u) => u.startsWith('https://tuxai.cn'));
+            let bad = 0;
+            for (const u of urls) {
+              const p = new URL(u).pathname.replace(/\/$/, '');
+              const file = 'dist' + p + (p.endsWith('.html') ? '' : '.html');
+              if (!fs.existsSync(file) && !fs.existsSync('dist' + p)) { console.error('llms.txt dead link:', u); bad++; }
+            }
+            if (bad) process.exit(1);
+            console.log('llms.txt links OK:', urls.length);"

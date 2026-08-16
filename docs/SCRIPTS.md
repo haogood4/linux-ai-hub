@@ -25,5 +25,6 @@
 
 `check-a11y.mjs` 覆盖可静态化的规则（lang / alt / label / heading 层级 / 空链接）；
 颜色对比度、焦点可见等视觉项由 `check:lhci`（Lighthouse CI）覆盖——`lighthouserc.json`
-已配置性能 ≥0.5、无障碍 ≥0.9、best-practices ≥0.9、SEO ≥0.9 门禁（3 个代表页：首页 / distros / tutorials）。
-本地跑 `pnpm check:lhci` 需要系统 Chrome（CHROME_PATH 或配置中的 chromePath）。
+已配置性能 ≥0.5、无障碍 ≥0.9、best-practices ≥0.9、SEO ≥0.9 门禁（5 个代表页：首页 / distros / tutorials / picker / terminal-game）。
+本地跑 `pnpm check:lhci` 需要系统 Chrome（CHROME_PATH 或配置中的 chromePath）；
+CI 中通过 `CHROME_PATH=/usr/bin/google-chrome` 使用 runner 自带 Chrome，脚本自动生成临时配置覆盖 chromePath。

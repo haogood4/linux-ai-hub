@@ -19,7 +19,7 @@
 - 自检脚本：check:completion、check:links、check:distros、check:a11y、check:lhci（LHCI 浏览器门禁，3 代表页全绿）、release-prep、build:inject-version、build:search-index
 - 发行版选择器：5 问加权评分制（用途 / 经验 / 偏好 / 显卡 / 迁移来源），推荐 + 备选
 - AEO：llms.txt（AI 爬虫可消费的站点索引）
-- 工程化：GitHub Actions CI（build + 类型检查 + 全部自检脚本 + 产物断言）、docs/DEPLOYMENT.md 部署指南
+- 工程化：GitHub Actions CI（build + 类型检查 + 全部自检脚本 + LHCI 门禁 + 产物/llms.txt 链接断言）、docs/DEPLOYMENT.md 部署指南
 - 文档体系：AGENTS.md、PROJECT_PLAN.md、docs/DECISIONS.md（ADR-001~008）、docs/TASKS.md、docs/SCRIPTS.md、GIT_RULES.md
 
 ### 修复

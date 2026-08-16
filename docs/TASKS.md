@@ -68,6 +68,8 @@
 | AEO：llms.txt | ✅ | 面向 AI 爬虫的站点索引（20 个关键页面），preview 验证 200 |
 | GitHub Actions CI | ✅ | push/PR 触发：build + astro check + 6 自检脚本 + 产物断言；修复 pnpm 11 allowBuilds 配置后全绿（40s） |
 | 部署文档 | ✅ | docs/DEPLOYMENT.md：Caddyfile（gzip + 安全头 + 404 兜底）、rsync 增量备份、Fail2ban、防火墙、发布检查单 |
+| LHCI 入 CI | ✅ | 4→5 代表页（+picker、terminal-game）；check-lhci 支持 CHROME_PATH 覆盖；CI 门禁全绿 |
+| llms.txt 防漂移 | ✅ | CI 断言 llms.txt 内 23 个站内链接均指向真实产物 |
 
 ## 验收提醒
 
