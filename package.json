@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node src/scripts/build-search-index.mjs && node src/scripts/inject-version.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "check:completion": "node src/scripts/audit-completion.mjs",

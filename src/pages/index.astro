@@ -1,8 +1,28 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Hero from '@/components/Hero.astro';
+
+const jsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      name: 'TuxAI — Linux AI Hub',
+      alternateName: 'Linux AI Hub',
+      url: 'https://tuxai.cn',
+      inLanguage: 'zh-CN',
+      description: '面向开发者的 Linux 入门与 AI 部署平台：发行版推荐、安装指南、AI 工具教程与学习路径。',
+    },
+    {
+      '@type': 'Organization',
+      name: 'TuxAI',
+      url: 'https://tuxai.cn',
+      logo: 'https://tuxai.cn/favicon.svg',
+    },
+  ],
+});
 ---
-<BaseLayout>
+<BaseLayout jsonLd={jsonLd}>
   <Hero
     title="重新认识你的电脑，从 Linux 开始"
     subtitle="Linux 是一个自由、开源、安全的操作系统选择。无论你是普通用户、学生、开发者，还是企业团队，都可以在这里找到适合自己的入门路径。"

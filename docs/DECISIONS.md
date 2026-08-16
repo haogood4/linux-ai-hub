@@ -153,8 +153,8 @@ registry 可用，可无缝替换为 Pagefind（索引与 UI 解耦）。
 - 第三方搜索服务（Algolia 等）——需凭据与云端依赖，违背静态优先原则。
 
 ### 影响
-Header.astro 新增搜索面板与内联脚本；构建流程新增 `pnpm build:search-index`（独立命令，
-不修改 `pnpm build` 链路）；部署时需同步上传 `dist/search-index.json`。
+Header.astro 新增搜索面板与内联脚本；构建流程改为 `pnpm build` 串联
+`build-search-index`（构建产物一次到位）；部署时需同步上传 `dist/search-index.json`。
 
 ---
 

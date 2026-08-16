@@ -9,11 +9,11 @@
 | `audit-completion.mjs` | `pnpm check:completion` / `pnpm check:completion:json` | 完成度核查：页面数、集合条目、构建产物、sitemap 收录、安装页备份风险提示覆盖 | 人类可读 / JSON |
 | `check-links.mjs` | `pnpm check:links` / `pnpm check:links:json` | 死链检查：扫描 dist/ HTML 产物的站内链接（a/img/link），站外链接仅报告不请求 | 人类可读 / JSON |
 | `check-distros.mjs` | `pnpm check:distros` / `check:distros:json` / `check:distros:live` | 发行版核查：frontmatter 完整性、详情页构建产物、官方 URL 格式；`--check-live` 联网 HEAD 验证官方链接可达性 | 人类可读 / JSON |
-| `inject-version.mjs` | `pnpm build:inject-version` | 构建版本注入：生成 dist/version.json（含构建时间），并注入 `meta generator` 到 dist/index.html（幂等） | 人类可读 / JSON |
+| `inject-version.mjs` | `pnpm build:inject-version` | 构建版本注入：生成 dist/version.json（含构建时间），并注入 `meta generator` 到 dist/index.html（幂等）；已挂入 `pnpm build` 链 | 人类可读 / JSON |
 | `release-prep.mjs` | `pnpm release-prep` / `release-prep:json` | 发布就绪度核查：版本号、构建产物、死链、安装页备份提示、git 工作区、CHANGELOG（`--skip-git` 跳过 git 检查） | 人类可读 / JSON |
 | `check-a11y.mjs` | `pnpm check:a11y` / `check:a11y:json` / `check:a11y:dist` | 无障碍静态审计：html lang、img alt、表单 label、heading 层级、空链接/空按钮；`--scan dist` 扫构建产物 | 人类可读 / JSON |
 | `check-lhci.mjs` | `pnpm check:lhci` | LHCI 门禁：检测 lighthouserc 配置与 @lhci/cli，就绪则透传 `lhci autorun`，未就绪输出接入步骤 | 人类可读 / JSON |
-| `build-search-index.mjs` | `pnpm build:search-index` | 站内搜索索引：从 dist HTML 提取 title/描述/标题/正文，生成 dist/search-index.json（Pagefind 因私有 registry 缺包的零依赖替代方案） | 人类可读 / JSON |
+| `build-search-index.mjs` | `pnpm build:search-index` | 站内搜索索引：从 dist HTML 提取 title/描述/标题/正文，生成 dist/search-index.json（Pagefind 因私有 registry 缺包的零依赖替代方案）；已挂入 `pnpm build` 链 | 人类可读 / JSON |
 
 ## 注意事项
 

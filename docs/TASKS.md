@@ -62,6 +62,9 @@
 | LHCI 浏览器门禁接入 | ✅ | @lhci/cli + lighthouserc.json，3 页全绿（perf/bp/seo 100，a11y 100）；修复对比度与链接下划线问题 |
 | 对比度 / 链接可辨识修复 | ✅ | gray-400→500、not-for-you red-600、footer/面包屑/正文链接下划线 |
 | 文档体系补齐 | ✅ | GIT_RULES.md、CHANGELOG.md、README 重写（清除 Astro 模板残留）、SCRIPTS.md 同步 |
+| 选择器扩展 5 问 + 评分制 | ✅ | 新增显卡 / 迁移来源两问；穷举规则表改为 5 维加权评分（weights），平局并列展示备选 |
+| 首页 JSON-LD 结构化数据 | ✅ | WebSite + Organization @graph（FAQ 页已有 FAQPage） |
+| build 链一次到位 | ✅ | `pnpm build` 串联 search-index + inject-version，AGENTS.md §16 脚本表同步补全 |
 
 ## 验收提醒
 
