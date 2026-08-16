@@ -1,0 +1,53 @@
+---
+const links = [
+  { href: '/what-is-linux', label: 'Linux 是什么' },
+  { href: '/why-linux', label: '为什么选择 Linux' },
+  { href: '/distros', label: '发行版推荐' },
+  { href: '/try/install', label: '安装指南' },
+  { href: '/paths', label: '学习路径' },
+];
+---
+<header class="sticky top-0 z-40 border-b border-gray-200 bg-white/90 backdrop-blur">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+    <a href="/" class="font-semibold text-lg text-gray-900 hover:text-primary no-underline">
+      Linux AI Hub
+    </a>
+
+    <nav aria-label="主导航" class="hidden md:flex items-center gap-6">
+      {links.map(({ href, label }) => (
+        <a href={href} class="text-sm text-gray-600 hover:text-primary no-underline">{label}</a>
+      ))}
+    </nav>
+
+    <a
+      href="/distros/picker"
+      class="hidden sm:inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white no-underline hover:bg-primary/90 transition-colors"
+    >
+      选择发行版
+    </a>
+
+    <button
+      type="button"
+      aria-label="打开菜单"
+      aria-expanded="false"
+      class="md:hidden rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+      data-mobile-menu-toggle
+    >
+      菜单
+    </button>
+  </div>
+</header>
+
+<script>
+  const button = document.querySelector('[data-mobile-menu-toggle]');
+  const nav = document.querySelector('nav[aria-label="主导航"]');
+  if (button && nav) {
+    let open = false;
+    button.addEventListener('click', () => {
+      open = !open;
+      button.setAttribute('aria-expanded', String(open));
+      nav.classList.toggle('hidden', !open);
+      nav.classList.toggle('flex', open);
+    });
+  }
+</script>

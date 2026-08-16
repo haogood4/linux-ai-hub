@@ -1,0 +1,94 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+
+const reasons = [
+  {
+    title: '免费开源',
+    desc: '无需授权费用，可以免费使用、学习甚至商用。代码公开，任何人都能审查，这也是它安全性的来源之一。',
+  },
+  {
+    title: '安全可靠',
+    desc: '权限模型严格，普通用户无法随意修改系统关键文件；漏洞由全球社区持续跟进修复，且修复更新通常很快发布。',
+  },
+  {
+    title: '稳定长久',
+    desc: '服务器常年不重启是常态。硬件资源占用低，老旧电脑也能流畅运行，减少换代成本。',
+  },
+  {
+    title: '自由可定制',
+    desc: '从桌面环境到系统组件都可以按需更换，装什么、留什么都由你决定，不会强制推送不想要的功能。',
+  },
+  {
+    title: 'AI 与开发首选',
+    desc: '主流 AI 框架、GPU 驱动、容器方案在 Linux 上支持最完整，很多教程和工具默认面向 Linux。',
+  },
+  {
+    title: '隐私尊重',
+    desc: '没有强制的遥测和广告，系统不会在后台悄悄收集你的使用数据。',
+  },
+];
+
+const scenarios = [
+  { label: '普通用户', desc: '上网、办公、影音、聊天：Ubuntu / Linux Mint 开箱即用', href: '/distros' },
+  { label: '开发者', desc: '命令行、Docker、开发工具链支持完整，配好环境一劳永逸', href: '/distros' },
+  { label: 'AI 实践者', desc: '本地部署 Ollama、Stable Diffusion，GPU 驱动与推理框架支持成熟', href: '/paths' },
+  { label: '企业服务器', desc: '成本低、稳定、生态成熟，云服务器默认操作系统大多基于 Linux', href: '/distros' },
+];
+---
+<BaseLayout
+  title="为什么选择 Linux？六个理由与适用人群 | Linux AI Hub"
+  description="免费开源、安全稳定、适合开发与 AI 部署——客观了解 Linux 的优势，以及它是否适合你，不吹捧不贬低。"
+>
+  <PageHeader
+    breadcrumb="入门指南"
+    title="为什么选择 Linux？"
+    subtitle="我们不打算说服你「放弃」某个系统。先客观了解 Linux 的优势，再看它是否适合你的场景。"
+  />
+
+  <div class="max-w-4xl mx-auto px-4 py-12 space-y-12">
+    <section>
+      <h2 class="text-2xl font-bold mb-6">六个核心理由</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {reasons.map(({ title, desc }) => (
+          <div class="rounded-xl border border-gray-200 bg-white p-6">
+            <h3 class="font-semibold text-lg mb-2">{title}</h3>
+            <p class="text-sm text-gray-600 leading-relaxed">{desc}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">诚实地说，也有一些门槛</h2>
+      <ul class="space-y-3 text-gray-700 leading-relaxed">
+        <li><strong>部分专有软件没有 Linux 版</strong>：比如部分设计、网银插件，需要找替代品或使用网页版，见<a href="/alternatives" class="no-underline">替代方案</a>。</li>
+        <li><strong>学习成本</strong>：命令行和包管理器是「新语言」，不过日常使用并不需要精通，遇到问题社区有大量中文资料。</li>
+        <li><strong>游戏兼容</strong>：多数游戏可通过 Steam 直接玩，但少数反作弊类游戏不支持 Linux，购机前建议查询兼容性。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-6">看看你是否属于这些场景</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {scenarios.map(({ label, desc, href }) => (
+          <a href={href} class="block rounded-xl border border-gray-200 bg-white p-6 hover:shadow-md transition-shadow no-underline">
+            <h3 class="font-semibold text-gray-900 mb-2">{label}</h3>
+            <p class="text-sm text-gray-600">{desc}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="rounded-xl bg-gray-900 text-white p-6 md:p-8">
+      <h2 class="text-xl font-bold mb-3">想试试？先用零风险的方式</h2>
+      <p class="text-gray-300 mb-5">
+        不需要立刻重装系统。推荐先装虚拟机或制作 U 盘启动盘体验，觉得合适再考虑正式安装。
+      </p>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <a href="/try/virtualbox" class="rounded-lg bg-primary px-5 py-2.5 font-medium text-white no-underline hover:bg-primary/90 transition-colors">虚拟机体验</a>
+        <a href="/try/install" class="rounded-lg border border-white/30 px-5 py-2.5 font-medium text-white no-underline hover:bg-white/10 transition-colors">Live USB 体验</a>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

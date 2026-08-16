@@ -1,11 +1,51 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Hero from '@/components/Hero.astro';
 ---
+<BaseLayout>
+  <Hero
+    title="重新认识你的电脑，从 Linux 开始"
+    subtitle="Linux 是一个自由、开源、安全的操作系统选择。无论你是普通用户、学生、开发者，还是企业团队，都可以在这里找到适合自己的入门路径。"
+    ctaText="开始了解 Linux"
+    ctaLink="/what-is-linux"
+    secondaryText="选择适合你的发行版"
+    secondaryLink="/distros"
+    features={[
+      { title: '免费开源', desc: '无授权费用，可自由修改和分发' },
+      { title: '安全可靠', desc: '权限严格、病毒极少、社区及时修复漏洞' },
+      { title: '可定制', desc: '根据需求自由配置桌面环境和工具' },
+      { title: '适合开发', desc: '强大的终端、包管理器和容器支持' },
+    ]}
+  />
 
-<Layout>
-	<Welcome />
-</Layout>
+  <section class="max-w-7xl mx-auto px-4 py-16">
+    <h2 class="text-2xl md:text-3xl font-bold mb-8 text-center">从入门到 AI 部署，一站式路径</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <a href="/paths" class="block rounded-xl border border-gray-200 bg-white p-6 hover:shadow-md transition-shadow no-underline">
+        <h3 class="font-semibold text-gray-900 mb-2">Linux 入门路径</h3>
+        <p class="text-sm text-gray-600">从零开始了解 Linux，选择发行版并在虚拟机或 U 盘中完成第一次安装。</p>
+      </a>
+      <a href="/paths" class="block rounded-xl border border-gray-200 bg-white p-6 hover:shadow-md transition-shadow no-underline">
+        <h3 class="font-semibold text-gray-900 mb-2">AI 部署路径</h3>
+        <p class="text-sm text-gray-600">在 Linux 上部署 Ollama、Stable Diffusion 等本地 AI 工具，从命令行到生产环境。</p>
+      </a>
+      <a href="/paths" class="block rounded-xl border border-gray-200 bg-white p-6 hover:shadow-md transition-shadow no-underline">
+        <h3 class="font-semibold text-gray-900 mb-2">工具评测路径</h3>
+        <p class="text-sm text-gray-600">Docker、Kubernetes、GPU 驱动与云服务器选型，只讲对 AI 开发有用的部分。</p>
+      </a>
+    </div>
+  </section>
+
+  <section class="bg-white border-y border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 py-16 text-center">
+      <h2 class="text-2xl md:text-3xl font-bold mb-4">Windows / macOS 迁移到 Linux？</h2>
+      <p class="text-gray-600 max-w-2xl mx-auto mb-8">
+        担心兼容性？我们整理了常用软件的 Linux 替代方案，并给出无风险的尝试方式：
+        先虚拟机，再 U 盘，最后才考虑安装到电脑。
+      </p>
+      <a href="/alternatives" class="inline-block rounded-lg bg-primary px-6 py-3 font-medium text-white no-underline hover:bg-primary/90 transition-colors">
+        查看软件替代方案
+      </a>
+    </div>
+  </section>
+</BaseLayout>

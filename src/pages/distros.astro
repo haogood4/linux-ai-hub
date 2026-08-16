@@ -1,0 +1,162 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+
+const distros = [
+  {
+    name: 'Ubuntu',
+    tag: '最流行、生态最全',
+    positioning: '基于 Debian 的主流发行版，软件生态和中文资料最丰富',
+    audience: '新手首选；几乎所有官方教程的默认平台',
+    difficulty: '低',
+    desktop: 'GNOME（默认）',
+    stability: '高（LTS 版 5 年支持）',
+    update: 'LTS 每 2 年 / 常规版每 6 个月',
+    reason: '遇到问题最容易被搜到解决方案，AI 工具（Ollama、Docker）官方支持最好',
+    url: 'https://ubuntu.com/download/desktop',
+  },
+  {
+    name: 'Linux Mint',
+    tag: '最像 Windows 的桌面',
+    positioning: '基于 Ubuntu，桌面（Cinnamon）对老用户更友好',
+    audience: '从 Windows 迁移的用户、想要传统任务栏体验的人',
+    difficulty: '低',
+    desktop: 'Cinnamon（默认）',
+    stability: '高（基于 Ubuntu LTS）',
+    update: '跟随 Ubuntu LTS',
+    reason: '上手几乎没有适应成本，预装常用软件，适合作为「离开 Windows 的第一步」',
+    url: 'https://linuxmint.com/download.php',
+  },
+  {
+    name: 'Fedora',
+    tag: '技术尝鲜、接近上游',
+    positioning: 'Red Hat 的上游社区版，新特性来得早',
+    audience: '想体验新技术、愿意偶尔折腾的开发者',
+    difficulty: '中',
+    desktop: 'GNOME（默认）',
+    stability: '中高',
+    update: '每 6 个月大版本',
+    reason: '内核与工具链新，AI 开发工具跟进快，适合开发者日常使用',
+    url: 'https://fedoraproject.org/workstation/download',
+  },
+  {
+    name: 'Arch Linux',
+    tag: '滚动更新、完全掌控',
+    positioning: '极简起点 + 滚动更新，一切由你组装',
+    audience: '想要完全掌控系统、愿意阅读文档的学习者',
+    difficulty: '高',
+    desktop: '自选（可装任意桌面）',
+    stability: '中（需自己维护）',
+    update: '持续滚动更新',
+    reason: '官方 Wiki 极详尽，学到的东西最多；不适合想「开箱即用」的用户',
+    url: 'https://archlinux.org/download/',
+  },
+  {
+    name: 'Debian',
+    tag: '稳定到极致',
+    positioning: 'Ubuntu 的根基，社区维护的经典发行版',
+    audience: '追求稳定、倾向「装一次用很多年」的用户与服务器管理员',
+    difficulty: '中',
+    desktop: '自选（安装器可选）',
+    stability: '极高',
+    update: '约每 2-3 年大版本',
+    reason: '软件相对保守但极其稳定，很多服务器长期运行 Debian',
+    url: 'https://www.debian.org/distrib/',
+  },
+  {
+    name: 'Rocky Linux / AlmaLinux',
+    tag: '服务器与企业',
+    positioning: 'RHEL 的免费兼容替代（Rocky 与 Alma 二选一即可）',
+    audience: '企业服务器、需要 RHEL 兼容环境的运维',
+    difficulty: '中',
+    desktop: 'GNOME（可装）',
+    stability: '极高',
+    update: '跟随 RHEL 生命周期',
+    reason: '与 Red Hat 企业版兼容，证书考试、企业运维环境常用',
+    url: 'https://rockylinux.org/download',
+  },
+];
+
+const compare = {
+  header: ['发行版', '适合人群', '难度', '更新频率', '稳定性'],
+  rows: [
+    ['Ubuntu', '新手 / 开发者 / AI 实践', '低', 'LTS 2 年', '高'],
+    ['Linux Mint', 'Windows 迁移用户', '低', 'LTS 2 年', '高'],
+    ['Fedora', '技术尝鲜开发者', '中', '6 个月', '中高'],
+    ['Arch Linux', '进阶学习者', '高', '滚动', '中'],
+    ['Debian', '稳定性优先', '中', '2-3 年', '极高'],
+    ['Rocky / Alma', '企业服务器', '中', 'RHEL 周期', '极高'],
+  ],
+};
+---
+<BaseLayout
+  title="Linux 发行版推荐：哪个适合你？| Linux AI Hub"
+  description="Ubuntu、Linux Mint、Fedora、Arch、Debian、Rocky 六大发行版横向对比：定位、适合人群、难度、稳定性与推荐理由。"
+>
+  <PageHeader
+    breadcrumb="入门指南"
+    title="发行版推荐"
+    subtitle="发行版（Distribution）就是「打包好的 Linux 系统」。选哪个取决于你的目标和经验，没有绝对最好，只有最合适。"
+  />
+
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="space-y-6">
+      {distros.map((d) => (
+        <article class="rounded-xl border border-gray-200 bg-white p-6 md:p-8">
+          <div class="flex flex-wrap items-center gap-3 mb-2">
+            <h2 class="text-xl font-bold text-gray-900">{d.name}</h2>
+            <span class="rounded-full bg-blue-50 text-primary px-3 py-1 text-xs font-medium">{d.tag}</span>
+          </div>
+          <p class="text-gray-700 leading-relaxed mb-4">{d.positioning}</p>
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm mb-4">
+            <div><dt class="text-gray-500 inline">适合人群：</dt><dd class="inline text-gray-800">{d.audience}</dd></div>
+            <div><dt class="text-gray-500 inline">上手难度：</dt><dd class="inline text-gray-800">{d.difficulty}</dd></div>
+            <div><dt class="text-gray-500 inline">桌面环境：</dt><dd class="inline text-gray-800">{d.desktop}</dd></div>
+            <div><dt class="text-gray-500 inline">稳定性：</dt><dd class="inline text-gray-800">{d.stability}</dd></div>
+            <div><dt class="text-gray-500 inline">更新频率：</dt><dd class="inline text-gray-800">{d.update}</dd></div>
+          </dl>
+          <p class="text-sm text-gray-600 mb-4"><strong class="text-gray-800">推荐理由：</strong>{d.reason}</p>
+          <a href={d.url} target="_blank" rel="noopener noreferrer" class="inline-block rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white no-underline hover:bg-primary/90 transition-colors">
+            访问官网
+          </a>
+        </article>
+      ))}
+    </div>
+
+    <section class="mt-12">
+      <h2 class="text-2xl font-bold mb-6">快速对比</h2>
+      <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+        <table class="min-w-full text-sm">
+          <caption class="sr-only">六大发行版快速对比表</caption>
+          <thead>
+            <tr class="border-b border-gray-200 bg-gray-50 text-left">
+              {compare.header.map((h) => (
+                <th scope="col" class="px-4 py-3 font-semibold text-gray-700 whitespace-nowrap">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {compare.rows.map((row, i) => (
+              <tr class={i % 2 === 0 ? 'border-b border-gray-100' : 'border-b border-gray-100 bg-gray-50/50'}>
+                {row.map((cell, j) => (
+                  <td class={`px-4 py-3 text-gray-700 ${j === 0 ? 'font-medium text-gray-900 whitespace-nowrap' : ''}`}>{cell}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="text-sm text-gray-500 mt-3">
+        注：稳定性为相对评估。数据仅供选型参考，具体以各发行版官方文档为准。
+      </p>
+    </section>
+
+    <section class="mt-12 rounded-xl bg-gray-900 text-white p-6 md:p-8">
+      <h2 class="text-xl font-bold mb-3">不确定选哪个？</h2>
+      <p class="text-gray-300 mb-5">回答几个小问题，帮你缩小范围。</p>
+      <a href="/distros/picker" class="inline-block rounded-lg bg-primary px-5 py-2.5 font-medium text-white no-underline hover:bg-primary/90 transition-colors">
+        打开发行版选择器
+      </a>
+    </section>
+  </div>
+</BaseLayout>

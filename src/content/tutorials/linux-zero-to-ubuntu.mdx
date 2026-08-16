@@ -1,0 +1,114 @@
+---
+title: 《Linux 零基础入门：在虚拟机/U盘上安装 Ubuntu 22.04》
+slug: linux-zero-to-ubuntu
+author: Linux AI Hub
+date: 2026-08-16
+tags: [linux, ubuntu, 入门]
+estimatedReadTime: 25
+environment: [虚拟机, U盘]
+---
+# Linux 零基础入门：在虚拟机/U盘上安装 Ubuntu 22.04
+
+## 写在前面
+
+Linux 是一个自由、开源的操作系统，广泛应用于服务器、开发环境以及个人桌面。对于从未使用过 Linux 的用户，通过虚拟机或 U 盘安装是最安全、最不具风险的尝试方式。
+
+## 前期准备
+
+### 1. 下载 Ubuntu 22.04 镜像
+- 官方网站：https://ubuntu.com/download/desktop
+- 选择 `amd64` 架构的 ISO 文件
+- 推荐下载 Ubuntu 22.04 LTS（长期支持版）
+
+### 2. 制作启动盘
+
+#### 方法 A：使用 U 盘
+- 最低 2GB 容量的 U 盘（建议 4GB 以上，数据会被抹除）
+- 软件：[Rufus](https://rufus.ie/)（Windows）或 [balenaEtcher](https://www.balena.io/etcher/)（跨平台）
+
+**使用 Rufus 的步骤：**
+1. 插入 U 盘，备份重要数据
+2. 打开 Rufus，选择 U 盘设备
+3. 点击 "选择"，下载的 Ubuntu ISO 文件
+4. 分区 scheme：`MBR`（大多数老机器）或 `GPT`（新机器）
+5. 目标系统类型：`BIE` 或 `UEFI`（取决于你的电脑）
+6. 点击 "开始"，确认数据抹除
+
+#### 方法 B：使用虚拟机
+- 软件：[VirtualBox](https://www.virtualbox.org/) 或 [VMware Player](https://www.vmware.com/products/player)
+- 创建新虚拟机，选择下载的 ISO 文件
+- 分配至少 4GB 内存和 20GB 磁盘空间
+
+## 分区建议
+
+### 在 U 盘上安装（Live USB 模式）
+- **不需要分区**：直接使用 U 盘作为启动盘，选 "Try Ubuntu" 而非 "Install Ubuntu"
+- **优点**：无需改动电脑内部设置，随时移除即可
+- **缺点**：性能受限于 U 盘读写速度
+
+### 在虚拟机中安装
+- 建议分配：`20GB` 磁盘空间，`动态分配`
+- 分区布局建议：
+  - `/boot/efi` : 512MB (仅 UEFI 模式)
+  - `/` (root) : 剩余空间， ext4 格式
+  - [交换空间] : 等于内存大小或 4GB (视需求而定)
+
+## 第一步：启动
+
+1. 插入 U 盘或启动虚拟机
+2. 进入 BIOS/UEFI 设置（通常按 `F2`, `F12`, `Del` 或 `Esc` 进入）
+3. 将 U 盘或虚拟机硬盘设置为第一启动设备
+4. 保存并退出 BIOS
+
+## 第二步：尝试或安装
+
+### 选择 "Try Ubuntu"
+- 在 GRUB 菜单中选择第一项 "Try Ubuntu without installing"
+- 这将启动一个临时的 Ubuntu 环境，不会改动你的电脑
+
+### 验证硬件兼容性
+- 打开 "设置" → "详细信息"，检查显卡、处理器、内存
+- 浏览器、播放器、文件管理器均可正常使用
+- 如果出现显卡驱动问题，请参考后文
+
+## 第三步：安装 Ubuntu (可选)
+
+如果你决定永久安装：
+
+1. 从 "Try Ubuntu" 桌面点击 "安装 Ubuntu" 图标
+2. 选择语言和键盘布局
+3. 网络连接：建议连接 Wi-Fi 以便下载更新
+4. **安装类型**：
+   - **“与磁盘双系统”**：在现有 Windows 的基础上安装 Linux，双系统启动
+   - **"抹除磁盘并安装 Ubuntu"**：完全替换操作系统
+   - **"自定义分区"**：手动配置分区（推荐有经验的用户）
+5. 创建用户名和密码
+6. 点击 "继续" 开始安装（约 10-20 分钟）
+
+## 完成后
+
+- 重启电脑，移除 U 盘
+- 你应该能看到 GRUB 菜单，选择 "Ubuntu" 进入 Linux 系统
+- 第一次登录可能需要下载和安装剩余的更新
+
+## 常见问题
+
+### 1. 启动进不去 GRUB 界面
+- 确保 BIOS/UEFI 正确设置启动顺序
+- 如果是 UEFI 模式，确保 ISO 是通过 Rufus 的 "DD Image" 模式或 "ISO Image" 模式写入的
+
+### 2. 黑屏或无法进入桌面
+- 可能是显卡驱动冲突
+- 在启动时按 `e` 编辑引导参数，添加 `nomodeset` 临时解决
+- 安装完成后再安装官方驱动
+
+### 3. 网络连接失败
+- Wi-Fi 需要在顶部网络图标中手动连接
+- 有线连接通常自动工作
+
+## 后续学习
+
+安装成功后，建议阅读以下教程：
+- [SSH 远程连接与安全加固](@/tutorials/ssh-security.md)
+- [Linux 文件权限与用户管理](@/tutorials/file-permissions.md)
+- [Docker 基础：核心概念与常用命令](@/tutorials/docker-basics.md)

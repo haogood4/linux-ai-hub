@@ -1,0 +1,92 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+---
+<BaseLayout
+  title="Linux 是什么？给零基础用户的入门解释 | Linux AI Hub"
+  description="用最简单的方式解释 Linux：什么是内核、什么是发行版，为什么它免费开源，以及它和 Windows、macOS 有什么不同。"
+>
+  <PageHeader
+    breadcrumb="入门指南"
+    title="Linux 是什么？"
+    subtitle="一个免费、开源的操作系统家族，从手机到服务器，从树莓派到超算都能看到它的身影。"
+  />
+
+  <div class="max-w-4xl mx-auto px-4 py-12 space-y-12">
+    <section>
+      <h2 class="text-2xl font-bold mb-4">一句话版本</h2>
+      <p class="text-gray-700 leading-relaxed">
+        Linux 是一个<strong>操作系统</strong>（管理电脑硬件和软件的程序），和 Windows、macOS
+        属于同一类东西。不同的是，Linux
+        的源代码是公开的，任何人都可以免费下载、使用、修改和分发，这就是「<strong>开源</strong>」的含义。
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">内核与发行版：两个容易混淆的概念</h2>
+      <p class="text-gray-700 leading-relaxed mb-4">
+        严格来说，「Linux」指的是一个<strong>内核</strong>——操作系统最核心的部分，负责管理内存、进程和硬件设备。光有内核没法直接用，所以社区把内核和桌面界面、软件工具、包管理器打包在一起，做成可以直接安装使用的完整系统，称为<strong>发行版</strong>（Distribution）。
+      </p>
+      <div class="rounded-xl border border-gray-200 bg-white p-6">
+        <p class="text-sm text-gray-600 mb-3">
+          举个例子：Ubuntu、Linux Mint、Fedora、Debian、Arch Linux 都是发行版——它们共用 Linux
+          内核，但桌面体验、软件来源和更新方式各不相同。
+        </p>
+        <a href="/distros" class="inline-block rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white no-underline hover:bg-primary/90 transition-colors">
+          查看发行版推荐
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">Linux 常见用途</h2>
+      <ul class="space-y-3 text-gray-700 leading-relaxed">
+        <li><strong>服务器</strong>：互联网上绝大多数网站和云服务运行在 Linux 上。你的手机 App 背后，很可能就是一台 Linux 服务器。</li>
+        <li><strong>开发环境</strong>：编程工具、命令行、容器（Docker）对 Linux 的支持最完整，很多开发者日常使用 Linux 写代码。</li>
+        <li><strong>AI 部署</strong>：大模型推理、训练框架（如 PyTorch、TensorFlow）官方优先支持 Linux，GPU 驱动与容器方案在 Linux 上最成熟。</li>
+        <li><strong>个人桌面</strong>：日常上网、办公、影音完全可用，部分老旧电脑用 Linux 反而更流畅。</li>
+        <li><strong>嵌入式与物联网</strong>：路由器、电视盒子、树莓派、Android 手机底层都是 Linux。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">常见误区</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="rounded-xl border border-gray-200 bg-white p-5">
+          <h3 class="font-semibold mb-2">误区一：Linux 只给程序员用</h3>
+          <p class="text-sm text-gray-600">
+            现代发行版安装后即用：浏览器、办公软件、影音、输入法一应俱全，普通用户也能正常使用。
+          </p>
+        </div>
+        <div class="rounded-xl border border-gray-200 bg-white p-5">
+          <h3 class="font-semibold mb-2">误区二：Linux 就是命令行</h3>
+          <p class="text-sm text-gray-600">
+            命令行只是 Linux 的优势之一，桌面环境（图形界面）同样成熟美观，命令行可以按需学习。
+          </p>
+        </div>
+        <div class="rounded-xl border border-gray-200 bg-white p-5">
+          <h3 class="font-semibold mb-2">误区三：软件都不兼容</h3>
+          <p class="text-sm text-gray-600">
+            常用软件大多有 Linux 版本，游戏（Steam/Proton）、办公、设计工具支持越来越好。部分专有软件确实没有 Linux 版，可以看
+            <a href="/alternatives" class="no-underline">替代方案页</a>。
+          </p>
+        </div>
+        <div class="rounded-xl border border-gray-200 bg-white p-5">
+          <h3 class="font-semibold mb-2">误区四：Linux 很难装</h3>
+          <p class="text-sm text-gray-600">
+            安装过程比 Windows 更简单直观。而且可以先用虚拟机或 U 盘体验，完全不影响现有系统，详见<a href="/try/install" class="no-underline">安装指南</a>。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="rounded-xl bg-gray-900 text-white p-6 md:p-8">
+      <h2 class="text-xl font-bold mb-3">下一步</h2>
+      <p class="text-gray-300 mb-5">了解了 Linux 是什么之后，看看它为什么值得尝试，以及哪个发行版适合你。</p>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <a href="/why-linux" class="rounded-lg bg-primary px-5 py-2.5 font-medium text-white no-underline hover:bg-primary/90 transition-colors">为什么选择 Linux</a>
+        <a href="/distros" class="rounded-lg border border-white/30 px-5 py-2.5 font-medium text-white no-underline hover:bg-white/10 transition-colors">发行版推荐</a>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

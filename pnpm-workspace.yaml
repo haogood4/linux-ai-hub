@@ -1,3 +1,11 @@
+packages:
+  - .
+verifyDepsBeforeRun: false
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+overrides:
+  vite: 5.4.8
 allowBuilds:
-  esbuild: true
-  sharp: true
+  esbuild: set this to true or false
+  sharp: set this to true or false
