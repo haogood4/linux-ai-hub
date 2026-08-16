@@ -36,13 +36,13 @@ const distroMeta = {
 };
 ---
 <BaseLayout
-  title="发行版选择器：3 个问题找到适合你的 Linux | TuxAI"
-  description="回答 3 个小问题，从 Ubuntu、Linux Mint、Fedora、Arch、Debian、Rocky 中找到适合你的发行版。"
+  title="发行版选择器：5 个问题找到适合你的 Linux | TuxAI"
+  description="回答 5 个小问题，从 Ubuntu、Linux Mint、Fedora、Arch、Debian、Rocky 中找到适合你的发行版。"
 >
   <PageHeader
     breadcrumb="发行版"
     title="发行版选择器"
-    subtitle="回答三个小问题，帮你缩小选择范围。没有绝对最好的发行版，只有最适合你的。"
+    subtitle="回答五个小问题，帮你缩小选择范围。没有绝对最好的发行版，只有最适合你的。"
   />
 
   <div class="max-w-3xl mx-auto px-4 py-12">
@@ -113,6 +113,42 @@ const distroMeta = {
         </div>
       </fieldset>
 
+      <fieldset class="rounded-xl border border-gray-200 bg-white p-6">
+        <legend class="font-semibold text-gray-900 px-1">4. 你的电脑显卡是什么情况？</legend>
+        <div class="mt-4 space-y-3">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="radio" name="gpu" value="integrated" class="mt-1 accent-blue-600" />
+            <span><strong>集成显卡（或不确定）</strong><span class="block text-sm text-gray-600">办公上网足够，不跑大型 AI 模型</span></span>
+          </label>
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="radio" name="gpu" value="nvidia" class="mt-1 accent-blue-600" />
+            <span><strong>NVIDIA 独立显卡</strong><span class="block text-sm text-gray-600">CUDA 生态，AI 推理主流选择</span></span>
+          </label>
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="radio" name="gpu" value="amd" class="mt-1 accent-blue-600" />
+            <span><strong>AMD 独立显卡</strong><span class="block text-sm text-gray-600">开源驱动，Linux 下开箱即用</span></span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="rounded-xl border border-gray-200 bg-white p-6">
+        <legend class="font-semibold text-gray-900 px-1">5. 你之前主要用什么系统？</legend>
+        <div class="mt-4 space-y-3">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="radio" name="origin" value="windows" class="mt-1 accent-blue-600" />
+            <span><strong>Windows</strong><span class="block text-sm text-gray-600">习惯了开始菜单、右键和图形安装包</span></span>
+          </label>
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="radio" name="origin" value="mac" class="mt-1 accent-blue-600" />
+            <span><strong>macOS</strong><span class="block text-sm text-gray-600">熟悉终端和类 Unix 环境</span></span>
+          </label>
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="radio" name="origin" value="none" class="mt-1 accent-blue-600" />
+            <span><strong>几乎没接触过其他系统</strong><span class="block text-sm text-gray-600">手机用得多，电脑用得少</span></span>
+          </label>
+        </div>
+      </fieldset>
+
       <div class="flex flex-col sm:flex-row gap-3">
         <button type="submit" class="rounded-lg bg-primary px-6 py-3 font-medium text-white hover:bg-primary/90 transition-colors">
           查看推荐
@@ -128,13 +164,36 @@ const distroMeta = {
 </BaseLayout>
 
 <script is:inline define:vars={{ distroMeta }}>
-  const rules = {
-    desktop: { new: { stable: 'mint', new: 'fedora', control: 'mint' }, some: { stable: 'mint', new: 'fedora', control: 'ubuntu' }, expert: { stable: 'debian', new: 'arch', control: 'arch' } },
-    dev: { new: { stable: 'ubuntu', new: 'fedora', control: 'ubuntu' }, some: { stable: 'ubuntu', new: 'fedora', control: 'arch' }, expert: { stable: 'debian', new: 'arch', control: 'arch' } },
-    ai: { new: { stable: 'ubuntu', new: 'fedora', control: 'ubuntu' }, some: { stable: 'ubuntu', new: 'fedora', control: 'arch' }, expert: { stable: 'ubuntu', new: 'fedora', control: 'arch' } },
-    server: { new: { stable: 'ubuntu', new: 'ubuntu', control: 'ubuntu' }, some: { stable: 'debian', new: 'rocky', control: 'debian' }, expert: { stable: 'debian', new: 'rocky', control: 'arch' } },
-    old: { new: { stable: 'mint', new: 'mint', control: 'mint' }, some: { stable: 'mint', new: 'mint', control: 'ubuntu' }, expert: { stable: 'debian', new: 'arch', control: 'arch' } },
+  const weights = {
+    purpose: {
+      desktop: { mint: 2, ubuntu: 1, fedora: 1, debian: 1, arch: 0, rocky: 0 },
+      dev: { ubuntu: 2, arch: 2, fedora: 1, debian: 1, mint: 0, rocky: 0 },
+      ai: { ubuntu: 3, fedora: 1, arch: 1, mint: 0, debian: 0, rocky: 0 },
+      server: { debian: 2, rocky: 2, ubuntu: 1, mint: 0, fedora: 0, arch: -1 },
+      old: { mint: 2, debian: 1, ubuntu: 1, fedora: 0, rocky: 0, arch: -1 },
+    },
+    experience: {
+      new: { mint: 2, ubuntu: 1, debian: 0, fedora: 0, rocky: -1, arch: -2 },
+      some: { ubuntu: 1, fedora: 1, mint: 1, debian: 0, arch: 0, rocky: 0 },
+      expert: { arch: 2, debian: 1, fedora: 1, rocky: 1, ubuntu: 0, mint: -1 },
+    },
+    preference: {
+      stable: { debian: 2, mint: 1, rocky: 1, ubuntu: 1, fedora: -1, arch: -2 },
+      new: { fedora: 2, arch: 1, ubuntu: 0, rocky: 0, mint: -1, debian: -1 },
+      control: { arch: 2, debian: 1, fedora: 0, rocky: 0, ubuntu: -1, mint: -1 },
+    },
+    gpu: {
+      integrated: { ubuntu: 0, mint: 0, fedora: 0, arch: 0, debian: 0, rocky: 0 },
+      nvidia: { ubuntu: 2, mint: 1, fedora: 0, rocky: 0, debian: -1, arch: -1 },
+      amd: { fedora: 1, ubuntu: 1, mint: 0, arch: 0, debian: 0, rocky: 0 },
+    },
+    origin: {
+      windows: { mint: 2, ubuntu: 1, debian: 0, fedora: 0, rocky: -1, arch: -1 },
+      mac: { ubuntu: 1, fedora: 1, arch: 1, mint: 0, debian: 0, rocky: 0 },
+      none: { mint: 2, ubuntu: 1, debian: 1, fedora: 0, rocky: 0, arch: -1 },
+    },
   };
+  const order = ['ubuntu', 'mint', 'fedora', 'arch', 'debian', 'rocky'];
   const meta = distroMeta;
   const form = document.querySelector('[data-picker]');
   const result = document.querySelector('[data-result]');
@@ -142,15 +201,13 @@ const distroMeta = {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const fd = new FormData(form);
-      const purpose = fd.get('purpose');
-      const experience = fd.get('experience');
-      const preference = fd.get('preference');
-      if (!purpose || !experience || !preference) {
-        result.innerHTML = '<p class="rounded-lg bg-amber-50 border border-amber-200 text-amber-800 p-4 text-sm">请先完成三个问题的选择。</p>';
+      const answers = { purpose: fd.get('purpose'), experience: fd.get('experience'), preference: fd.get('preference'), gpu: fd.get('gpu'), origin: fd.get('origin') };
+      if (Object.values(answers).some((v) => !v)) {
+        result.innerHTML = '<p class="rounded-lg bg-amber-50 border border-amber-200 text-amber-800 p-4 text-sm">请先完成五个问题的选择。</p>';
         result.classList.remove('hidden');
         return;
       }
-      if (purpose === 'gaming') {
+      if (answers.purpose === 'gaming') {
         result.innerHTML =
           `<div class="rounded-xl border-2 border-red-300 bg-red-50 p-6 md:p-8">` +
           `<p class="text-sm font-medium text-red-700 mb-2">🚫 暂时不建议换 Linux</p>` +
@@ -166,18 +223,32 @@ const distroMeta = {
         result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         return;
       }
-      const key = rules[purpose]?.[experience]?.[preference];
-      const d = meta[key];
+      const scores = {};
+      for (const key of order) scores[key] = 0;
+      for (const [dim, answer] of Object.entries(answers)) {
+        const dimW = weights[dim]?.[answer];
+        if (!dimW) continue;
+        for (const key of order) scores[key] += dimW[key] ?? 0;
+      }
+      const ranked = order.slice().sort((a, b) => scores[b] - scores[a]);
+      const top = ranked[0];
+      const runnerUp = ranked.find((k) => k !== top && scores[k] === scores[top]) ?? ranked[1];
+      const d = meta[top];
+      const r = meta[runnerUp];
       if (!d) {
         result.innerHTML = '<p class="rounded-lg bg-amber-50 border border-amber-200 text-amber-800 p-4 text-sm">暂时没有匹配结果，建议从 Ubuntu 开始。</p>';
         result.classList.remove('hidden');
         return;
       }
+      const tieNote = scores[runnerUp] === scores[top]
+        ? `<p class="text-sm text-gray-600 mb-4">「${r.name}」和它得分相同，看个人喜好即可。</p>`
+        : `<p class="text-sm text-gray-600 mb-4">备选：<a href="${r.url}" class="underline">${r.name}</a>（紧随其后）。</p>`;
       result.innerHTML =
         `<div class="rounded-xl border border-gray-200 bg-white p-6 md:p-8">` +
         `<p class="text-sm text-gray-500 mb-2">根据你的回答，推荐：</p>` +
         `<h2 class="text-2xl font-bold text-gray-900 mb-2">${d.name}</h2>` +
-        `<p class="text-gray-600 mb-4">${d.desc}</p>` +
+        `<p class="text-gray-600 mb-2">${d.desc}</p>` +
+        tieNote +
         `<a href="${d.url}" class="inline-block rounded-lg bg-primary px-5 py-2.5 font-medium text-white no-underline hover:bg-primary/90 transition-colors">了解 ${d.name} 更多</a>` +
         `</div>`;
       result.classList.remove('hidden');
