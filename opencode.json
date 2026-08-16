@@ -10,7 +10,7 @@
       "git fetch*": "allow",
       "git add*": "allow",
       "git commit*": "allow",
-      "git push*": "ask"
+      "git push*": "allow"
     }
   }
 }
