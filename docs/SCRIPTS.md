@@ -8,6 +8,8 @@
 |------|------|------|------|
 | `audit-completion.mjs` | `pnpm check:completion` / `pnpm check:completion:json` | 完成度核查：页面数、集合条目、构建产物、sitemap 收录、安装页备份风险提示覆盖 | 人类可读 / JSON |
 | `check-links.mjs` | `pnpm check:links` / `pnpm check:links:json` | 死链检查：扫描 dist/ HTML 产物的站内链接（a/img/link），站外链接仅报告不请求 | 人类可读 / JSON |
+| `check-distros.mjs` | `pnpm check:distros` / `check:distros:json` / `check:distros:live` | 发行版核查：frontmatter 完整性、详情页构建产物、官方 URL 格式；`--check-live` 联网 HEAD 验证官方链接可达性 | 人类可读 / JSON |
+| `inject-version.mjs` | `pnpm build:inject-version` | 构建版本注入：生成 dist/version.json（含构建时间），并注入 `meta generator` 到 dist/index.html（幂等） | 人类可读 / JSON |
 
 ## 注意事项
 
@@ -17,4 +19,7 @@
 
 ## 规划中（未实现）
 
-AGENTS.md §16 表格中的 `release-prep.mjs`、`check-a11y.mjs`、`check-lhci.mjs`、`check-distros.mjs`、`inject-version.mjs` 尚未实现。落地顺序建议：`check-distros.mjs`（发行版 URL 可达性）→ `inject-version.mjs`（构建版本注入）→ 其余随 CI/上线推进。
+AGENTS.md §16 表格中的 `release-prep.mjs`、`check-a11y.mjs`、`check-lhci.mjs` 尚未实现。落地前提：
+- `check-lhci.mjs` 依赖 Lighthouse CI 环境（需引入依赖，与「零外部依赖」约束冲突），随 CI 上线推进
+- `release-prep.mjs` 依赖版本管理流程（changelog / tag 策略）确认后实现
+- `check-a11y.mjs` 的对比度等视觉项无法在纯静态脚本中自动验证，建议随 Playwright 审计环境落地

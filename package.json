@@ -13,7 +13,11 @@
     "check:completion": "node src/scripts/audit-completion.mjs",
     "check:completion:json": "node src/scripts/audit-completion.mjs --json",
     "check:links": "node src/scripts/check-links.mjs",
-    "check:links:json": "node src/scripts/check-links.mjs --json"
+    "check:links:json": "node src/scripts/check-links.mjs --json",
+    "check:distros": "node src/scripts/check-distros.mjs",
+    "check:distros:json": "node src/scripts/check-distros.mjs --json",
+    "check:distros:live": "node src/scripts/check-distros.mjs --check-live",
+    "build:inject-version": "node src/scripts/inject-version.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^3.1.0",
