@@ -1,12 +1,9 @@
 packages:
   - .
 verifyDepsBeforeRun: false
-onlyBuiltDependencies:
-  - esbuild
-  - sharp
+allowBuilds:
+  esbuild: true
+  sharp: true
 overrides:
   vite: 5.4.8
   style-to-js: 2.0.2
-allowBuilds:
-  esbuild: set this to true or false
-  sharp: set this to true or false
