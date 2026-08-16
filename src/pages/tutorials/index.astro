@@ -6,10 +6,28 @@ import { getCollection } from 'astro:content';
 const tutorials = (await getCollection('tutorials')).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
 );
+
+const plannedGroups = [
+  {
+    title: 'AI 推理与服务',
+    items: [
+      { title: 'llama.cpp：CPU/GPU 量化推理', desc: '轻量级推理引擎，量化模型压缩后可在低配机器上运行' },
+      { title: 'vLLM：高吞吐推理服务', desc: '面向多用户并发调用的生产级推理服务' },
+      { title: 'Open WebUI：给 Ollama 加图形界面', desc: '浏览器聊天界面，支持多模型切换与文档上传' },
+    ],
+  },
+  {
+    title: '容器与生图',
+    items: [
+      { title: 'Docker + GPU 容器', desc: '容器化部署 AI 服务，nvidia-container-toolkit 配置' },
+      { title: 'Stable Diffusion 本地生图', desc: '文生图模型部署与常用 WebUI' },
+    ],
+  },
+];
 ---
 <BaseLayout
   title="Linux + AI 教程库 | TuxAI"
-  description="从 Linux 入门到 AI 本地部署的教程合集：安装、命令行、Docker、Ollama、GPU 推理等可复现的实践指南。"
+  description="从 Linux 入门到 AI 本地部署的教程合集：安装、命令行、Ollama、GPU 推理、Docker 等可复现的实践指南。"
 >
   <PageHeader
     breadcrumb="内容"
@@ -17,25 +35,50 @@ const tutorials = (await getCollection('tutorials')).sort(
     subtitle="可跟着做的实践教程：Linux 入门、系统配置、AI 部署与工具链。每篇都有明确的环境要求与操作步骤。"
   />
   <div class="max-w-4xl mx-auto px-4 py-12">
-    {tutorials.length === 0 ? (
-      <p class="text-gray-500">教程整理中，敬请期待。</p>
-    ) : (
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {tutorials.map((t) => (
-          <a href={`/tutorials/${t.slug}`} class="block rounded-xl border border-gray-200 bg-white p-6 hover:shadow-md transition-shadow no-underline">
-            <h2 class="font-semibold text-gray-900 mb-2 leading-snug">{t.data.title}</h2>
-            <p class="text-sm text-gray-600 mb-4">
-              {t.data.tags.map((tag) => (
-                <span class="inline-block rounded-full bg-gray-100 text-gray-600 px-2.5 py-0.5 text-xs mr-1.5 mb-1">{tag}</span>
-              ))}
-            </p>
-            <p class="text-xs text-gray-400">
-              预计阅读 {t.data.estimatedReadTime} 分钟 ·{' '}
-              {t.data.date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
-          </a>
-        ))}
-      </div>
+    {tutorials.length > 0 && (
+      <>
+        <h2 class="text-xl font-bold mb-4">已上线</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {tutorials.map((t) => (
+            <a href={`/tutorials/${t.slug}`} class="block rounded-xl border border-gray-200 bg-white p-6 hover:shadow-md transition-shadow no-underline">
+              <h3 class="font-semibold text-gray-900 mb-2 leading-snug">{t.data.title}</h3>
+              <p class="text-sm text-gray-600 mb-4">
+                {t.data.tags.map((tag) => (
+                  <span class="inline-block rounded-full bg-gray-100 text-gray-600 px-2.5 py-0.5 text-xs mr-1.5 mb-1">{tag}</span>
+                ))}
+              </p>
+              <p class="text-xs text-gray-400">
+                预计阅读 {t.data.estimatedReadTime} 分钟 ·{' '}
+                {t.data.date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
+              </p>
+            </a>
+          ))}
+        </div>
+      </>
     )}
+
+    <h2 class="text-xl font-bold mt-12 mb-4">规划中</h2>
+    <p class="text-sm text-gray-500 mb-6">
+      以下教程已列入计划，内容撰写中，上线后会同步到学习路径。你可以先收藏本站，或到
+      <a href="/community" class="text-primary no-underline hover:underline">社区入口</a> 获取更新。
+    </p>
+    <div class="space-y-8">
+      {plannedGroups.map((g) => (
+        <section>
+          <h3 class="font-semibold text-gray-800 mb-3">{g.title}</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {g.items.map((item) => (
+              <div class="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6" aria-disabled="true">
+                <div class="flex items-start justify-between gap-3 mb-2">
+                  <h4 class="font-medium text-gray-700 leading-snug">{item.title}</h4>
+                  <span class="shrink-0 rounded-full bg-gray-200 text-gray-600 px-2.5 py-0.5 text-xs whitespace-nowrap">规划中</span>
+                </div>
+                <p class="text-sm text-gray-500">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
   </div>
 </BaseLayout>
