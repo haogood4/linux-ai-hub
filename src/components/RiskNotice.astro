@@ -1,0 +1,12 @@
+---
+interface Props {
+  title?: string;
+}
+const { title = '重要提醒' } = Astro.props as Props;
+---
+<div class="rounded-xl border border-red-200 bg-red-50 p-5" role="alert">
+  <h2 class="font-bold text-red-800 mb-2">{title}</h2>
+  <p class="text-sm text-red-700 leading-relaxed">
+    安装系统前，请务必备份重要数据。分区、格式化或安装操作可能导致数据丢失。
+  </p>
+</div>

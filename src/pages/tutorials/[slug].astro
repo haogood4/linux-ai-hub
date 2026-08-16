@@ -1,0 +1,57 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const tutorials = await getCollection('tutorials');
+  return tutorials.map((t) => ({ params: { slug: t.slug }, props: { tutorial: t } }));
+}
+
+const { tutorial } = Astro.props;
+const { Content } = await render(tutorial);
+const { title, tags, estimatedReadTime, date, environment } = tutorial.data;
+---
+<BaseLayout
+  title={`${title} | TuxAI`}
+  description={`${title}——Linux + AI 实践教程。`}
+>
+  <article class="max-w-3xl mx-auto px-4 py-12">
+    <nav aria-label="面包屑" class="text-sm text-gray-500 mb-4">
+      <a href="/" class="hover:text-primary no-underline">首页</a>
+      <span aria-hidden="true"> / </span>
+      <a href="/tutorials" class="hover:text-primary no-underline">教程库</a>
+      <span aria-hidden="true"> / </span>
+      <span class="text-gray-700">{title}</span>
+    </nav>
+
+    <header class="mb-8">
+      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-4">{title}</h1>
+      <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-4">
+        <span>预计阅读 {estimatedReadTime} 分钟</span>
+        <span aria-hidden="true">·</span>
+        <span>{date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+        {environment.length > 0 && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span>环境：{environment.join(' / ')}</span>
+          </>
+        )}
+      </div>
+      <div class="flex flex-wrap gap-1.5">
+        {tags.map((tag) => (
+          <span class="rounded-full bg-gray-100 text-gray-600 px-2.5 py-0.5 text-xs">{tag}</span>
+        ))}
+      </div>
+    </header>
+
+    <div class="prose-linux">
+      <Content />
+    </div>
+
+    <nav aria-label="页尾导航" class="mt-12 border-t border-gray-200 pt-6">
+      <a href="/tutorials" class="inline-block rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 no-underline hover:bg-gray-100 transition-colors">
+        ← 返回教程库
+      </a>
+    </nav>
+  </article>
+</BaseLayout>

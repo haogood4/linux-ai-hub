@@ -1,0 +1,104 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import RiskNotice from '@/components/RiskNotice.astro';
+---
+<BaseLayout
+  title="本机安装 Linux：Live USB 完整指南 | TuxAI"
+  description="从制作 U 盘启动盘到安装 Ubuntu 的分步指南。含备份提醒、BIOS 设置与安装类型选择，零基础可跟做。"
+>
+  <PageHeader
+    breadcrumb="安装指南"
+    title="本机安装：Live USB 指南"
+    subtitle="用 U 盘安装 Linux 到自己的电脑。全程约 1-2 小时，建议先看完再动手。"
+  />
+
+  <div class="max-w-3xl mx-auto px-4 py-12 space-y-10">
+    <RiskNotice />
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">第一步：备份（最重要）</h2>
+      <p class="text-gray-700 leading-relaxed mb-3">
+        无论选择哪种安装方式，先把照片、文档、密码本等一切不想丢失的数据备份到移动硬盘或云盘，并<strong>确认备份能恢复</strong>。如果选择「与 Windows 共存」或「抹除磁盘」安装，操作会直接改写磁盘。
+      </p>
+      <p class="text-gray-700 leading-relaxed">
+        同时建议记录一下当前系统的激活信息或账号，以备回退。
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">第二步：下载 Linux 镜像</h2>
+      <ol class="list-decimal list-inside space-y-2 text-gray-700 leading-relaxed">
+        <li>去 <a href="https://ubuntu.com/download/desktop" target="_blank" rel="noopener noreferrer" class="no-underline">Ubuntu 官网</a>下载桌面版 ISO（新手推荐；官网中文界面友好）。</li>
+        <li>想体验更接近 Windows 的桌面，可下载 <a href="https://linuxmint.com/download.php" target="_blank" rel="noopener noreferrer" class="no-underline">Linux Mint</a>。</li>
+        <li>下载后建议校验 SHA256 哈希（官网会给出校验值），确保文件完整。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">第三步：制作启动 U 盘</h2>
+      <p class="text-gray-700 leading-relaxed mb-3">
+        需要一枚至少 8GB 的 U 盘（<strong>制作过程会清空 U 盘内容</strong>，请勿放入重要文件）。
+      </p>
+      <div class="rounded-xl border border-gray-200 bg-white p-6">
+        <h3 class="font-semibold mb-2">Windows 下推荐 Rufus</h3>
+        <ol class="list-decimal list-inside space-y-1.5 text-sm text-gray-700">
+          <li>从 <a href="https://rufus.ie/" target="_blank" rel="noopener noreferrer" class="no-underline">rufus.ie</a> 下载并打开 Rufus。</li>
+          <li>设备选择你的 U 盘，引导类型选择下载好的 ISO 文件。</li>
+          <li>分区类型：新电脑选 GPT + UEFI；老电脑（2015 年前）选 MBR。</li>
+          <li>点击「开始」，确认警告后等待完成。</li>
+        </ol>
+      </div>
+      <div class="rounded-xl border border-gray-200 bg-white p-6 mt-4">
+        <h3 class="font-semibold mb-2">macOS / 跨平台推荐 balenaEtcher</h3>
+        <ol class="list-decimal list-inside space-y-1.5 text-sm text-gray-700">
+          <li>从 <a href="https://etcher.balena.io/" target="_blank" rel="noopener noreferrer" class="no-underline">etcher.balena.io</a> 下载并打开。</li>
+          <li>依次选择 ISO 文件、U 盘，点击「Flash」。</li>
+        </ol>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">第四步：从 U 盘启动</h2>
+      <ol class="list-decimal list-inside space-y-2 text-gray-700 leading-relaxed">
+        <li>重启电脑，开机时反复按启动菜单键（常见：F12 / F9 / Esc / F11，品牌不同略有差异）。</li>
+        <li>在启动菜单里选择 U 盘（通常显示品牌名或 USB 字样）。</li>
+        <li>看到 GRUB 界面后，选择 <strong>「Try or Install Ubuntu」</strong>。</li>
+        <li>先选 <strong>「Try Ubuntu」</strong>：这是不写入硬盘的临时系统，可以上网、体验、确认硬件兼容，随时拔盘退出，完全无风险。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">第五步：正式安装</h2>
+      <p class="text-gray-700 leading-relaxed mb-3">
+        体验满意后，双击桌面的「安装 Ubuntu」图标：
+      </p>
+      <ol class="list-decimal list-inside space-y-2 text-gray-700 leading-relaxed">
+        <li>选择语言、键盘布局，连接网络（可选，用于下载更新）。</li>
+        <li><strong>安装类型是关键一步</strong>：
+          <ul class="list-disc list-inside ml-4 mt-2 space-y-1">
+            <li>「与 Windows 共存」：自动分区做双系统，见<a href="/try/dual-boot" class="no-underline">双系统指南</a>。</li>
+            <li>「抹除磁盘并安装」：整盘格式化，<strong>此操作会删除磁盘上所有数据</strong>。</li>
+            <li>「手动分区」：高级用户使用。</li>
+          </ul>
+        </li>
+        <li>设置用户名与密码，点击继续，等待约 10-20 分钟完成。</li>
+        <li>重启并拔掉 U 盘，进入全新系统。</li>
+      </ol>
+    </section>
+
+    <section class="rounded-xl border border-gray-200 bg-white p-6">
+      <h2 class="text-lg font-bold mb-3">遇到问题？</h2>
+      <ul class="space-y-2 text-sm text-gray-700">
+        <li><strong>黑屏进不去系统</strong>：开机在 GRUB 菜单按 <code class="bg-gray-100 px-1 rounded">e</code>，在引导参数末尾加 <code class="bg-gray-100 px-1 rounded">nomodeset</code> 后按 F10 启动（显卡驱动临时方案）。</li>
+        <li><strong>Wi-Fi 连不上</strong>：部分网卡需要额外驱动，先插网线更新系统再试。</li>
+        <li><strong>想回退 Windows</strong>：只要没选择「抹除磁盘」，用 Windows 恢复介质修复引导即可；选择抹除则无法回退。</li>
+      </ul>
+    </section>
+
+    <nav aria-label="下一步" class="flex flex-col sm:flex-row gap-3">
+      <a href="/try/virtualbox" class="rounded-lg border border-gray-300 px-5 py-2.5 text-center font-medium text-gray-700 no-underline hover:bg-gray-100 transition-colors">想先零风险体验？看虚拟机指南</a>
+      <a href="/try/dual-boot" class="rounded-lg border border-gray-300 px-5 py-2.5 text-center font-medium text-gray-700 no-underline hover:bg-gray-100 transition-colors">想保留 Windows？看双系统指南</a>
+    </nav>
+  </div>
+</BaseLayout>

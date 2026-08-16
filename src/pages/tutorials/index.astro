@@ -1,0 +1,41 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import { getCollection } from 'astro:content';
+
+const tutorials = (await getCollection('tutorials')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+---
+<BaseLayout
+  title="Linux + AI 教程库 | TuxAI"
+  description="从 Linux 入门到 AI 本地部署的教程合集：安装、命令行、Docker、Ollama、GPU 推理等可复现的实践指南。"
+>
+  <PageHeader
+    breadcrumb="内容"
+    title="教程库"
+    subtitle="可跟着做的实践教程：Linux 入门、系统配置、AI 部署与工具链。每篇都有明确的环境要求与操作步骤。"
+  />
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    {tutorials.length === 0 ? (
+      <p class="text-gray-500">教程整理中，敬请期待。</p>
+    ) : (
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {tutorials.map((t) => (
+          <a href={`/tutorials/${t.slug}`} class="block rounded-xl border border-gray-200 bg-white p-6 hover:shadow-md transition-shadow no-underline">
+            <h2 class="font-semibold text-gray-900 mb-2 leading-snug">{t.data.title}</h2>
+            <p class="text-sm text-gray-600 mb-4">
+              {t.data.tags.map((tag) => (
+                <span class="inline-block rounded-full bg-gray-100 text-gray-600 px-2.5 py-0.5 text-xs mr-1.5 mb-1">{tag}</span>
+              ))}
+            </p>
+            <p class="text-xs text-gray-400">
+              预计阅读 {t.data.estimatedReadTime} 分钟 ·{' '}
+              {t.data.date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+          </a>
+        ))}
+      </div>
+    )}
+  </div>
+</BaseLayout>

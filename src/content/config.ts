@@ -4,8 +4,7 @@ const tutorials = defineCollection({
   type: 'content',
   schema: z.object({
     title: z.string(),
-    slug: z.string(),
-    author: z.string().default('Linux AI Hub'),
+    author: z.string().default('TuxAI'),
     date: z.coerce.date(),
     tags: z.array(z.string()).default([]),
     estimatedReadTime: z.number().int().positive(),

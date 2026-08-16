@@ -1,0 +1,73 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import RiskNotice from '@/components/RiskNotice.astro';
+---
+<BaseLayout
+  title="虚拟机体验 Linux：VirtualBox 完整指南 | TuxAI"
+  description="用 VirtualBox 在 Windows/macOS 里运行 Linux 虚拟机的分步教程：下载、创建虚拟机、安装、快照备份。零风险尝试 Linux。"
+>
+  <PageHeader
+    breadcrumb="安装指南"
+    title="虚拟机体验：VirtualBox 指南"
+    subtitle="在你的系统里开一个「虚拟电脑」运行 Linux，互不影响，随时删除。最适合第一次尝试 Linux 的方式。"
+  />
+
+  <div class="max-w-3xl mx-auto px-4 py-12 space-y-10">
+    <div class="rounded-xl border border-gray-200 bg-white p-5 text-sm text-gray-700">
+      <strong>关于风险：</strong>虚拟机不会改动你现有的系统和磁盘分区，是风险最低的尝试方式。安装虚拟机软件本身请从官网下载，避免第三方打包版本。
+    </div>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">第一步：下载 VirtualBox 与镜像</h2>
+      <ol class="list-decimal list-inside space-y-2 text-gray-700 leading-relaxed">
+        <li>从 <a href="https://www.virtualbox.org/wiki/Downloads" target="_blank" rel="noopener noreferrer" class="no-underline">virtualbox.org</a> 下载对应你系统的安装包（Windows / macOS / Linux 都支持），安装完成后建议同时安装「Extension Pack」（可选，用于 USB 等增强功能）。</li>
+        <li>下载 Linux 镜像：<a href="https://ubuntu.com/download/desktop" target="_blank" rel="noopener noreferrer" class="no-underline">Ubuntu 桌面版 ISO</a>（约 5GB）。</li>
+        <li>硬件要求：至少 8GB 内存的电脑（虚拟机分配 4GB），留出约 25GB 磁盘空间。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">第二步：创建虚拟机</h2>
+      <ol class="list-decimal list-inside space-y-2 text-gray-700 leading-relaxed">
+        <li>打开 VirtualBox，点击「新建」。</li>
+        <li>名称填 <code class="bg-gray-100 px-1 rounded">Ubuntu</code>，类型选 Linux，版本选 Ubuntu (64-bit)。</li>
+        <li>内存分配 <strong>4096MB</strong>（4GB），处理器 2 核。</li>
+        <li>虚拟硬盘：选「现在创建」，大小 <strong>25GB</strong>，类型 VDI，存储方式选「动态分配」（按需增长，不一次性占用）。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">第三步：挂载 ISO 并安装</h2>
+      <ol class="list-decimal list-inside space-y-2 text-gray-700 leading-relaxed">
+        <li>选中虚拟机 → 设置 → 存储 → 光驱位置选择下载的 ISO 文件。</li>
+        <li>点击「启动」，虚拟机内会自动从 ISO 引导。</li>
+        <li>选择「Try or Install Ubuntu」→「Install Ubuntu」，按向导安装（语言、键盘、用户名密码）。</li>
+        <li>安装类型选「抹除磁盘并安装」——这里抹除的是<strong>虚拟硬盘</strong>，不影响你电脑的真实数据。</li>
+        <li>安装完成后重启虚拟机，拔掉虚拟光驱（设置 → 存储 → 移除 ISO）。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">第四步：善用快照</h2>
+      <p class="text-gray-700 leading-relaxed mb-3">
+        快照是虚拟机的「时光机」：实验前拍一张，搞坏了随时回滚。
+      </p>
+      <ol class="list-decimal list-inside space-y-1.5 text-sm text-gray-700">
+        <li>虚拟机菜单：机器 → 生成备份（快照）。</li>
+        <li>系统出问题后：备份列表右键 → 恢复备份。</li>
+        <li>建议在「装好系统 + 更新完毕」后拍一张，之后放心折腾。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">常见问题</h2>
+      <ul class="space-y-2 text-sm text-gray-700">
+        <li><strong>虚拟机很卡</strong>：确认开启 BIOS 中的虚拟化（Intel VT-x / AMD-V），并给虚拟机分配足够内存。</li>
+        <li><strong>屏幕分辨率太小</strong>：安装「增强功能」（设备 → 安装增强功能），重启后自适应窗口。</li>
+        <li><strong>U 盘无法使用</strong>：需要安装 Extension Pack，并在设备 → USB 中勾选。</li>
+        <li><strong>想体验别的方式</strong>：试试<a href="/try/install" class="no-underline"> Live USB 真实体验</a>或<a href="/try/dual-boot" class="no-underline">双系统</a>。</li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>

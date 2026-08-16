@@ -1,0 +1,84 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import RiskNotice from '@/components/RiskNotice.astro';
+---
+<BaseLayout
+  title="双系统安装 Linux：保留 Windows 的完整指南 | TuxAI"
+  description="在已有 Windows 的电脑上安装 Linux 组成双系统的分步指南：备份、分区、引导修复与回退方案。高风险操作，务必先备份。"
+>
+  <PageHeader
+    breadcrumb="安装指南"
+    title="双系统指南"
+    subtitle="保留 Windows，同时安装 Linux，开机时二选一。适合想「两手准备」的用户——但这是所有安装方式中风险最高的，务必先看风险提示。"
+  />
+
+  <div class="max-w-3xl mx-auto px-4 py-12 space-y-10">
+    <RiskNotice title="高风险操作：务必先备份" />
+
+    <section class="rounded-xl border border-red-200 bg-red-50 p-5">
+      <h2 class="font-bold text-red-800 mb-2">双系统的具体风险</h2>
+      <ul class="space-y-1.5 text-sm text-red-700 leading-relaxed list-disc list-inside">
+        <li>分区调整（压缩卷）操作不当可能损坏现有系统。</li>
+        <li>安装器自动分区可能覆盖整个磁盘——选错选项会丢失所有数据。</li>
+        <li>引导项（GRUB）出问题可能导致开机无法进入 Windows。</li>
+        <li>Windows 更新偶发覆盖引导，需要重新修复（可恢复，但需要操作）。</li>
+      </ul>
+      <p class="text-sm text-red-700 mt-2">新手强烈建议先在虚拟机里练习（<a href="/try/virtualbox" class="no-underline font-medium">虚拟机指南</a>），再决定是否双系统。</p>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">第一步：备份与准备</h2>
+      <ol class="list-decimal list-inside space-y-2 text-gray-700 leading-relaxed">
+        <li>完整备份重要数据到外部磁盘，并确认可恢复。</li>
+        <li>制作 Windows 恢复介质（「设置 → 系统 → 恢复 → 创建恢复驱动器」），用于引导修复与回退。</li>
+        <li>关闭 Windows 快速启动：控制面板 → 电源选项 → 选择电源按钮功能 → 取消勾选「启用快速启动」。否则可能造成文件系统锁死。</li>
+        <li>在 BIOS/UEFI 中确认开启 UEFI 模式与安全启动（保持默认即可，Ubuntu 支持安全启动）。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">第二步：为 Linux 腾出空间</h2>
+      <ol class="list-decimal list-inside space-y-2 text-gray-700 leading-relaxed">
+        <li>Win + X → 磁盘管理。</li>
+        <li>右键容量最大的分区 → 「压缩卷」，输入至少 <strong>60GB</strong>（建议 100GB+）。</li>
+        <li>压缩后会出现一块「未分配」空间——<strong>不要格式化它</strong>，留给 Linux 安装器处理。</li>
+        <li>重启电脑，确认 Windows 一切正常后再继续。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">第三步：安装 Linux</h2>
+      <ol class="list-decimal list-inside space-y-2 text-gray-700 leading-relaxed">
+        <li>按<a href="/try/install" class="no-underline"> Live USB 指南</a>制作启动盘并从 U 盘启动。</li>
+        <li>选择「Install Ubuntu」→ 语言键盘设置。</li>
+        <li><strong>安装类型选择「与 Windows 共存」</strong>（Install alongside Windows Boot Manager）。安装器会自动使用那块未分配空间，不会动 Windows 分区。</li>
+        <li>确认分区预览无误后继续，完成安装并重启。</li>
+        <li>开机应看到 GRUB 菜单：默认进 Linux，选「Windows Boot Manager」进 Windows。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 class="text-2xl font-bold mb-4">第四步：出问题怎么办</h2>
+      <div class="rounded-xl border border-gray-200 bg-white p-6 space-y-4">
+        <div>
+          <h3 class="font-semibold mb-1">开机直接进 Windows，没有 GRUB</h3>
+          <p class="text-sm text-gray-700">进 BIOS/UEFI 启动顺序，把「Ubuntu」或 GRUB 移到首位；或从 U 盘启动进 Try Ubuntu，运行 <code class="bg-gray-100 px-1 rounded">sudo update-grub</code> 后重启。</p>
+        </div>
+        <div>
+          <h3 class="font-semibold mb-1">进不去 Windows</h3>
+          <p class="text-sm text-gray-700">用 Windows 恢复介质启动 → 疑难解答 → 启动修复。GRUB 里选 Windows 项进不去时同样用此法。</p>
+        </div>
+        <div>
+          <h3 class="font-semibold mb-1">想删除 Linux 恢复单系统</h3>
+          <p class="text-sm text-gray-700">备份好 Linux 里的数据 → 在 Windows 磁盘管理中删除 Linux 分区并扩展回 Windows 分区 → 用 Windows 恢复介质修复引导。此项操作有数据丢失风险，谨慎执行。</p>
+        </div>
+      </div>
+    </section>
+
+    <nav aria-label="下一步" class="flex flex-col sm:flex-row gap-3">
+      <a href="/try/virtualbox" class="rounded-lg border border-gray-300 px-5 py-2.5 text-center font-medium text-gray-700 no-underline hover:bg-gray-100 transition-colors">还没把握？先虚拟机练习</a>
+      <a href="/try/install" class="rounded-lg border border-gray-300 px-5 py-2.5 text-center font-medium text-gray-700 no-underline hover:bg-gray-100 transition-colors">只想试试？看 Live USB 指南</a>
+    </nav>
+  </div>
+</BaseLayout>

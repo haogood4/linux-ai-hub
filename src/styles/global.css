@@ -21,3 +21,65 @@
     @apply text-primary underline-offset-2;
   }
 }
+
+@layer components {
+  .prose-linux {
+    @apply text-gray-800 leading-relaxed;
+  }
+  .prose-linux h1 {
+    @apply text-3xl font-bold text-gray-900 mt-8 mb-4;
+  }
+  .prose-linux h2 {
+    @apply text-2xl font-bold text-gray-900 mt-10 mb-4 pb-2 border-b border-gray-200;
+  }
+  .prose-linux h3 {
+    @apply text-xl font-semibold text-gray-900 mt-8 mb-3;
+  }
+  .prose-linux h4 {
+    @apply text-lg font-semibold text-gray-900 mt-6 mb-2;
+  }
+  .prose-linux p {
+    @apply my-4;
+  }
+  .prose-linux ul {
+    @apply list-disc list-inside my-4 space-y-1.5;
+  }
+  .prose-linux ol {
+    @apply list-decimal list-inside my-4 space-y-1.5;
+  }
+  .prose-linux li > ul,
+  .prose-linux li > ol {
+    @apply ml-4 mt-1;
+  }
+  .prose-linux a {
+    @apply text-primary hover:underline;
+  }
+  .prose-linux strong {
+    @apply font-semibold text-gray-900;
+  }
+  .prose-linux code {
+    @apply bg-gray-100 text-sm px-1.5 py-0.5 rounded;
+  }
+  .prose-linux pre {
+    @apply bg-gray-900 text-gray-100 rounded-lg p-4 my-4 overflow-x-auto text-sm;
+  }
+  .prose-linux pre code {
+    @apply bg-transparent p-0 text-gray-100;
+  }
+  .prose-linux blockquote {
+    @apply border-l-4 border-primary pl-4 my-4 text-gray-600 italic;
+  }
+  .prose-linux table {
+    @apply w-full my-4 text-sm border-collapse;
+  }
+  .prose-linux th,
+  .prose-linux td {
+    @apply border border-gray-200 px-3 py-2 text-left;
+  }
+  .prose-linux th {
+    @apply bg-gray-50 font-semibold;
+  }
+  .prose-linux hr {
+    @apply my-8 border-gray-200;
+  }
+}

@@ -3,9 +3,12 @@ import { defineConfig } from 'astro/config';
 import { fileURLToPath } from 'node:url';
 
 import tailwindcss from '@tailwindcss/vite';
+import mdx from '@astrojs/mdx';
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://tuxai.cn',
+  integrations: [mdx()],
   vite: {
     plugins: [tailwindcss()],
     resolve: {

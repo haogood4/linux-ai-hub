@@ -1,0 +1,117 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+
+const categories = [
+  {
+    title: '办公与文档',
+    items: [
+      { win: 'Microsoft Office', linux: 'LibreOffice', note: '兼容 docx/xlsx/pptx，日常办公完全够用', license: '开源免费' },
+      { win: 'WPS Office', linux: 'LibreOffice / WPS Linux 版', note: 'WPS 官方提供 Linux 版，界面习惯接近', license: '开源 / 免费' },
+      { win: 'Adobe Acrobat', linux: 'Okular / Firefox PDF', note: '阅读、批注、填写表单均可用', license: '开源免费' },
+    ],
+  },
+  {
+    title: '浏览器与通讯',
+    items: [
+      { win: 'Chrome / Edge', linux: 'Chrome / Edge / Firefox', note: '三大浏览器均有 Linux 版，体验一致', license: '免费' },
+      { win: 'WeChat', linux: '微信 Linux 版 / 网页版', note: '官方已提供 Linux 版本', license: '免费' },
+      { win: '腾讯会议', linux: '腾讯会议 Linux 版', note: '官方支持，安装 deb 包即可', license: '免费' },
+      { win: 'Zoom / Teams', linux: 'Zoom / Teams Linux 版', note: '官方原生支持', license: '免费' },
+    ],
+  },
+  {
+    title: '设计与影音',
+    items: [
+      { win: 'Adobe Photoshop', linux: 'GIMP / Krita', note: '专业修图 GIMP，绘画 Krita，均可胜任大部分需求', license: '开源免费' },
+      { win: 'Adobe Illustrator', linux: 'Inkscape', note: '矢量图形编辑，功能对标', license: '开源免费' },
+      { win: '剪映', linux: 'Kdenlive / DaVinci Resolve', note: 'Kdenlive 轻量，DaVinci Resolve 有官方 Linux 版（专业调色）', license: '开源 / 免费版' },
+      { win: 'Audacity 已支持 / 其他音频', linux: 'Audacity / Ardour', note: '音频编辑与录音在 Linux 上很成熟', license: '开源免费' },
+    ],
+  },
+  {
+    title: '开发工具',
+    items: [
+      { win: 'Visual Studio Code', linux: 'VS Code（官方支持）', note: '官方 Linux 版，体验与 Windows 完全一致', license: '免费' },
+      { win: 'JetBrains 全家桶', linux: '同款 JetBrains IDE', note: '官方原生支持，Windows 配置可直接迁移', license: '付费/开源版' },
+      { win: 'Docker Desktop', linux: 'Docker Engine + 插件', note: 'Linux 原生容器，无需虚拟机层，性能更好', license: '开源免费' },
+      { win: 'PowerShell', linux: 'Bash / Zsh + 相同工具', note: '命令行脚本习惯需要少量迁移，社区资料丰富', license: '开源免费' },
+    ],
+  },
+  {
+    title: '系统与工具',
+    items: [
+      { win: 'Windows 自带截图', linux: 'GNOME 截图 / Flameshot', note: 'Flameshot 支持标注、滚动截图', license: '开源免费' },
+      { win: 'Everything（文件搜索）', linux: 'fzf / ripgrep / GNOME 搜索', note: '终端搜索更快，图形界面也有索引搜索', license: '开源免费' },
+      { win: '7-Zip / WinRAR', linux: '内置归档工具 / p7zip', note: 'rar/zip/7z 全支持', license: '开源免费' },
+      { win: '驱动安装向导', linux: '包管理器一键安装', note: '多数驱动内核自带，显卡驱动有官方源', license: '—' },
+    ],
+  },
+];
+
+const unavailable = ['部分网银客户端', '特定反作弊游戏（如部分竞技网游）', '部分行业专用软件'];
+---
+<BaseLayout
+  title="Windows / macOS 软件替代方案清单 | TuxAI"
+  description="常用软件在 Linux 上的替代方案：办公、设计、影音、开发工具一网打尽，以及哪些软件暂时没有 Linux 版。"
+>
+  <PageHeader
+    breadcrumb="迁移指南"
+    title="软件替代方案"
+    subtitle="从 Windows 或 macOS 迁移时，最关心的是「常用软件能不能用」。这里整理了一份清单，多数场景有成熟的替代品。"
+  />
+
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="space-y-12">
+      {categories.map((cat) => (
+        <section>
+          <h2 class="text-2xl font-bold mb-4">{cat.title}</h2>
+          <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+            <table class="min-w-full text-sm">
+              <caption class="sr-only">{cat.title}替代方案</caption>
+              <thead>
+                <tr class="border-b border-gray-200 bg-gray-50 text-left">
+                  <th scope="col" class="px-4 py-3 font-semibold text-gray-700">Windows / macOS</th>
+                  <th scope="col" class="px-4 py-3 font-semibold text-gray-700">Linux 替代</th>
+                  <th scope="col" class="px-4 py-3 font-semibold text-gray-700">说明</th>
+                  <th scope="col" class="px-4 py-3 font-semibold text-gray-700">性质</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cat.items.map((item, i) => (
+                  <tr class={i % 2 === 0 ? 'border-b border-gray-100' : 'border-b border-gray-100 bg-gray-50/50'}>
+                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{item.win}</td>
+                    <td class="px-4 py-3 text-gray-700">{item.linux}</td>
+                    <td class="px-4 py-3 text-gray-600">{item.note}</td>
+                    <td class="px-4 py-3 text-gray-500 whitespace-nowrap">{item.license}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ))}
+    </div>
+
+    <section class="mt-12 rounded-xl border border-amber-200 bg-amber-50 p-6">
+      <h2 class="text-lg font-bold text-amber-900 mb-3">暂时没有官方 Linux 版的软件</h2>
+      <ul class="space-y-2 text-sm text-amber-800">
+        {unavailable.map((u) => (
+          <li>· {u}</li>
+        ))}
+      </ul>
+      <p class="text-sm text-amber-800 mt-3">
+        处理方式：优先尝试网页版；个别软件可通过兼容层（如 Wine / Bottles）运行，但效果因软件而异，不建议作为日常依赖。动手前先确认你的关键软件可用，再考虑迁移。
+      </p>
+    </section>
+
+    <section class="mt-10 rounded-xl bg-gray-900 text-white p-6 md:p-8">
+      <h2 class="text-xl font-bold mb-3">迁移前先试水</h2>
+      <p class="text-gray-300 mb-5">别急着重装系统，先用虚拟机或 U 盘体验 Linux，确认软件都能满足需求后再决定。</p>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <a href="/try/virtualbox" class="rounded-lg bg-primary px-5 py-2.5 font-medium text-white no-underline hover:bg-primary/90 transition-colors">虚拟机体验</a>
+        <a href="/try/install" class="rounded-lg border border-white/30 px-5 py-2.5 font-medium text-white no-underline hover:bg-white/10 transition-colors">Live USB 体验</a>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
