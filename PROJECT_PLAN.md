@@ -52,6 +52,7 @@
 - [x] 教程：ComfyUI 工作流入门（节点式工作流 + 社区工作流复刻）
 - [x] 教程：Function Calling 与 MCP（让本地模型调用工具）
 - [x] 教程：AI 视频生成（Wan 2.2 / LTX-2 本地方案）
+- [x] 教程：本地 TTS 语音合成（CosyVoice / Fish Speech 本地方案）
 - [x] `/paths` 学习路径聚合页（paths 集合 3 档路线）
 - [x] `/terminal-game` 包管理器命令行游戏（Debian/Arch/Red Hat 三派系独立关卡 + 命令对照表）
 

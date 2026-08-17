@@ -7,14 +7,7 @@ const tutorials = (await getCollection('tutorials')).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
 );
 
-const plannedGroups = [
-  {
-    title: '更多生图与创作',
-    items: [
-      { title: '语音合成（TTS）本地部署', desc: '本地文字转语音服务' },
-    ],
-  },
-];
+const plannedGroups: { title: string; items: { title: string; desc: string }[] }[] = [];
 ---
 <BaseLayout
   title="Linux + AI 教程库 | TuxAI"
@@ -52,15 +45,17 @@ const plannedGroups = [
       </>
     )}
 
-    <h2 class="text-xl font-bold mt-12 mb-4">规划中</h2>
-    <p class="text-sm text-gray-500 mb-6">
-      以下教程已列入计划，内容撰写中，上线后会同步到学习路径。你可以先收藏本站，或到
-      <a href="/community" class="text-primary underline underline-offset-2 hover:opacity-80">社区入口</a> 获取更新。
-    </p>
-    <div class="space-y-8">
-      {plannedGroups.map((g) => (
-        <section>
-          <h3 class="font-semibold text-gray-800 mb-3">{g.title}</h3>
+    {plannedGroups.length > 0 && (
+      <>
+        <h2 class="text-xl font-bold mt-12 mb-4">规划中</h2>
+        <p class="text-sm text-gray-500 mb-6">
+          以下教程已列入计划，内容撰写中，上线后会同步到学习路径。你可以先收藏本站，或到
+          <a href="/community" class="text-primary underline underline-offset-2 hover:opacity-80">社区入口</a> 获取更新。
+        </p>
+        <div class="space-y-8">
+          {plannedGroups.map((g) => (
+            <section>
+              <h3 class="font-semibold text-gray-800 mb-3">{g.title}</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             {g.items.map((item) => (
               <div class="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6" aria-disabled="true">
@@ -72,8 +67,10 @@ const plannedGroups = [
               </div>
             ))}
           </div>
-        </section>
-      ))}
-    </div>
+          </section>
+        ))}
+      </div>
+      </>
+    )}
   </div>
 </BaseLayout>

@@ -1,0 +1,146 @@
+---
+title: 本地 TTS 语音合成：让 AI 开口说话
+slug: local-tts
+author: TuxAI
+date: 2026-08-17
+tags: [ai, tts, 语音合成, cosyvoice, fish-speech, 声音克隆]
+estimatedReadTime: 18
+environment: [服务器, GPU]
+---
+# 本地 TTS 语音合成：让 AI 开口说话
+
+## 写在前面
+
+给本地 AI 加一张「嘴」：输入文字，输出自然语音。2026 年的开源 TTS 已经相当成熟——中文合成质量接近真人、3 秒音频就能克隆音色、部分方案 CPU 也能跑。本文帮你选型，并以中文效果最好的 CosyVoice 为主线跑通部署与合成，最后把 TTS 接进你的本地 AI 助手。
+
+## 一、2026 主流开源 TTS 怎么选
+
+| 方案 | 团队 | 协议 | 中文 | 零样本克隆 | 特点 |
+|------|------|------|------|------------|------|
+| **CosyVoice 2/3** | 阿里通义 | Apache 2.0 | ★★★★★ | ✅ 3 秒音频 | 中文最强、流式快、支持方言、情感控制 |
+| **Fish Speech 1.5** | Fish Audio | Apache 2.0 | ★★★★ | ✅ 10 秒音频 | 多语言、社区活跃、自带 WebUI |
+| **GPT-SoVITS v2** | 社区 | MIT | ★★★★ | 少样本微调 | 克隆之王（57K stars）、工具链完善 |
+| **ChatTTS** | 2noise | 自定义 | ★★★★ | ❌ | 对话自然（停顿/笑声/换气） |
+| **Kokoro TTS** | Kokoro | Apache 2.0 | ★★ | 有限 | 仅 82M 参数、**CPU 可跑**、极快 |
+| **VoxFlash-TTS** | VoxFlash | Docker 公开 | ★★★★ | ✅ | 速度优先、实时交互 |
+
+**选型建议**：
+- 中文配音/有声内容、要给 Agent 装嘴 → **CosyVoice**（质量 + 克隆 + 方言全都要）
+- 多语言、想要省心的 WebUI → **Fish Speech**
+- 克隆特定真人音色、能接受少量训练数据 → **GPT-SoVITS**
+- 没 GPU 或显存不足 → **Kokoro**（英文好，中文一般）
+- 实时对话、延迟敏感 → **VoxFlash-TTS**
+
+> 上述「零样本克隆」指无需训练、给一段参考音频即可模仿说话；克隆相似度与参考音频质量、模型能力相关，并非音色完全一致。
+
+## 二、实战主线：CosyVoice 部署
+
+### 2.1 方式一：Docker 一键（推荐）
+
+```bash
+# 拉取官方镜像（首次较大）
+docker pull funaudio/cosyvoice3
+
+# 启动（8080 端口 WebUI，GPU 加速）
+docker run --gpus all -p 8080:8080 funaudio/cosyvoice3
+```
+
+浏览器打开 `http://localhost:8080`，输入文字 → 选预设音色 → 合成，即开即用。
+
+### 2.2 方式二：源码安装
+
+```bash
+git clone https://github.com/FunAudioLLM/CosyVoice.git
+cd CosyVoice
+pip install -r requirements.txt
+
+# 启动 WebUI（GPU 版）
+python -m cosyvoice.cli.webui --port 8080
+```
+
+- 硬件建议：8GB 以上显存（M3 Max 级别的 Mac 也能跑，需加 `PYTORCH_ENABLE_MPS_FALLBACK=1`）
+- 模型自动下载，体积较大，预留 20GB+ 磁盘
+- 国内网络下载模型慢时，可用 hf-mirror 镜像（`HF_ENDPOINT=https://hf-mirror.com`）
+
+### 2.3 用 Python 直接合成
+
+不需要 WebUI 的话，几行代码搞定：
+
+```python
+from cosyvoice.cli.cosyvoice import CosyVoice2
+
+cosyvoice = CosyVoice2('pretrained_models/CosyVoice2-0.5B', load_jit=False)
+
+for output in cosyvoice.inference_sft('你好，我是本地部署的语音助手。', '中文女'):
+    output['tts_speech'].save('output.wav')
+```
+
+## 三、音色克隆：3 秒音频复刻声音
+
+CosyVoice 零样本克隆流程：
+
+1. 准备一段 3–10 秒、人声干净、无背景音乐的参考音频（wav/mp3）
+2. WebUI 或代码中提供该音频作为提示音色：
+
+```python
+prompt_speech = '参考音频.wav'
+for output in cosyvoice.inference_zero_shot('复刻这段话的声线。', prompt_speech, '中文女'):
+    output['tts_speech'].save('cloned.wav')
+```
+
+效果要点：参考音频越干净相似度越高；方言口音也能继承（CosyVoice 3 支持 18 种方言）。
+
+## 四、轻量备选：Kokoro（无 GPU 也能跑）
+
+```bash
+pip install kokoro onnxruntime
+
+python - <<'EOF'
+from kokoro import KPipeline
+pipeline = KPipeline(lang_code='a')
+for result in pipeline('Hello from Kokoro, running on CPU.', voice='af_heart'):
+    result.audio.save('kokoro.wav')
+EOF
+```
+
+> 注意：Kokoro 的中文支持有限（当前以英文为主），中文场景建议还是上 CosyVoice/Fish Speech。
+
+## 五、接进你的本地 AI：给 Agent 装嘴
+
+配合 [Function Calling](/tutorials/function-calling-mcp) 教程的思路，让 LLM 决定何时开口：
+
+1. 把 TTS 封装成一个工具：`text_to_speech(text, voice)` → 返回音频文件路径
+2. 模型对话时通过工具调用触发合成
+3. 播放器/客户端播放 `output.wav`，实现「语音助手」效果
+
+```python
+import subprocess
+def text_to_speech(text: str, voice: str = "中文女") -> str:
+    subprocess.run(["python", "tts_cli.py", text, voice])
+    return "output.wav"  # 返回文件路径供前端播放
+```
+
+也可用 [Open WebUI](/tutorials/open-webui) 的 TTS 插件，直接在聊天界面里朗读回复。
+
+## 常见问题
+
+**中文合成有口音/吞字？** 换 CosyVoice（中文 CER 约 0.8%，开源最强梯队）；确认文本无生僻词、标点合理；方言用 CosyVoice 3 的方言音色。
+
+**合成很慢？** 流式输出只等首包（CosyVoice 约 150ms）；批量长文本建议拆分并行；实在没 GPU 用 Kokoro 先跑通流程。
+
+**克隆声音不像？** 参考音频要干净（无回声/无音乐/单说话人）、3–10 秒、语速正常；用 48kHz 高质量音源。
+
+**能商用吗？** 各方案协议不同：CosyVoice/Fish Speech/Kokoro 为 Apache 2.0（可商用），ChatTTS 和 GPT-SoVITS 需核对各自许可证；**且必须取得目标音色本人授权**。
+
+## 风险提示
+
+- **声音克隆涉及肖像权与个人信息保护**：未经本人同意克隆他人声音用于公开内容，可能构成侵权（中国《民法典》第 1023 条参照肖像权保护自然人声音）。仅可用于本人声音、已授权素材或合成音色
+- 合成内容用于播客、广告、客服等场景，应明确向听众披露「AI 合成」
+- 涉及语音诈骗、虚假信息等违法用途的，法律后果自负——请合法使用
+
+## 下一步
+
+- 给模型装上工具与大脑 → [Function Calling 与 MCP](/tutorials/function-calling-mcp)
+- 聊天界面集成语音 → [Open WebUI](/tutorials/open-webui)
+- 视频配音（TTS + 视频生成组合）→ [本地 AI 视频生成](/tutorials/ai-video-generation)
+- 用 [Docker GPU 容器](/tutorials/docker-gpu-containers) 隔离部署 TTS 服务，稳定又干净

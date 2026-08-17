@@ -105,3 +105,5 @@
 | Function Calling 与 MCP 教程 | ✅ | 2026-08-17 | Ollama tool calling 原理 + Python 全流程代码（JSON Schema/tool_calls/tool 回传）+ 模型选型表 + MCP 协议讲解（client/server/stdio）+ 本地模型接 MCP 生态 + 安全底线，经 2026-08 多源核查（Ollama 原生 tools、qwen3/llama3.3 支持、客户端生态 Goose/Cline/Continue.dev/LM Studio） |
 
 | AI 视频生成教程 | ✅ | 2026-08-17 | Wan 2.2 实战主线（TI2V-5B 8GB 入门 + 14B MoE 高质量路线，高/低噪声双模型 + umt5 CLIP + VAE 通道坑）+ LTX-2/HunyuanVideo/CogVideoX 选型对比 + LightX2V/GGUF/SageAttention 提速 + 长视频两路径，经 2026-08 多源核查（ComfyUI 官方文档、显存数据、L40S 速度实测） |
+
+| 本地 TTS 语音合成教程 | ✅ | 2026-08-17 | CosyVoice 2/3 主线（中文 CER 0.8%、3 秒零样本克隆、150ms 流式、18 方言）+ Fish Speech/GPT-SoVITS/ChatTTS/Kokoro/VoxFlash 选型表 + Docker 与源码两种部署 + Python 合成示例 + 接 Function Calling 装嘴方案 + 声音克隆法律风险提示，经 2026-08 多源核查（FunAudioLLM 仓库、实测部署文、社区对比） |
