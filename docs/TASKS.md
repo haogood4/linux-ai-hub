@@ -87,3 +87,6 @@
 
 - 涉及安装 / 分区 / 双系统的页面必须包含备份风险提示（AGENTS.md §7）
 - 每次构建通过 + 移动端检查后再标记完成
+| llama.cpp 量化推理教程 | ✅ | 2026-08-17 | GGUF/Q4_K_M/llama-cli/llama-server OpenAI 兼容 API，内容经 2026-08 真实资料核查（b10369） |
+| Docker + GPU 容器教程 | ✅ | 2026-08-17 | nvidia-container-toolkit（nvidia-docker2 已弃用）、CUDA 镜像验证、容器跑 Ollama 实战 |
+| GitHub 动态页上线 | 🔄 | 2026-08-17 | 页面+导航已提交并 CI 全绿；等待 SFTP 密码部署 |
