@@ -95,3 +95,5 @@
 | Open WebUI 教程 | ✅ | 2026-08-17 | Docker Compose（Ollama+WebUI）、模型选型表、接 vLLM/llama.cpp 进阶 |
 | Stable Diffusion 教程 | ✅ | 2026-08-17 | WebUI 部署、SD1.5/SDXL 模型、Civitai 来源、低显存参数，经 2026-08 资料核查 |
 | 教程库规划清单更新 | ✅ | 2026-08-17 | Phase 3 全部 5 篇上线；新规划：RAG/Dify/MCP/ComfyUI/AI 视频/TTS |
+
+| RAG 知识库实战教程 | ✅ | 2026-08-17 | Ollama embedding（nomic/bge-m3/all-minilm 对照）+ Qdrant 入库/检索/生成全流程 + rerank/混合检索进阶，经 2026-08 多源核查（embedding 维度、chunking 经验值、Qdrant 6333 端口） |

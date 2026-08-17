@@ -47,6 +47,7 @@
 - [x] 教程：Docker + GPU 容器
 - [x] 教程：Open WebUI 图形界面
 - [x] 教程：Stable Diffusion 部署
+- [x] 教程：RAG 知识库实战（Ollama embedding + Qdrant）
 - [x] `/paths` 学习路径聚合页（paths 集合 3 档路线）
 - [x] `/terminal-game` 包管理器命令行游戏（Debian/Arch/Red Hat 三派系独立关卡 + 命令对照表）
 

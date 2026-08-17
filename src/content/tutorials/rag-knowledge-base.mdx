@@ -1,0 +1,213 @@
+---
+title: RAG 知识库实战：给本地 AI 接入你的文档
+slug: rag-knowledge-base
+author: TuxAI
+date: 2026-08-17
+tags: [ai, rag, 知识库, ollama, qdrant, 向量数据库]
+estimatedReadTime: 17
+environment: [服务器, GPU]
+---
+# RAG 知识库实战：给本地 AI 接入你的文档
+
+## 写在前面
+
+大模型聊天好用，但它有两个天生短板：**知识过时**（训练数据有时间截止）和 **幻觉**（不知道的会编）。RAG（Retrieval-Augmented Generation，检索增强生成）就是解决这两个问题的标准方案：把文档切成小块存进向量数据库，提问时先检索相关内容，再把「检索到的内容 + 问题」一起交给模型生成答案。
+
+本教程用 **Ollama（embedding + 生成模型）+ Qdrant（向量数据库）** 在本地搭一套完整 RAG 流水线，数据全程不出机器。
+
+> 前置：先按 [Ollama 本地部署](/tutorials/ollama-local-deploy) 装好 Ollama。本教程以 Python 为例，需要一点基础。
+
+## RAG 是怎么工作的
+
+一句话流程：**切块 → 向量化 → 存入向量库 → 检索 → 拼接提示词 → 生成**。
+
+```
+你的文档 ──切块──▶ 文本块 ──embedding──▶ 向量 ──▶ 存入 Qdrant
+                                                          ▲
+用户提问 ──embedding──▶ 问题向量 ──相似度检索──▶ Top-K 文本块
+                                                          │
+                                        拼成提示词 ──▶ LLM 生成答案
+```
+
+- **Embedding（嵌入）**：把文本转成一组数字（向量），语义相近的文本向量也相近
+- **向量数据库**：存向量并做相似度检索，Qdrant 是主流开源方案之一（本机已装 1.18 版，systemd 自启、仅监听 127.0.0.1）
+
+## 环境要求
+
+- 已装 [Ollama](/tutorials/ollama-local-deploy)，并拉好生成模型（如 `qwen2.5:7b`）
+- 已装 [Qdrant](/tutorials/docker-gpu-containers)（本机直装版或 Docker 版均可，默认 127.0.0.1:6333）
+- Python 3.10+
+- 无 GPU 也能跑：embedding 模型很小，生成模型用 CPU 版小模型即可
+
+## 第一步：准备 embedding 模型
+
+Embedding 模型负责「把文本变成向量」。用 Ollama 拉一个轻量的：
+
+```bash
+ollama pull nomic-embed-text
+```
+
+常用 embedding 模型对照（注意**向量维度**，混用会出错）：
+
+| 模型 | 向量维度 | 上下文长度 | 说明 |
+|------|---------|-----------|------|
+| `nomic-embed-text` | 768 | 8192 token | 通用，英文效果好 |
+| `bge-m3` | 1024 | 8192 token | 多语言（含中文）效果好 |
+| `all-minilm` | 384 | 512 token | 极小，快速验证用 |
+
+中文知识库建议用 `bge-m3`。验证：
+
+```bash
+curl http://localhost:11434/api/embed \
+  -H "Content-Type: application/json" \
+  -d '{"model": "bge-m3", "input": "Linux 是什么"}'
+# 返回 {"embeddings": [[0.012, ...]]}
+```
+
+> 一个坑：向量维度由模型决定，同一知识库全程只用一个 embedding 模型，换模型要重建索引。
+
+## 第二步：装 Python 依赖
+
+```bash
+pip install qdrant-client ollama
+```
+
+两个库分别是 Qdrant 的 Python 客户端和 Ollama 的官方 Python 库。
+
+## 第三步：文档切块（chunking）
+
+切块是 RAG 效果的关键：块太大检索不精准，太小丢失上下文。经验值：**每块 200~500 token，块间重叠 50~100 token**，按段落切。
+
+```python
+import re
+
+def split_into_chunks(text: str, max_chars: int = 500, overlap: int = 80) -> list[str]:
+    paragraphs = re.split(r"\n\s*\n", text)
+    chunks, current = [], ""
+    for p in paragraphs:
+        if len(current) + len(p) > max_chars and current:
+            chunks.append(current)
+            current = p
+        else:
+            current += "\n" + p
+    if current:
+        chunks.append(current)
+    # 简单重叠：取上一块结尾若干字符拼到下一块开头
+    for i in range(1, len(chunks)):
+        chunks[i] = chunks[i - 1][-overlap:] + "\n" + chunks[i]
+    return chunks
+```
+
+> 实用技巧：先按 Markdown 标题切（每个 `##` 小节一块），再按长度细分；表格、代码块尽量保持完整。
+
+## 第四步：向量化并存入 Qdrant
+
+```python
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams
+import ollama
+
+EMBED_MODEL = "bge-m3"
+client = QdrantClient(host="127.0.0.1", port=6333)
+
+COLLECTION = "my_kb"
+DIM = 1024  # bge-m3 的维度
+
+client.recreate_collection(
+    collection_name=COLLECTION,
+    vectors_config=VectorParams(size=DIM, distance=Distance.COSINE),
+)
+
+def embed(texts: list[str]) -> list[list[float]]:
+    r = ollama.embed(model=EMBED_MODEL, input=texts)
+    return r["embeddings"]
+
+# 假设 chunks 是上一步切好的文本块
+chunks = split_into_chunks(open("notes.md", encoding="utf-8").read())
+vectors = embed(chunks)
+
+client.upsert(
+    collection_name=COLLECTION,
+    points=[
+        {"id": i, "vector": v, "payload": {"text": chunks[i]}}
+        for i, v in enumerate(vectors)
+    ],
+)
+print(f"已入库 {len(chunks)} 块")
+```
+
+> Qdrant 默认端口 6333。如果你用的是本机直装版，检查 `systemctl status qdrant` 是否运行。
+
+## 第五步：检索 + 生成（完整 RAG 问答）
+
+```python
+def rag_answer(question: str, top_k: int = 3) -> str:
+    # 1. 问题向量化
+    q_vec = embed([question])[0]
+
+    # 2. 向量库检索最相似的 top_k 块
+    hits = client.search(
+        collection_name=COLLECTION,
+        query_vector=q_vec,
+        limit=top_k,
+    )
+    context = "\n\n".join(h.payload["text"] for h in hits)
+
+    # 3. 拼接提示词
+    prompt = f"""基于以下资料回答用户问题。资料中没有的信息，请直接说明不知道，不要编造。
+
+资料：
+{context}
+
+问题：{question}
+
+回答："""
+
+    # 4. 生成模型作答
+    resp = ollama.generate(model="qwen2.5:7b", prompt=prompt)
+    return resp["response"]
+
+print(rag_answer("笔记里提到的备份方案是什么？"))
+```
+
+到这一步，一套可用的本地 RAG 就完成了：问它文档里写过的内容，它引用真实资料回答，不再是瞎编。
+
+## 第六步：进阶优化（按需）
+
+| 手段 | 效果 | 成本 |
+|------|------|------|
+| **rerank 重排** | 先粗检 top-20，再用重排模型精排取 top-3，准确率明显提升 | 需另拉重排模型（如 `bge-reranker-v2-m3`） |
+| **混合检索** | 向量检索 + 关键词检索（BM25）结果用 RRF 融合，专有名词/编号更好找 | 需额外实现关键词索引 |
+| **多文档分区** | 不同文档存不同 collection，或 payload 加来源字段按来源过滤 | 简单，建议一开始就做 |
+| **引用溯源** | payload 里存文档名+页码，回答时附引用 | 简单，建议一开始就做 |
+
+rerank 示例（配合 LangChain 或直接调 API 均可，社区主流做法是 `bge-reranker-v2-m3` + Qdrant 粗检后精排）。
+
+## 常见问题
+
+**检索结果和问题不相关？**
+- 换 embedding 模型（中文用 bge-m3）
+- 缩小切块（400→200 字符）
+- 检查切块是否破坏了语义完整（表格、代码被拦腰切）
+
+**向量维度报错 / 检索出错？**
+维度不匹配，最常见的错是换了 embedding 模型后没重建 collection。删掉重建：`client.delete_collection("my_kb")` 后重新入库。
+
+**「基于资料回答」还是答不上来？**
+- 提高 `top_k`（3→5）
+- 确认资料确实切块入库（打印 chunks 数量核对）
+- 提示词里加「资料中没有的信息请说明不知道」
+
+**数据量大了变慢？**
+Qdrant 支持 HNSW 索引（默认已开）、payload 过滤、分片。百万级以下单机足够；更大考虑分布式部署（见 [Docker + GPU 容器](/tutorials/docker-gpu-containers)）。
+
+**想用现成界面？**
+[Open WebUI](/tutorials/open-webui) 自带知识库（RAG）功能，上传文档即用，适合不想写代码的场景；本教程适合要定制流程的开发者。
+
+## 下一步
+
+- 想理解生成模型本身，看 [llama.cpp 推理](/tutorials/llama-cpp-inference) 或 [vLLM 服务](/tutorials/vllm-serving)
+- 想搭完整可视化应用，等 Dify 教程（规划中）
+- 想接 Open WebUI 现成 RAG，看 [Open WebUI 教程](/tutorials/open-webui)
+
+> 提示：embedding 与生成模型均开源免费。向量数据库里的数据属于你自己，注意备份 Qdrant 的 snapshot。涉及系统操作前请备份数据。
