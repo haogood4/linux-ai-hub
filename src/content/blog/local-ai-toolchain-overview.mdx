@@ -1,0 +1,60 @@
+---
+title: 2026 年自建 AI 全家桶：一份本地 AI 工具链全景图
+slug: local-ai-toolchain-overview
+author: TuxAI
+date: 2026-08-17
+tags: [ai, 本地部署, 工具链, 深度阅读]
+excerpt: 从模型运行时、界面、生图、工作流到知识库与语音，一张图看清本地 AI 生态的每个环节，以及每类工具你该从哪个教程入门。
+---
+# 2026 年自建 AI 全家桶：一份本地 AI 工具链全景图
+
+「本地跑 AI」听起来像折腾，其实今天已经是一条相当成熟的路线：每个环节都有多个成熟开源项目，文档齐全，普通配置的电脑也能跑起来一部分。本文把这条链路拆开给你看——不是劝你全装，而是帮你建立地图，知道每块拼图是什么、什么时候需要。
+
+## 一、模型运行时：一切的地基
+
+本地 AI 的第一步是「把模型跑起来」，这层叫运行时。目前主流有两条路线：
+
+- **Ollama**：一条命令装好、开箱即用，`ollama run qwen3` 就能对话。适合新手和日常使用，也是大多数图形界面工具默认对接的后端
+- **llama.cpp / vLLM**：更底层、更可控。llama.cpp 主打单机推理与量化（GGUF 格式），vLLM 面向高并发服务化（OpenAI 兼容接口、多用户吞吐）
+
+选择建议：只想自己用，先 Ollama；要压榨性能、部署成服务，再学 llama.cpp 或 vLLM。本站有对应的[Ollama 本地部署](/tutorials/ollama-local-deploy)、[llama.cpp 推理](/tutorials/llama-cpp-inference)和[vLLM 服务化](/tutorials/vllm-serving)教程。
+
+## 二、对话界面：给模型配个「壳」
+
+命令行能跑模型，但大多数人想要图形界面。Open WebUI 是目前最流行的选择：聊天、文件上传、多模型切换、本地知识库管理一应俱全，浏览器访问即可。详见[Open WebUI 教程](/tutorials/open-webui)。
+
+## 三、生图与视频：创作类模型
+
+- **Stable Diffusion WebUI**：成熟度最高，插件生态丰富，适合新手入门文生图，见[Stable Diffusion 教程](/tutorials/stable-diffusion)
+- **ComfyUI**：节点式工作流，自由度极高，进阶调优、批量出图、复刻社区工作流都靠它，见[ComfyUI 教程](/tutorials/comfyui-basic-workflow)
+- **AI 视频生成**：2026 年开源视频模型已可用，Wan、LTX 等能在消费级显卡跑通，见[AI 视频生成教程](/tutorials/ai-video-generation)
+
+## 四、语音：听懂你、说给你
+
+语音合成（TTS）方面，CosyVoice 等开源项目已做到接近真人音色，还能克隆声音；语音识别（ASR）则有 Whisper 等成熟方案。详见[本地 TTS 教程](/tutorials/local-tts)。
+
+## 五、知识库与自动化：让 AI 用上你的资料
+
+- **RAG 知识库**：把文档切块、向量化、检索后交给模型回答，解决「模型不知道你的私有资料」的问题，见[RAG 知识库教程](/tutorials/rag-knowledge-base)
+- **Dify**：可视化搭建 AI 应用，把模型、知识库、工具调用串成工作流，不需要写代码，见[Dify 教程](/tutorials/dify-visual-ai-platform)
+- **Function Calling / MCP**：让模型能调用外部工具（查天气、操作文件、访问 API），是把 AI 从「聊天」变成「干活」的关键，见[Function Calling 与 MCP 教程](/tutorials/function-calling-mcp)
+
+## 六、硬件与容器：底座问题
+
+- 显存决定能跑多大的模型，[硬件选购](/hardware)页面有详细建议
+- 多服务并存时用 Docker 统一管理，GPU 容器化见[Docker GPU 容器教程](/tutorials/docker-gpu-containers)
+
+## 怎么开始
+
+不要求全求大。建议按需安装，一条渐进路径：
+
+1. 先装 Ollama + Open WebUI，解决「能对话」
+2. 有图片需求再加 Stable Diffusion 或 ComfyUI
+3. 资料多了再上 RAG / Dify
+4. 最后才是语音、视频、MCP 这些进阶项
+
+## 小结
+
+本地 AI 工具链已经完整到「一个普通人按图索骥就能搭起来」的程度。它不免费（硬件和电费要花钱），但换来的是数据不出机器、不按次付费、可离线使用。本文是一张地图，具体每一步，本站 13 篇教程已经帮你走通了一遍。
+
+> 延伸阅读：[Ollama 本地部署](/tutorials/ollama-local-deploy)、[零风险尝试 Linux](/blog/try-linux-without-risk)、[硬件选购](/hardware)

@@ -42,7 +42,7 @@
 | Header/Footer 导航覆盖新页面 | ✅ | Header 6 项 / Footer 5 项 |
 | `/not-for-you` 诚实警示页 | ✅ | 5 类不适合人群 + 换机前三件事 + picker 游戏拦截 |
 | `/404` 自定义页面 | ✅ | 快捷入口 + 首页引导，noindex |
-| 博客扩充 | ✅ | 3 篇：《AI 生态跑在 Linux》《零风险尝试三种方式》《发行版怎么选》 |
+| 博客扩充 | ✅ | 8 篇：原 3 篇 +《本地 AI 工具链全景图》《量化与 GGUF》《云端 API vs 本地模型》《WSL2/虚拟机/双系统怎么选》《2026 年 Linux 桌面诚实评估》 |
 | `check-links` 死链检查 | ✅ | `pnpm check:links`，654 站内链接 0 死链 |
 | `audit-completion` 完成度核查 | ✅ | `pnpm check:completion`（命令名避开 pnpm 保留字） |
 | FAQ FAQPage JSON-LD | ✅ | 结构化数据注入 BaseLayout jsonLd prop |

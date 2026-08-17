@@ -58,7 +58,7 @@
 
 ### Phase 4 — 社区与增长
 - [x] `/community` 社区入口
-- [x] `/blog` 深度文章（3 篇）
+- [x] `/blog` 深度文章（8 篇）
 - [x] `/faq` 常见问题（含 FAQPage 结构化数据）
 - [x] `/not-for-you` 诚实警示页（哪些人不适合 Linux）
 - [x] SEO 完善（metadata、sitemap、robots、404 页、OG 分享图、favicon）
