@@ -1,0 +1,184 @@
+---
+title: llama.cpp：在 Linux 上跑起 CPU/GPU 量化推理
+slug: llama-cpp-inference
+author: TuxAI
+date: 2026-08-17
+tags: [ai, llama.cpp, 大模型, 量化, 本地部署, 推理]
+estimatedReadTime: 18
+environment: [服务器, GPU]
+---
+# llama.cpp：在 Linux 上跑起 CPU/GPU 量化推理
+
+## 写在前面
+
+llama.cpp 是当前最成熟的本地大模型推理引擎之一：纯 C/C++ 实现，几乎没有外部依赖，CPU 也能跑、有 NVIDIA/AMD 显卡更快，还能直接把模型变成 OpenAI 兼容的 API 服务。它的核心是 **GGUF 量化格式**——把十几 GB 的模型压缩到几 GB，普通笔记本也能跑起来。
+
+如果你只是想最快跑通一个本地大模型，先看[Ollama 教程](/tutorials/ollama-local-deploy)；如果你想理解底层机制、精确控制显存与速度，或要把模型做成 API 服务，这篇正合适。
+
+## 环境要求
+
+- 一个 Linux 系统（Ubuntu / Debian / Fedora / Arch 均可）
+- 磁盘：至少预留 10GB（模型 4~6GB + 编译产物）
+- 内存：纯 CPU 推理建议 8GB 以上；显存 6GB 以上可用 GPU 加速
+- 编译工具链（仅源码编译需要）：`git`、`cmake`、`gcc/g++`
+
+> 没有显卡也能用：llama.cpp 本来就是为 CPU 推理设计的，只是速度比 GPU 慢一个量级，适合体验与轻量使用。
+
+## 第一步：安装 llama.cpp
+
+有两种方式，任选其一。
+
+### 方式 A：预编译 Release 包（最快）
+
+去 [llama.cpp Releases](https://github.com/ggml-org/llama.cpp/releases) 下载 Linux 版压缩包（选择 `bin-linux-x64-cpu`；NVIDIA 显卡可选 `bin-linux-x64-cuda-cu12.x`）。国内网络访问 GitHub 慢的话，可用 Gitee 镜像：`https://gitee.com/mirrors/llama.cpp`（源码镜像，需自行编译）。
+
+解压后把 `build/bin` 里的 `llama-cli`、`llama-server` 放到任意目录即可使用，无需安装。
+
+### 方式 B：源码编译（推荐，可带 CUDA）
+
+```bash
+git clone https://github.com/ggml-org/llama.cpp.git
+cd llama.cpp
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j $(nproc)
+```
+
+验证：
+
+```bash
+./build/bin/llama-cli --version
+```
+
+**NVIDIA 显卡加速版**（需先装 CUDA Toolkit 12.x）：
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DGGML_CUDA=ON
+cmake --build build -j $(nproc)
+```
+
+> 编译 CUDA 版耗时较长（视 CPU 核数 10~30 分钟），属正常现象。
+
+## 第二步：下载 GGUF 量化模型
+
+llama.cpp 只能运行 **GGUF** 格式的模型。下载渠道：
+
+- 海外：[HuggingFace](https://huggingface.co/) 搜索「模型名 + GGUF」
+- 国内镜像：[hf-mirror.com](https://hf-mirror.com/)（速度更快）；[ModelScope 魔搭](https://www.modelscope.cn/)（国内平台，无需代理）
+
+```bash
+pip install huggingface_hub
+export HF_ENDPOINT=https://hf-mirror.com
+huggingface-cli download Qwen/Qwen3-4B-GGUF qwen3-4b-q4_k_m.gguf --local-dir ./models
+```
+
+### 量化版本怎么选
+
+| 量化标识 | 4B 模型大小 | 适用场景 |
+|----------|------------|---------|
+| Q2_K | ~2.5GB | 内存极限，质量明显下降 |
+| **Q4_K_M** | ~2.8GB | **日常首选，体积/质量平衡** |
+| Q5_K_M | ~3.2GB | 质量更好，内存充裕时选 |
+| Q8_0 | ~4.5GB | 接近原精度，体积大 |
+
+日常使用选 **Q4_K_M**；显存/内存紧张选 Q2_K 或 Q3_K_S。
+
+## 第三步：命令行推理
+
+单次问答：
+
+```bash
+./build/bin/llama-cli -m ./models/qwen3-4b-q4_k_m.gguf -p "用一句话介绍 Linux"
+```
+
+交互式对话：
+
+```bash
+./build/bin/llama-cli -m ./models/qwen3-4b-q4_k_m.gguf -i -ins
+```
+
+纯 CPU 时加线程数（设为物理核心数，不是超线程数）：
+
+```bash
+./build/bin/llama-cli -m ./models/qwen3-4b-q4_k_m.gguf -t 8 -i -ins
+```
+
+## 第四步：GPU 加速（有 NVIDIA 显卡时）
+
+先确认驱动正常：
+
+```bash
+nvidia-smi
+```
+
+`-ngl` 参数控制有多少层模型放到 GPU，`-ngl 999` 表示尽可能全放：
+
+```bash
+./build/bin/llama-cli -m ./models/qwen3-4b-q4_k_m.gguf -ngl 999 -i -ins
+```
+
+**显存不够装下整个模型怎么办？** 降低 `-ngl` 数值，让剩余层跑在 CPU 内存上——速度下降但不会崩溃：
+
+```bash
+./build/bin/llama-server -m ./models/qwen3-4b-q4_k_m.gguf -ngl 32   # 只有 32 层上 GPU
+```
+
+## 第五步：启动 OpenAI 兼容 API 服务
+
+这是 llama.cpp 最实用的功能之一——启动一个本地 HTTP 服务，接口格式与 OpenAI 完全兼容，现有调用 OpenAI 的代码改一下地址就能用：
+
+```bash
+./build/bin/llama-server \
+  -m ./models/qwen3-4b-q4_k_m.gguf \
+  --host 127.0.0.1 --port 8080 \
+  -ngl 999
+```
+
+启动后：
+
+- 内置网页聊天界面：`http://localhost:8080`
+- API 端点：`http://localhost:8080/v1/chat/completions`
+
+用 curl 测试：
+
+```bash
+curl http://localhost:8080/v1/chat/completions -H "Content-Type: application/json" -d '{
+  "model": "qwen3-4b",
+  "messages": [{"role": "user", "content": "用一句话介绍 Linux"}]
+}'
+```
+
+> 默认只监听 `127.0.0.1`，数据不出机器。如需远程访问，用 SSH 隧道或反向代理并加鉴权（`--api-key`），不要直接改成 `0.0.0.0` 裸暴露。
+
+## 常用参数速查
+
+| 参数 | 作用 |
+|------|------|
+| `-m <路径>` | 指定 GGUF 模型文件 |
+| `-ngl N` | N 层模型放 GPU（`999`=尽量全放；`0`=纯 CPU） |
+| `-t N` | CPU 线程数（设物理核心数） |
+| `-c N` | 上下文长度（默认 4096，越大占内存越多） |
+| `--flash-attn` | 启用 Flash Attention，KV Cache 显存减少约 30%~50% |
+| `--parallel N` | 并发推理槽数（API 服务多人同时用） |
+| `--api-key <key>` | API 鉴权 Key（对外暴露时必设） |
+
+## 常见问题
+
+**模型输出乱码或答非所问？**
+确认模型是否带 `Instruct` 或 `chat` 标识（对话版），用 `-i -ins` 走对话模板；上下文 `-c` 设太短也可能截断回答。
+
+**CPU 很慢？**
+换更小模型（3B/1.5B 量化版），`-t` 设物理核心数，用 Q4_K_M 以上量化版本。
+
+**显存不足（OOM）？**
+降 `-ngl`；换更低量化（Q4_K_S）；缩上下文 `-c 2048`；开启 `--flash-attn`。
+
+**llama.cpp 和 vLLM 怎么选？**
+个人电脑/单机、显存有限、需要量化 → llama.cpp；多用户高并发生产服务、企业级 GPU → vLLM（教程整理中）。两者定位不同，llama.cpp 在资源受限场景下是首选。
+
+## 下一步
+
+- 给 Ollama 加图形界面：Open WebUI（教程整理中）
+- 容器化部署：Docker + GPU 容器（教程整理中）
+- 需要更专业的硬件搭配？看[硬件兼容指南](/hardware)
+
+> 提示：涉及系统安装、驱动、分区等操作前，请务必备份重要数据。模型与框架均免费开源，商用前请查看对应模型主页的许可说明。

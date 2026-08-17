@@ -2,7 +2,6 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHeader from '@/components/PageHeader.astro';
 
-const today = new Date();
 const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
 const jsonLd = JSON.stringify({
   '@context': 'https://schema.org',
