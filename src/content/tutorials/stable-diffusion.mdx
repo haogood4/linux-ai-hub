@@ -1,0 +1,129 @@
+---
+title: Stable Diffusion：在 Linux 上搭建本地 AI 绘画
+slug: stable-diffusion
+author: TuxAI
+date: 2026-08-17
+tags: [ai, stable-diffusion, comfyui, 生图, 绘画]
+estimatedReadTime: 15
+environment: [GPU]
+---
+# Stable Diffusion：在 Linux 上搭建本地 AI 绘画
+
+## 写在前面
+
+想免费无限生成图片、不上传数据、自由换模型？Stable Diffusion 是目前最成熟的开源生图方案。本教程在 **Linux** 上从零部署一套本地 AI 绘画环境，跑通「输入一句话 → 得到一张图」。
+
+先选界面，二选一：
+
+| | WebUI（AUTOMATIC1111） | ComfyUI |
+|---|---|---|
+| 特点 | 填空式，上手快，功能齐全 | 节点式工作流，显存省、速度快、可玩性高 |
+| 显存要求 | 6GB 以上 | 4GB 起步 |
+| 适合 | 新手第一套 | 想要工作流复刻、进阶玩法 |
+
+> 建议先装 WebUI 入门，跑顺后再试 ComfyUI（两者模型文件可以共用）。
+
+## 环境要求
+
+- NVIDIA 显卡，驱动正常（`nvidia-smi` 有输出）
+- 显存：WebUI 至少 6GB（SDXL 模型需 12GB+）；ComfyUI 4GB 可跑 SD1.5
+- 磁盘空间：程序 + 模型，建议预留 20GB 以上
+- Python 3.10（推荐），Git
+
+## 第一步：部署 WebUI
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
+cd stable-diffusion-webui
+
+# 2. 创建虚拟环境
+python3.10 -m venv venv
+source venv/bin/activate
+
+# 3. 安装依赖（国内可加清华源加速）
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+pip install -r requirements.txt
+```
+
+启动（首次会自动下载依赖，耐心等待）：
+
+```bash
+./webui.sh
+```
+
+看到 `http://127.0.0.1:7860` 后浏览器打开即进入界面。
+
+> 显卡够好可以给 `./webui.sh` 加参数 `--xformers` 提速；显存紧张加 `--medvram`（8GB 以下建议）或 `--lowvram`（4GB 左右）。
+
+## 第二步：下载模型
+
+模型文件（`.safetensors`）放入 `models/Stable-diffusion/` 目录：
+
+```bash
+mkdir -p models/Stable-diffusion
+# 下载好后放进去，例如：
+# Realistic Vision（写实）、DreamShaper（动漫）、SDXL Base（高清）
+```
+
+常见模型来源：
+
+- **Civitai**（全球最大模型社区，civitai.com，海外）
+- **国内镜像**：liblib.art、tusi.art 等平台直接下载
+- **HuggingFace**：官方 SD1.5 / SDXL 底模
+
+放好后回到 WebUI 页面，左上角模型下拉框选择新模型即可。
+
+| 模型 | 用途 | 显存 |
+|------|------|------|
+| SD 1.5 系列（v1-5、Realistic Vision、DreamShaper） | 入门、写实/动漫 | 6~8GB |
+| SDXL Base | 高清、构图更好 | 12GB+ |
+
+## 第三步：生成第一张图
+
+WebUI 页面操作：
+
+1. 顶部选择模型
+2. 「txt2img」标签页输入提示词：
+   - 正向：`a beautiful landscape, mountain, river, sunset, highly detailed`
+   - 负向（Negative prompt）：`low quality, blurry, watermark`
+3. 参数：Steps 20、CFG Scale 7、分辨率 512×512
+4. 点 **Generate**，几秒到几十秒后出图
+
+关键词写法技巧：
+
+- 英文逗号分隔多个描述词：主体、场景、风格、质量词
+- 顺序影响权重：越靠前越重要
+- 想要某种画风，直接写 `anime style` / `oil painting` / `photorealistic`
+
+## 进阶玩法
+
+- **图生图（img2img）**：上传图片改风格、扩图
+- **LoRA**：小模型文件（几十 MB）叠加特定角色/画风，不用换底模
+- **ControlNet**：用线稿/姿势图控制生成构图
+- **高清修复（Upscale）**：先低分辨率生成再放大
+- **ComfyUI**：加载别人的工作流文件（拖入即用），复刻大神的生成方案
+
+## 常见问题
+
+**`CUDA out of memory`？**
+降分辨率（512→384）、降低 batch size、加 `--medvram/--lowvram` 启动参数、换小模型（SD1.5 而非 SDXL）。
+
+**模型在下拉框里看不到？**
+确认文件是 `.safetensors` 格式、放对目录（`models/Stable-diffusion/`），页面点刷新图标。
+
+**生成太慢？**
+- 检查驱动是否为最新（老驱动对 PyTorch 加速差）
+- 加 `--xformers`
+- 显存够就调大分辨率反而可能更快（避免多次放大）
+
+**AMD 显卡能跑吗？**
+可以但复杂：Linux 下用 ROCm 编译版 PyTorch，或者用 ComfyUI 的 ROCm 支持。NVIDIA 是体验最顺的路径。
+
+## 下一步
+
+- 学习推理原理可看 [llama.cpp 教程](/tutorials/llama-cpp-inference)（同为本地 AI 生态）
+- 批量出图、服务化场景可了解 ComfyUI 的 API 模式
+- 显存紧张时，参考 [Docker + GPU 容器](/tutorials/docker-gpu-containers) 用容器隔离环境
+
+> 提示：Stable Diffusion 模型权重均为开源（底模许可见各模型主页）。AI 生成内容注意遵守平台与当地法规，商用前确认模型许可（部分模型禁商用）。涉及系统操作前请备份数据。

@@ -1,0 +1,149 @@
+---
+title: Open WebUI：给本地大模型配一个 ChatGPT 界面
+slug: open-webui
+author: TuxAI
+date: 2026-08-17
+tags: [ai, open-webui, ollama, 大模型, docker, web]
+estimatedReadTime: 14
+environment: [服务器, GPU, 容器]
+---
+# Open WebUI：给本地大模型配一个 ChatGPT 界面
+
+## 写在前面
+
+命令行里 `ollama run qwen2.5` 能用，但体验和 ChatGPT 差太多。**Open WebUI** 是本地大模型生态里最流行的网页界面：聊天、多模型切换、历史记录、知识库检索（RAG）、多用户管理全都有，而且数据完全留在自己机器上。
+
+本教程带你用 Docker 把 **Ollama（推理引擎）+ Open WebUI（网页界面）** 一起跑起来，最后在浏览器里得到一个完全本地、类 ChatGPT 的对话平台。
+
+> 前置知识：Docker 基础操作与 GPU 加速见 [Docker + GPU 容器](/tutorials/docker-gpu-containers)。
+
+## 环境要求
+
+- Linux + Docker（GPU 加速建议装 NVIDIA Container Toolkit）
+- 内存 8GB 以上（跑 7B 模型建议 16GB+）
+- 磁盘：模型文件 5~20GB/个
+
+## 第一步：用 Docker Compose 一次拉起两个服务
+
+创建项目目录和配置文件：
+
+```bash
+mkdir -p ~/ai-stack && cd ~/ai-stack
+```
+
+新建 `compose.yaml`：
+
+```yaml
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    volumes:
+      - ollama:/root/.ollama
+    # 有 NVIDIA GPU 就打开下面两行
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    depends_on:
+      - ollama
+    ports:
+      - "3000:8080"
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+    volumes:
+      - open-webui:/app/backend/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  ollama:
+  open-webui:
+```
+
+启动：
+
+```bash
+docker compose up -d
+```
+
+- Ollama 服务：容器间地址 `http://ollama:11434`
+- Open WebUI：浏览器访问 **http://localhost:3000**（首次访问注册管理员账号）
+
+> `-v ollama:/root/.ollama` 是模型持久化关键：模型下载到卷里，删容器重来也不丢。
+
+## 第二步：往 Ollama 里装模型
+
+Open WebUI 界面里也能直接搜模型安装，但命令行更稳（模型来自 Ollama 官方库）：
+
+```bash
+docker exec -it ollama ollama pull qwen2.5:7b
+docker exec -it ollama ollama pull deepseek-r1:7b
+```
+
+按显存选型号：
+
+| 显存 | 推荐模型 | 说明 |
+|------|----------|------|
+| 8GB | `qwen2.5:3b` | 日常聊天流畅 |
+| 12~16GB | `qwen2.5:7b` / `deepseek-r1:7b` | 质量与速度平衡 |
+| 24GB+ | `qwen2.5:14b` / `deepseek-r1:14b` | 更强的推理能力 |
+
+国内下载慢？可以配置镜像加速（如设置 `OLLAMA_ORIGINS` 无关，主要是 registry 加速）：
+```bash
+# 拉不动时改用国内加速器（如 docker 镜像加速器 + ollama 官方源重试）
+docker exec -it ollama ollama pull qwen2.5:7b --insecure
+```
+
+## 第三步：开始用
+
+回到浏览器 http://localhost:3000，右上角模型下拉框选择已装的模型，直接开聊。
+
+值得用的功能：
+
+- **多模型同屏对比**：同一问题发给不同模型，看谁答得好
+- **历史会话**：左侧栏管理，自动保存
+- **知识库（RAG）**：「工作空间」里上传文档（PDF/Word/Markdown），对话时引用本地资料回答
+- **多用户**：注册页可开多人账号，数据互相隔离
+- **代码高亮 / Markdown / 附件**：开箱即用
+
+## 进阶：接到 OpenAI 兼容的任意后端
+
+Open WebUI 不止能连 Ollama。在「管理员设置 → 连接」里把 `OLLAMA_BASE_URL` 换成别的服务地址即可：
+
+- 接 [vLLM](/tutorials/vllm-serving)（`http://host.docker.internal:8000/v1`，用 OpenAI 连接方式）
+- 接 [llama.cpp](/tutorials/llama-cpp-inference) 的 llama-server（同样兼容 OpenAI API）
+- 甚至可以接 OpenAI 官方 API 做混合使用
+
+> 容器里访问宿主机上的服务，用 `host.docker.internal` 代替 `localhost`（compose 里已加 `extra_hosts`）。
+
+## 常见问题
+
+**登录后模型列表为空？**
+Ollama 没连上。在容器里测一下：`docker exec -it open-webui curl http://ollama:11434/api/tags`，返回模型 JSON 即正常；为空则检查 compose 里 `OLLAMA_BASE_URL` 拼写。
+
+**浏览器打开 3000 端口没反应？**
+`docker compose ps` 看状态；`docker compose logs -f open-webui` 看日志，首次启动要拉取下载（约 2~5 分钟）。
+
+**CPU 机器能用吗？**
+能。跑 3B 小模型聊天够用（速度约 10 token/s），7B 勉强，14B 以上不推荐。GPU 加速方法见 [Docker + GPU 容器](/tutorials/docker-gpu-containers)。
+
+**数据存在哪？**
+Open WebUI 的聊天/用户数据在 `open-webui` 卷里，Ollama 模型在 `ollama` 卷里。备份这两卷即可（`docker volume inspect` 查看路径）。
+
+## 下一步
+
+- 想理解底层推理引擎，看 [llama.cpp 教程](/tutorials/llama-cpp-inference)
+- 要服务多用户并发、追求吞吐，把后端换成 [vLLM](/tutorials/vllm-serving)
+- 生图方向：[Stable Diffusion 本地生图](/tutorials/stable-diffusion)（教程整理中）
+
+> 提示：Open WebUI 是开源项目（BSD-3-Clause 许可）。涉及系统操作前请备份数据。模型均免费开源，商用前查看模型主页许可。

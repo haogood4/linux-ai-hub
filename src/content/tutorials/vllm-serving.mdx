@@ -1,0 +1,166 @@
+---
+title: vLLM：高吞吐量的大模型推理服务
+slug: vllm-serving
+author: TuxAI
+date: 2026-08-17
+tags: [ai, vllm, 大模型, 推理, 服务, 生产环境]
+estimatedReadTime: 16
+environment: [服务器, GPU]
+---
+# vLLM：高吞吐量的大模型推理服务
+
+## 写在前面
+
+vLLM 是面向**生产环境**的大模型推理服务框架：它的核心优势是 **PagedAttention 显存管理**——把 KV Cache 像操作系统分页一样管理，同样的显存能同时服务更多并发请求，吞吐量比常规方案高数倍。
+
+如果你只是个人电脑上自己玩，[llama.cpp](/tutorials/llama-cpp-inference) 更轻量；如果目标是**多用户并发调用**、把模型做成正式 API 服务，vLLM 是当前最主流的选择（OpenAI 兼容接口，一行命令启动）。
+
+> 定位差异一句话：llama.cpp 是「一个人用，省资源」；vLLM 是「很多人同时用，要吞吐」。
+
+## 环境要求
+
+- Linux 系统 + NVIDIA 显卡（驱动正常，`nvidia-smi` 可用）
+- Python 3.10+（推荐 3.12）
+- 显存：7B 级模型建议 16GB 以上；量化版（AWQ 4bit）可降到 10GB
+- 磁盘：模型权重 10~20GB
+
+> 无 GPU 不建议用 vLLM（CPU 部署体验差），这类场景请用 llama.cpp。
+
+## 第一步：安装 vLLM
+
+建议用虚拟环境，避免污染系统 Python：
+
+```bash
+python3 -m venv vllm-env
+source vllm-env/bin/activate
+pip install --upgrade pip
+pip install vllm
+```
+
+验证安装：
+
+```bash
+python -c "import vllm; print(vllm.__version__)"
+```
+
+> 国内网络可加 `-i https://mirror.baidu.com/pypi/simple` 加速；vLLM 二进制对 CUDA 版本有强依赖，pip 安装会自动带上对应 CUDA 组件，一般无需手动装 CUDA Toolkit。
+
+## 第二步：下载模型
+
+vLLM 直接加载 HuggingFace 格式的模型（不是 GGUF 量化文件）。用 Qwen 系列做示例：
+
+```bash
+pip install modelscope
+# 国内：魔搭下载（速度快）
+modelscope download --model Qwen/Qwen2.5-7B-Instruct --local_dir ./models/Qwen2.5-7B-Instruct
+
+# 或者海外：HuggingFace
+# export HF_ENDPOINT=https://hf-mirror.com
+# huggingface-cli download Qwen/Qwen2.5-7B-Instruct --local-dir ./models/Qwen2.5-7B-Instruct
+```
+
+## 第三步：启动推理服务
+
+`vllm serve` 一条命令启动 OpenAI 兼容 API 服务：
+
+```bash
+vllm serve ./models/Qwen2.5-7B-Instruct \
+  --host 127.0.0.1 --port 8000 \
+  --gpu-memory-utilization 0.9
+```
+
+启动参数说明：
+
+| 参数 | 作用 |
+|------|------|
+| `--host` / `--port` | 监听地址（默认 127.0.0.1:8000） |
+| `--gpu-memory-utilization` | 显存占用上限（0.8~0.95，防 OOM） |
+| `--max-model-len` | 最大上下文长度（默认 4096，调大占显存） |
+| `--served-model-name` | API 里的模型别名（默认用模型路径名） |
+| `--tensor-parallel-size N` | 多卡并行（模型切分到 N 张 GPU） |
+| `--api-key <key>` | API 鉴权 Key（对外暴露时必设） |
+
+### 多卡部署（大模型）
+
+```bash
+vllm serve ./models/Qwen2.5-14B-Instruct \
+  --tensor-parallel-size 2 \
+  --gpu-memory-utilization 0.85
+```
+
+## 第四步：调用服务
+
+**查看模型列表：**
+
+```bash
+curl http://localhost:8000/v1/models
+```
+
+**对话接口（OpenAI 兼容）：**
+
+```bash
+curl http://localhost:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "Qwen2.5-7B-Instruct",
+    "messages": [{"role": "user", "content": "用一句话介绍 Linux"}],
+    "max_tokens": 200
+  }'
+```
+
+**用 Python 的 openai 库调用（换 base_url 即可）：**
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="EMPTY",  # 未设置 --api-key 时任意字符串即可
+    base_url="http://localhost:8000/v1",
+)
+resp = client.chat.completions.create(
+    model="Qwen2.5-7B-Instruct",
+    messages=[{"role": "user", "content": "用一句话介绍 Linux"}],
+)
+print(resp.choices[0].message.content)
+```
+
+现有调用 OpenAI 接口的程序，只需要把 `base_url` 改成 `http://localhost:8000/v1` 就能切换到本地服务。
+
+## 显存不够怎么办
+
+| 手段 | 效果 |
+|------|------|
+| 选更小的模型（3B/1.5B） | 显存需求减半以上 |
+| AWQ 4bit 量化版模型 | 显存约降 60%，vLLM 原生支持 |
+| 调低 `--max-model-len`（如 4096→2048） | 减少 KV Cache 显存 |
+| 调低 `--gpu-memory-utilization` | 给其他程序留显存 |
+
+AWQ 量化版启动：
+
+```bash
+vllm serve ./models/Qwen2.5-7B-Instruct-AWQ \
+  --quantization awq \
+  --gpu-memory-utilization 0.85
+```
+
+## 常见问题
+
+**`torch` / CUDA 版本冲突？**
+vLLM 对 PyTorch 版本敏感，建议在干净虚拟环境里 `pip install vllm`（自动装匹配的 torch），不要和已有项目混装。
+
+**模型加载报错需要 `--trust-remote-code`？**
+部分模型仓库带自定义代码，启动命令加 `--trust-remote-code` 即可。只在确知模型来源可信时使用。
+
+**并发一高就 OOM？**
+调低 `--gpu-memory-utilization`、`--max-model-len`；或换 AWQ 量化模型。
+
+**vLLM 和 llama.cpp 怎么选？**
+单用户、显存紧、要量化 → llama.cpp；多用户并发、生产 API 服务、企业 GPU → vLLM。先看[llama.cpp 教程](/tutorials/llama-cpp-inference)对比后再决定。
+
+## 下一步
+
+- 容器化部署 vLLM：官方镜像 `vllm/vllm-openai`（教程见 [Docker + GPU 容器](/tutorials/docker-gpu-containers)）
+- 图形界面：Open WebUI（教程整理中）
+- 生图方向：Stable Diffusion 本地部署（教程整理中）
+
+> 提示：涉及系统安装、驱动、分区等操作前，请务必备份重要数据。模型与框架均免费开源，商用前请查看对应模型主页的许可说明。

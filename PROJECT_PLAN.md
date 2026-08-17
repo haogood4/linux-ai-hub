@@ -43,9 +43,10 @@
 
 ### Phase 3 — AI 部署内容
 - [x] 教程：Ollama 本地部署
-- [x] 教程：llama.cpp / vLLM 推理（llama.cpp 篇已完成；vLLM 篇整理中）
+- [x] 教程：llama.cpp / vLLM 推理
 - [x] 教程：Docker + GPU 容器
-- [ ] 教程：Stable Diffusion 部署
+- [x] 教程：Open WebUI 图形界面
+- [x] 教程：Stable Diffusion 部署
 - [x] `/paths` 学习路径聚合页（paths 集合 3 档路线）
 - [x] `/terminal-game` 包管理器命令行游戏（Debian/Arch/Red Hat 三派系独立关卡 + 命令对照表）
 

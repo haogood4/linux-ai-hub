@@ -90,3 +90,8 @@
 | llama.cpp 量化推理教程 | ✅ | 2026-08-17 | GGUF/Q4_K_M/llama-cli/llama-server OpenAI 兼容 API，内容经 2026-08 真实资料核查（b10369） |
 | Docker + GPU 容器教程 | ✅ | 2026-08-17 | nvidia-container-toolkit（nvidia-docker2 已弃用）、CUDA 镜像验证、容器跑 Ollama 实战 |
 | GitHub 动态页上线 | 🔄 | 2026-08-17 | 页面+导航已提交并 CI 全绿；等待 SFTP 密码部署 |
+
+| vLLM 高吞吐推理教程 | ✅ | 2026-08-17 | vllm serve / OpenAI 兼容 API / 多卡并行 / AWQ，经 2026-08 官方文档核查 |
+| Open WebUI 教程 | ✅ | 2026-08-17 | Docker Compose（Ollama+WebUI）、模型选型表、接 vLLM/llama.cpp 进阶 |
+| Stable Diffusion 教程 | ✅ | 2026-08-17 | WebUI 部署、SD1.5/SDXL 模型、Civitai 来源、低显存参数，经 2026-08 资料核查 |
+| 教程库规划清单更新 | ✅ | 2026-08-17 | Phase 3 全部 5 篇上线；新规划：RAG/Dify/MCP/ComfyUI/AI 视频/TTS |

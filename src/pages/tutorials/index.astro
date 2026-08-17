@@ -9,18 +9,19 @@ const tutorials = (await getCollection('tutorials')).sort(
 
 const plannedGroups = [
   {
-    title: 'AI 推理与服务',
+    title: 'AI 应用开发',
     items: [
-      { title: 'llama.cpp：CPU/GPU 量化推理', desc: '轻量级推理引擎，量化模型压缩后可在低配机器上运行' },
-      { title: 'vLLM：高吞吐推理服务', desc: '面向多用户并发调用的生产级推理服务' },
-      { title: 'Open WebUI：给 Ollama 加图形界面', desc: '浏览器聊天界面，支持多模型切换与文档上传' },
+      { title: 'RAG 知识库实战', desc: '向量数据库 + 本地模型，给 AI 接入自己的文档资料' },
+      { title: 'Dify：可视化 AI 应用搭建', desc: '低代码编排对话、知识库与工作流' },
+      { title: 'Function Calling 与 MCP', desc: '让本地模型调用工具，连接外部系统' },
     ],
   },
   {
-    title: '容器与生图',
+    title: '更多生图与创作',
     items: [
-      { title: 'Docker + GPU 容器', desc: '容器化部署 AI 服务，nvidia-container-toolkit 配置' },
-      { title: 'Stable Diffusion 本地生图', desc: '文生图模型部署与常用 WebUI' },
+      { title: 'ComfyUI 工作流入门', desc: '节点式工作流进阶，复刻社区成熟方案' },
+      { title: 'AI 视频生成', desc: '本地视频生成与工作流集成' },
+      { title: '语音合成（TTS）本地部署', desc: '本地文字转语音服务' },
     ],
   },
 ];
