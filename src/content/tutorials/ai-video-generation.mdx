@@ -1,0 +1,137 @@
+---
+title: 本地 AI 视频生成：从 Wan 2.2 开始
+slug: ai-video-generation
+author: TuxAI
+date: 2026-08-17
+tags: [ai, 视频生成, wan, comfyui, 显存, 图生视频]
+estimatedReadTime: 20
+environment: [GPU]
+---
+# 本地 AI 视频生成：从 Wan 2.2 开始
+
+## 写在前面
+
+2026 年的本地 AI 视频生成已经「跑得起来」了：开源模型可以在消费级显卡上生成 **5 秒左右的 720p 片段**，8GB 显存也有低门槛方案。但要说实话——它还不是「输入一句话出一分钟成片」的程度，速度、显存和可玩性之间需要做明确的取舍。
+
+本教程基于 [ComfyUI](/tutorials/comfyui-basic-workflow) 讲透 2026 主流开源视频模型选型，并以阿里 Wan 2.2 为实战主线，跑通文生视频、图生视频、首尾帧三种玩法。
+
+## 一、2026 开源视频模型怎么选
+
+| 模型 | 出品方 | 协议 | 参数量 | 最低显存 | 特点 |
+|------|--------|------|--------|----------|------|
+| **Wan 2.2** | 阿里 | Apache 2.0 | 5B / 14B（MoE 激活） | 8GB（5B） | 中文好、影视级美学、ComfyUI 原生支持、官方 4 步加速 |
+| **LTX-2 / 2.3** | Lightricks | Apache 2.0 | 2B 级 | 8GB | 最快、20 秒长视频、开源首个**音画同步** |
+| **HunyuanVideo** | 腾讯 | 自定义 | 13B | 16GB | 电影感最强，但慢且吃显存 |
+| **CogVideoX** | 智谱 | Apache 2.0 | 2B / 5B | 8GB（2B） | 叙事理解好，运动较保守 |
+| **Mochi 1** | Genmo | Apache 2.0 | 10B | 24GB | 物理真实，适合研究 |
+
+**选型建议**：
+- 8GB 显存（4060 等）→ Wan 2.2 TI2V-5B 或 LTX-2 量化版
+- 12–16GB → Wan 2.2 5B 全精度、Wan 2.1 1.3B 上 720p
+- 24GB → Wan 2.2 14B FP8（480p）或 GGUF Q5（720p）
+- 中文提示词 → Wan 系（UMT5 多语言编码器）；英文为主 → LTX 速度优势明显
+
+> 闭源 API（Sora、Seedance、可灵）质量更高但拿不到权重，无法本地部署——这也是本地方案最大的边界。
+
+## 二、环境准备
+
+- 已装好 [ComfyUI](/tutorials/comfyui-basic-workflow)（建议最新版，视频节点原生支持）
+- NVIDIA 显卡 + 驱动 + CUDA 环境（见 [Docker + GPU 容器](/tutorials/docker-gpu-containers)）
+- 磁盘空间：视频模型动辄 20–90GB，预留 100GB+ 比较稳
+
+## 三、实战主线：Wan 2.2 TI2V-5B（8GB 入门）
+
+Wan 2.2 的 5B 混合版（TI2V）一个模型同时支持文生视频和图生视频，配合 ComfyUI 原生 offloading 适配 8GB 显存，是 2026 年综合门槛最低的路线。
+
+### 3.1 下载模型
+
+| 文件 | 作用 | 存放目录 |
+|------|------|----------|
+| `wan2.2_ti2v_5B_fp16.safetensors` | 生成主模型 | `models/diffusion_models/` |
+| `umt5_xxl_fp8_e4m3fn_scaled.safetensors` | 文本编码器（多语言） | `models/text_encoders/` |
+| `wan2.2_vae.safetensors` | 视频 VAE（5B 专用，48 通道） | `models/vae/` |
+
+模型来源：[HuggingFace Wan-AI](https://huggingface.co/Wan-AI)、[Comfy-Org 模型页](https://comfyanonymous.github.io/ComfyUI_examples/)；国内可从 hf-mirror 镜像下载。
+
+### 3.2 加载官方工作流
+
+1. ComfyUI 菜单 → **工作流 → 浏览模板 → 视频** → 选择 `Wan2.2 5B 视频生成`
+2. 确认三个节点分别指向上面三个文件
+3. 正向提示词写画面：主体 + 动作 + 镜头 + 光影
+
+**提示词示例**：
+
+```
+一只橘猫在窗台上晒太阳，微风吹动窗帘，
+镜头缓慢推进，午后金色光线，写实风格，电影感
+```
+
+4. （可选）图生视频：Ctrl+B 启用 `Load Image` 上传起始图，它会作为首帧驱动
+5. 点 Run，等待（8GB 显存 480p 5 秒约 5–10 分钟）
+
+### 3.3 输出文件
+
+默认输出在 `ComfyUI/output/`，格式为 mp4（`Save Video` 节点）或 gif。
+
+## 四、进阶：Wan 2.2 14B 高质量路线
+
+想要更好的画面和复杂运动，用 14B（MoE 双专家架构：总参 27B、每步激活 14B，高/低噪声两个专家分别管布局和细节）。
+
+### 4.1 文件清单
+
+| 文件 | 存放目录 |
+|------|----------|
+| `wan2.2_t2v_high_noise_14B_fp8_scaled.safetensors` | `models/diffusion_models/` |
+| `wan2.2_t2v_low_noise_14B_fp8_scaled.safetensors` | `models/diffusion_models/` |
+| `umt5_xxl_fp8_e4m3fn_scaled.safetensors` | `models/text_encoders/` |
+| `wan_2.1_vae.safetensors` | `models/vae/` |
+
+> **注意**：14B 用 `wan_2.1_vae`（16 通道）；用成 5B 的 `wan2.2_vae`（48 通道）会直接报通道不匹配错误——这是最高频的坑。
+
+工作流同样在模板库：`Wan2.2 14B T2V`（文生视频）/ `Wan2.2 14B I2V`（图生视频）/ `Wan2.2 14B FLF2V`（首尾帧转视频）。
+
+- 14B 显存门槛：FP8 约 24GB（480p），GGUF Q5 约 21GB、Q3 约 15GB（720p 需 24GB 以上）
+- 速度参考（L40S 48GB + 官方 LightX2V 4 步）：5 秒视频约 30 秒出，10 秒约 2 分钟，30 秒约 12 分钟——**帧数越多，注意力 O(N²) 越慢**，长视频不建议单次硬跑
+
+## 五、低显存与提速三板斧
+
+1. **LightX2V 步数蒸馏**：官方 4 步 LoRA，采样步数从 20–50 步降到 4 步，速度提升数倍，画质损失小
+2. **GGUF 量化**（City96/ComfyUI-GGUF 节点）：Q5/Q3 版本显著降显存，适合 12GB 以下
+3. **SageAttention**：Hopper 架构（4090/5090 等）可装，进一步提速；没装时 ComfyUI 自动回退 PyTorch attention，只是慢一些
+
+## 六、长视频：分镜拼接 vs I2V 链式
+
+单段生成上限约 5–10 秒（再长速度骤降且易崩），长视频两条路：
+
+- **路径 A：T2V 多分镜拼接**——把脚本拆成多个 5 秒分镜分别生成，用 ffmpeg 拼接；适合叙事/不同场景
+- **路径 B：I2V 链式**——每段取末帧作为下一段 I2V 的首帧，画面连续；适合同一场景延续
+
+```bash
+# ffmpeg 拼接示例（同分辨率 mp4）
+ffmpeg -f concat -safe 0 -i list.txt -c copy output.mp4
+```
+
+## 常见问题
+
+**8GB 显存够吗？** 够——Wan 2.2 5B（配合 offloading）或 LTX-2 量化版都能跑 480p；4060 实测 5 秒 480p 约 4 分钟（Wan 2.1 1.3B 参考值）。
+
+**报错 `expected input ... to have 48 channels, but got 16 channels`？** VAE 用错了：14B 配 `wan_2.1_vae`，5B 配 `wan2.2_vae`，互换必炸。
+
+**生成很慢正常吗？** 正常。视频生成是数十步 × 每步全帧注意力，5 秒 480p 用几分钟到十几分钟都属于合理区间；装 SageAttention + LightX2V 能快数倍。
+
+**能生成带声音的视频吗？** LTX-2 系支持音画同步生成；Wan 系目前纯画面，音频需后期合成。
+
+**爆显存（OOM）怎么办？** 降分辨率（480p）、降帧数、用 GGUF Q3/Q5、开启 offloading（性能换显存）。
+
+## 风险提示
+
+- 视频模型体积大、推理重，注意磁盘空间与发热；长时间满载生成建议监控显卡温度
+- 涉及真人肖像、他人作品、商业用途的内容，请遵守相关法律法规与平台规范
+- 开源模型许可不同（Apache 2.0 / 自定义），商用前先核对各模型许可证
+
+## 下一步
+
+- 先装好图形化环境 → [ComfyUI 工作流入门](/tutorials/comfyui-basic-workflow)
+- 视频帧需要先有画面 → [Stable Diffusion 部署](/tutorials/stable-diffusion)
+- 视频内容配音配乐 → 后续「本地 TTS 语音合成」教程
+- 跑不动大模型时 → 用 [Docker GPU 容器](/tutorials/docker-gpu-containers) 隔离环境或租云 GPU
