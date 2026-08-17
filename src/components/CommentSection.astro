@@ -1,0 +1,36 @@
+---
+// 评论区组件：基于 Giscus（GitHub Discussions）
+// 无后端依赖，评论数据存储在仓库 Discussions 中
+const repo = 'haogood4/linux-ai-hub';
+const repoId = 'R_kgDOT5wYQg';
+const category = 'General';
+const categoryId = 'DIC_kwDOT5wYQs4DDlJN';
+const lang = Astro.props.lang ?? 'zh-CN';
+const hint =
+  lang === 'zh-CN'
+    ? '评论区由 GitHub Discussions 驱动，使用 GitHub 账号即可参与讨论。'
+    : 'Comments are powered by GitHub Discussions — sign in with a GitHub account to join the conversation.';
+---
+<section class="mt-12 border-t border-gray-200 pt-8" aria-label="评论区">
+  <h2 class="text-xl font-bold text-gray-900 mb-1">评论</h2>
+  <p class="text-sm text-gray-500 mb-6">{hint}</p>
+  <div class="giscus"></div>
+  <script
+    is:inline
+    src="https://giscus.app/client.js"
+    data-repo={repo}
+    data-repo-id={repoId}
+    data-category={category}
+    data-category-id={categoryId}
+    data-mapping="pathname"
+    data-strict="1"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="top"
+    data-theme="light"
+    data-lang={lang}
+    data-loading="lazy"
+    crossorigin="anonymous"
+    async
+  ></script>
+</section>

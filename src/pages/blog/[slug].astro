@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import CommentSection from '@/components/CommentSection.astro';
 import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
@@ -39,6 +40,8 @@ const { title, tags, date, author } = post.data;
     <div class="prose-linux">
       <Content />
     </div>
+
+    <CommentSection />
 
     <nav aria-label="页尾导航" class="mt-12 border-t border-gray-200 pt-6">
       <a href="/blog" class="inline-block rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 no-underline hover:bg-gray-100 transition-colors">

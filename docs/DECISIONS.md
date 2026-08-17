@@ -186,3 +186,30 @@ package.json 新增 @lhci/cli devDependency；首次接入发现并修复 2 类�
 hook 参数结构不同），导致构建失败且 sitemap 缺失。修复：sitemap 精确锁定 `3.3.1`。
 再次印证 ADR-001 结论：**所有新增/变更依赖必须核对与 astro 4.16 生态的兼容性，
 易变范围版本（^）在重解析时可能被意外升级**。
+
+---
+
+## ADR-009 评论区接入 Giscus（GitHub Discussions）
+
+日期：2026-08-17
+
+### 背景
+博客与教程文章需要读者评论区。站点为纯静态托管（Astro 构建产物 + Nginx + CDN），
+虚拟主机 SSH 仅开放 SFTP（无 shell 执行权限），无法运行 Waline/Artalk 等需常驻
+后端进程的自建评论服务；Cactus（Matrix）在国内网络环境下加载不稳定。
+
+### 选择
+接入 [Giscus](https://giscus.app)：评论数据存储在仓库 GitHub Discussions（分类 General），
+组件 `src/components/CommentSection.astro`（Astro 原生组件，注入 giscus client.js，
+`is:inline` 透传外部脚本）。接入三个详情页模板：`/blog/[slug]`、`/tutorials/[slug]`
+（zh-CN）、`/en/tutorials/[slug]`（en）。前置条件：仓库 `haogood4/linux-ai-hub`
+由 private 改为 **public**（网站内容本就公开，无额外泄露；仓库无敏感文件）。
+
+### 原因
+零后端依赖、GitHub 登录天然防垃圾评论、读者画像（开发者）高度匹配、
+评论与代码同仓库便于管理。
+
+### 影响
+- 仓库可见性 public；Discussions 已启用
+- 评论加载依赖 giscus.app + GitHub API（国内访问基本可用，偶发慢）
+- 无构建期影响（script 运行时注入），check 全绿、构建 67 页不变
