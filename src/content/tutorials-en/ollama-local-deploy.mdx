@@ -1,0 +1,124 @@
+---
+title: 'Run Your First Local LLM on Linux: Ollama for Beginners'
+slug: ollama-local-deploy
+author: TuxAI
+date: 2026-08-16
+tags: [ai, ollama, llm, local-deployment, beginner]
+estimatedReadTime: 15
+environment: [服务器, GPU]
+---
+# Run Your First Local LLM on Linux: Ollama for Beginners
+
+## Introduction
+
+Ollama is one of the simplest and most popular ways to run LLMs locally: one command to install, one command to pull a model, and you're chatting right in the terminal. It's also the shortest path from "learning Linux" to "producing AI on Linux."
+
+This tutorial assumes you already have a Linux environment — a VM, dual boot, or a server all work. If you don't have Linux yet, check the [installation guide](/try/install) first.
+
+## System Requirements
+
+- A Linux system (Ubuntu / Debian / Fedora, or any mainstream distro)
+- RAM: 8GB+ recommended; for pure CPU inference, more RAM means smoother runs
+- GPU (optional but recommended): an NVIDIA card with official drivers gives a big speed boost
+
+> No NVIDIA GPU? No problem — Ollama supports pure CPU inference, it's just slower. Fine for a first taste.
+
+## Step 1: Install Ollama
+
+The official one-line installer works on Linux (installs to your user directory, no sudo needed):
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+Verify the install:
+
+```bash
+ollama --version
+```
+
+> If you'd rather not pipe a script directly, grab the `.deb` or `.rpm` package from the [Ollama downloads page](https://ollama.com/download/linux).
+
+## Step 2: Pull and Run Your First Model
+
+Let's use Llama 3.2 8B (Meta's open-source model, strong general capability) as the example:
+
+```bash
+ollama run llama3.2
+```
+
+The first run downloads the model automatically (several GB, depends on your network speed), then drops you straight into the chat interface:
+
+```text
+>>> 用一句话介绍 Linux
+```
+
+Type `/bye` to exit the chat.
+
+### For Chinese-Speaking Users
+
+If you mostly chat in Chinese, the Qwen series handles Chinese particularly well:
+
+```bash
+ollama run qwen2.5
+```
+
+## Step 3: Verify GPU Acceleration (with an NVIDIA GPU)
+
+First, confirm the driver is installed:
+
+```bash
+nvidia-smi
+```
+
+If you see the GPU info table, the driver is fine. Ollama auto-detects your GPU and uses it by default — no extra configuration. A running model shows up as VRAM usage:
+
+```bash
+nvidia-smi
+```
+
+If `nvidia-smi` says "command not found", you need to install the NVIDIA driver — on Ubuntu, check "Software & Updates → Additional Drivers", select the official driver, and reboot.
+
+## Quick Command Reference
+
+| Command | What it does |
+|------|------|
+| `ollama list` | List downloaded models |
+| `ollama pull llama3.2` | Download a model without entering chat |
+| `ollama rm llama3.2` | Delete a model, free up disk space |
+| `ollama stop` | Stop the currently running model |
+
+## Calling It via the API (Advanced)
+
+Ollama ships with an HTTP API, listening on `http://localhost:11434` by default, ready for your own programs:
+
+```bash
+curl http://localhost:11434/api/generate -d '{
+  "model": "llama3.2",
+  "prompt": "用一句话介绍 Linux"
+}'
+```
+
+Many tools (Open WebUI, VS Code extensions, etc.) can simply point at `http://localhost:11434`.
+
+> Note: by default Ollama only listens on localhost. Don't change it to `0.0.0.0` to expose it — a big part of local inference is that your data never leaves the machine. For remote access, use an SSH tunnel or a reverse proxy with proper access control.
+
+## FAQ
+
+**Model running slowly?** Slow CPU inference is normal. Switch to a smaller model (e.g. `llama3.2:1b`), or upgrade hardware / use a GPU.
+
+**Running out of disk space?** Model files are large — check `ollama list` and `ollama rm` anything you don't need.
+
+**Is Ollama free?** Ollama itself is free and open-source. Models have their own open licenses (Llama uses Meta's community license, Qwen uses Apache 2.0) — check the license on each model's page before commercial use.
+
+## Next Steps
+
+- Got Ollama running? Try a GUI: deploy Open WebUI (tutorial in progress)
+- Going further: llama.cpp quantized inference, vLLM high-throughput serving (tutorials in progress)
+- Need proper hardware pairing? Check the [Hardware Compatibility Guide](/hardware)
+
+> Caution: back up important data before any system install, driver, or partitioning operations.
+
+---
+
+*This is a pilot English translation. The rest of the tutorial library is available in Chinese at the [main tutorial hub](/tutorials).*

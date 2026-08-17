@@ -1,0 +1,120 @@
+---
+title: 'Linux from Zero: Install Ubuntu 22.04 on a VM or USB Drive'
+slug: linux-zero-to-ubuntu
+author: TuxAI
+date: 2026-08-16
+tags: [linux, ubuntu, beginner]
+estimatedReadTime: 25
+environment: [虚拟机, U盘]
+---
+# Linux from Zero: Install Ubuntu 22.04 on a VM or USB Drive
+
+## Introduction
+
+Linux is a free, open-source operating system widely used on servers, in development environments, and on personal desktops. For anyone who has never used Linux, installing it in a virtual machine or from a USB drive is the safest, lowest-risk way to try it out.
+
+## Before You Start
+
+### 1. Download the Ubuntu 22.04 ISO
+- Official site: https://ubuntu.com/download/desktop
+- Choose the `amd64` ISO file
+- Ubuntu 22.04 LTS (long-term support) is recommended
+
+### 2. Create a Boot Drive
+
+#### Option A: USB Drive
+- A USB stick with at least 2GB of capacity (4GB+ recommended — all data on it will be erased)
+- Tools: [Rufus](https://rufus.ie/) (Windows) or [balenaEtcher](https://www.balena.io/etcher/) (cross-platform)
+
+**Steps with Rufus:**
+1. Insert the USB drive and back up any important data
+2. Open Rufus and select the USB device
+3. Click "Select" and choose the downloaded Ubuntu ISO
+4. Partition scheme: `MBR` (most older machines) or `GPT` (newer machines)
+5. Target system type: `BIOS` or `UEFI` (depending on your computer)
+6. Click "Start" and confirm the data wipe
+
+#### Option B: Virtual Machine
+- Software: [VirtualBox](https://www.virtualbox.org/) or [VMware Player](https://www.vmware.com/products/player)
+- Create a new virtual machine and select the downloaded ISO
+- Allocate at least 4GB of RAM and 20GB of disk space
+
+## Partitioning Advice
+
+### Installing on a USB Drive (Live USB Mode)
+- **No partitioning needed**: just use the USB drive as the boot drive and pick "Try Ubuntu" instead of "Install Ubuntu"
+- **Pros**: no changes to your computer's internal setup, removable at any time
+- **Cons**: performance is limited by the USB drive's read/write speed
+
+### Installing in a Virtual Machine
+- Suggested allocation: `20GB` disk space, `dynamically allocated`
+- Suggested partition layout:
+  - `/boot/efi` : 512MB (UEFI mode only)
+  - `/` (root) : remaining space, ext4
+  - [swap] : equal to your RAM size or 4GB (depending on your needs)
+
+## Step 1: Boot
+
+1. Insert the USB drive or start the virtual machine
+2. Enter BIOS/UEFI setup (usually `F2`, `F12`, `Del`, or `Esc`)
+3. Set the USB drive or VM disk as the first boot device
+4. Save and exit BIOS
+
+## Step 2: Try or Install
+
+### Choose "Try Ubuntu"
+- In the GRUB menu, select the first entry, "Try Ubuntu without installing"
+- This boots a temporary Ubuntu environment and changes nothing on your computer
+
+### Check Hardware Compatibility
+- Open "Settings" → "About" and check the graphics, processor, and memory
+- The browser, media player, and file manager should all work normally
+- Having graphics driver trouble? See the troubleshooting section below
+
+## Step 3: Install Ubuntu (Optional)
+
+If you decide to install it permanently:
+
+1. From the "Try Ubuntu" desktop, click the "Install Ubuntu" icon
+2. Choose your language and keyboard layout
+3. Network: connect to Wi-Fi so updates can be downloaded
+4. **Installation type**:
+   - **"Install Ubuntu alongside ..."**: installs Linux next to an existing Windows, giving you a dual-boot setup
+   - **"Erase disk and install Ubuntu"**: completely replaces the operating system
+   - **"Something else"** (manual partitioning): configure partitions yourself (recommended for experienced users)
+5. Create a username and password
+6. Click "Continue" to start the installation (about 10–20 minutes)
+
+## After Installation
+
+- Reboot and remove the USB drive
+- You should see the GRUB menu — select "Ubuntu" to enter Linux
+- The first login may download and install remaining updates
+
+## FAQ
+
+### 1. Can't get into GRUB at boot
+- Make sure the boot order is set correctly in BIOS/UEFI
+- On UEFI systems, make sure the ISO was written via Rufus's "DD Image" or "ISO Image" mode
+
+### 2. Black screen or can't reach the desktop
+- Likely a graphics driver conflict
+- Press `e` at boot to edit the boot parameters and add `nomodeset` as a temporary fix
+- Install the official driver after installation is complete
+
+### 3. Network connection fails
+- Wi-Fi must be connected manually via the network icon in the top bar
+- Wired connections usually work automatically
+
+## Keep Learning
+
+After a successful install, continue with:
+- [SSH Essentials: Working with SSH Servers, Clients, and Keys](https://www.digitalocean.com/community/tutorials/ssh-essentials-working-with-ssh-servers-clients-and-keys) (English, DigitalOcean Community)
+- [Linux File Permissions and User Management](https://ubuntu.com/tutorials/command-line-for-beginners#3-creating-folders-and-files) (English, Ubuntu official)
+- [Docker basics: core concepts and common commands](https://docs.docker.com/get-started/) (English, Docker official)
+
+> This site's Chinese tutorials on SSH / permissions / Docker are still in progress — links will be updated here once they're published.
+
+---
+
+*This is a pilot English translation. The rest of the tutorial library is available in Chinese at the [main tutorial hub](/tutorials).*

@@ -1,0 +1,170 @@
+---
+title: 'vLLM: High-Throughput LLM Inference Serving'
+slug: vllm-serving
+author: TuxAI
+date: 2026-08-17
+tags: [ai, vllm, llm, inference, serving, production]
+estimatedReadTime: 16
+environment: [服务器, GPU]
+---
+# vLLM: High-Throughput LLM Inference Serving
+
+## Introduction
+
+vLLM is an inference serving framework built for **production environments**. Its core advantage is **PagedAttention memory management**: the KV Cache is managed the way an operating system pages memory, so the same VRAM can serve many more concurrent requests — throughput several times higher than conventional setups.
+
+If you're just playing around on your own PC, [llama.cpp](/en/tutorials/llama-cpp-inference) is lighter; if your goal is **many concurrent users** and turning a model into a proper API service, vLLM is the mainstream choice right now (OpenAI-compatible interface, one-command launch).
+
+> Positioning in one line: llama.cpp is "one person using it, saving resources"; vLLM is "many people using it at once, chasing throughput."
+
+## Environment Requirements
+
+- Linux + NVIDIA GPU (driver working, `nvidia-smi` available)
+- Python 3.10+ (3.12 recommended)
+- VRAM: 16GB+ recommended for 7B-class models; quantized versions (AWQ 4bit) can drop to 10GB
+- Disk: 10–20GB for model weights
+
+> Without a GPU, don't use vLLM (CPU deployment is a poor experience) — use llama.cpp for that scenario.
+
+## Step 1: Install vLLM
+
+Use a virtual environment so you don't pollute your system Python:
+
+```bash
+python3 -m venv vllm-env
+source vllm-env/bin/activate
+pip install --upgrade pip
+pip install vllm
+```
+
+Verify the installation:
+
+```bash
+python -c "import vllm; print(vllm.__version__)"
+```
+
+> In China, add `-i https://mirror.baidu.com/pypi/simple` to speed up downloads. vLLM binaries depend heavily on the CUDA version, but the pip install bundles the matching CUDA components automatically — you generally don't need to install the CUDA Toolkit by hand.
+
+## Step 2: Download a Model
+
+vLLM loads HuggingFace-format models directly (not GGUF quantized files). Using the Qwen family as an example:
+
+```bash
+pip install modelscope
+# ModelScope (fast in China)
+modelscope download --model Qwen/Qwen2.5-7B-Instruct --local_dir ./models/Qwen2.5-7B-Instruct
+
+# Or HuggingFace (outside China)
+# export HF_ENDPOINT=https://hf-mirror.com
+# huggingface-cli download Qwen/Qwen2.5-7B-Instruct --local-dir ./models/Qwen2.5-7B-Instruct
+```
+
+## Step 3: Start the Inference Service
+
+`vllm serve` starts an OpenAI-compatible API service with one command:
+
+```bash
+vllm serve ./models/Qwen2.5-7B-Instruct \
+  --host 127.0.0.1 --port 8000 \
+  --gpu-memory-utilization 0.9
+```
+
+Startup flags explained:
+
+| Flag | What it does |
+|------|--------------|
+| `--host` / `--port` | Listening address (default 127.0.0.1:8000) |
+| `--gpu-memory-utilization` | VRAM usage cap (0.8–0.95, prevents OOM) |
+| `--max-model-len` | Maximum context length (default 4096; raising it costs VRAM) |
+| `--served-model-name` | Model alias in the API (defaults to the model path name) |
+| `--tensor-parallel-size N` | Multi-GPU parallelism (splits the model across N GPUs) |
+| `--api-key <key>` | API auth key (**required when exposing the service publicly**) |
+
+### Multi-GPU Deployment (Large Models)
+
+```bash
+vllm serve ./models/Qwen2.5-14B-Instruct \
+  --tensor-parallel-size 2 \
+  --gpu-memory-utilization 0.85
+```
+
+## Step 4: Call the Service
+
+**List the models:**
+
+```bash
+curl http://localhost:8000/v1/models
+```
+
+**Chat endpoint (OpenAI-compatible):**
+
+```bash
+curl http://localhost:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "Qwen2.5-7B-Instruct",
+    "messages": [{"role": "user", "content": "用一句话介绍 Linux"}],
+    "max_tokens": 200
+  }'
+```
+
+**From Python with the openai library (just swap the base_url):**
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="EMPTY",  # any string works if --api-key is not set
+    base_url="http://localhost:8000/v1",
+)
+resp = client.chat.completions.create(
+    model="Qwen2.5-7B-Instruct",
+    messages=[{"role": "user", "content": "用一句话介绍 Linux"}],
+)
+print(resp.choices[0].message.content)
+```
+
+Any program that already calls the OpenAI API can switch to your local service by changing `base_url` to `http://localhost:8000/v1`.
+
+## Running Out of VRAM?
+
+| Approach | Effect |
+|----------|--------|
+| Pick a smaller model (3B/1.5B) | VRAM requirement more than halves |
+| AWQ 4bit quantized model | ~60% less VRAM, natively supported by vLLM |
+| Lower `--max-model-len` (e.g. 4096→2048) | Reduces KV Cache VRAM |
+| Lower `--gpu-memory-utilization` | Leaves VRAM for other programs |
+
+Starting an AWQ quantized model:
+
+```bash
+vllm serve ./models/Qwen2.5-7B-Instruct-AWQ \
+  --quantization awq \
+  --gpu-memory-utilization 0.85
+```
+
+## FAQ
+
+**`torch` / CUDA version conflicts?**
+vLLM is sensitive to PyTorch versions. Install it in a clean virtual environment with `pip install vllm` (it installs a matching torch automatically) — don't mix it into an existing project.
+
+**Model load error asking for `--trust-remote-code`?**
+Some model repos ship custom code; add `--trust-remote-code` to the launch command. Only use it when you're sure the model's source is trustworthy.
+
+**OOM under high concurrency?**
+Lower `--gpu-memory-utilization` and `--max-model-len`; or switch to an AWQ quantized model.
+
+**vLLM or llama.cpp?**
+Single user, tight VRAM, want quantization → llama.cpp; many concurrent users, production API service, enterprise GPUs → vLLM. Compare them in the [llama.cpp tutorial](/en/tutorials/llama-cpp-inference) before deciding.
+
+## Next Steps
+
+- Containerize vLLM: official image `vllm/vllm-openai` (see [Docker GPU Containers](/en/tutorials/docker-gpu-containers))
+- Graphical interface: Open WebUI (tutorial in progress)
+- Image generation: local Stable Diffusion deployment (tutorial in progress)
+
+> Heads-up: before any system installation, driver, or partition work, **back up your important data**. Models and frameworks are free and open-source — check each model's license on its homepage before commercial use.
+
+---
+
+*This is a pilot English translation. The rest of the tutorial library is available in Chinese at the [main tutorial hub](/tutorials).*

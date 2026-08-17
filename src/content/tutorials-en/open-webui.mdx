@@ -1,0 +1,153 @@
+---
+title: 'Open WebUI: A ChatGPT-Style Interface for Your Local LLM'
+slug: open-webui
+author: TuxAI
+date: 2026-08-17
+tags: [ai, open-webui, ollama, llm, docker, web]
+estimatedReadTime: 14
+environment: [服务器, GPU, 容器]
+---
+# Open WebUI: A ChatGPT-Style Interface for Your Local LLM
+
+## Introduction
+
+`ollama run qwen2.5` works in the terminal, but the experience is nowhere near ChatGPT. **Open WebUI** is the most popular web interface in the local LLM ecosystem: chat, multi-model switching, conversation history, knowledge-base retrieval (RAG), and multi-user management — all included, and your data stays entirely on your own machine.
+
+This tutorial runs **Ollama (the inference engine) + Open WebUI (the web interface)** together with Docker, and by the end you'll have a fully local, ChatGPT-like chat platform in your browser.
+
+> Prerequisite: Docker basics and GPU acceleration — see [Docker GPU Containers](/en/tutorials/docker-gpu-containers).
+
+## Environment Requirements
+
+- Linux + Docker (install the NVIDIA Container Toolkit for GPU acceleration)
+- 8GB+ RAM (16GB+ recommended for 7B models)
+- Disk: 5–20GB per model file
+
+## Step 1: Spin Up Both Services with Docker Compose
+
+Create a project directory and config file:
+
+```bash
+mkdir -p ~/ai-stack && cd ~/ai-stack
+```
+
+Create `compose.yaml`:
+
+```yaml
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    volumes:
+      - ollama:/root/.ollama
+    # Uncomment the lines below if you have an NVIDIA GPU
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    depends_on:
+      - ollama
+    ports:
+      - "3000:8080"
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+    volumes:
+      - open-webui:/app/backend/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  ollama:
+  open-webui:
+```
+
+Start it:
+
+```bash
+docker compose up -d
+```
+
+- Ollama service: reachable between containers at `http://ollama:11434`
+- Open WebUI: visit **http://localhost:3000** in your browser (register an admin account on first visit)
+
+> `-v ollama:/root/.ollama` is the key to model persistence: models download into the volume, so deleting the container and starting over doesn't lose them.
+
+## Step 2: Install Models into Ollama
+
+You can search and install models from inside the Open WebUI interface, but the command line is more reliable (models come from Ollama's official library):
+
+```bash
+docker exec -it ollama ollama pull qwen2.5:7b
+docker exec -it ollama ollama pull deepseek-r1:7b
+```
+
+Pick a model by VRAM:
+
+| VRAM | Recommended model | Notes |
+|------|-------------------|-------|
+| 8GB | `qwen2.5:3b` | Smooth everyday chat |
+| 12–16GB | `qwen2.5:7b` / `deepseek-r1:7b` | Balanced quality and speed |
+| 24GB+ | `qwen2.5:14b` / `deepseek-r1:14b` | Stronger reasoning |
+
+Slow downloads in China? Configure a mirror accelerator (`OLLAMA_ORIGINS` is unrelated — this is mainly about registry acceleration):
+```bash
+# If the pull stalls, switch to a China accelerator (e.g. a Docker registry mirror, then retry the official Ollama source)
+docker exec -it ollama ollama pull qwen2.5:7b --insecure
+```
+
+## Step 3: Start Using It
+
+Back in the browser at http://localhost:3000, pick an installed model from the dropdown at the top right and start chatting.
+
+Features worth using:
+
+- **Side-by-side model comparison**: send the same question to different models and see who answers better
+- **Conversation history**: managed in the left sidebar, auto-saved
+- **Knowledge base (RAG)**: upload documents (PDF/Word/Markdown) in "Workspaces" and answer from local materials during chat
+- **Multiple users**: the signup page supports several accounts, with data isolated between them
+- **Code highlighting / Markdown / attachments**: out of the box
+
+## Advanced: Connect Any OpenAI-Compatible Backend
+
+Open WebUI isn't limited to Ollama. In "Admin Settings → Connections", swap `OLLAMA_BASE_URL` for another service:
+
+- Connect [vLLM](/en/tutorials/vllm-serving) (`http://host.docker.internal:8000/v1`, via the OpenAI connection type)
+- Connect llama.cpp's llama-server (also OpenAI-API-compatible) — see [llama.cpp](/en/tutorials/llama-cpp-inference)
+- You can even connect OpenAI's official API for a hybrid setup
+
+> From inside a container, reach services on the host via `host.docker.internal` instead of `localhost` (the compose file above already adds `extra_hosts`).
+
+## FAQ
+
+**Model list empty after logging in?**
+Ollama isn't connected. Test inside the container: `docker exec -it open-webui curl http://ollama:11434/api/tags` — a JSON list of models means it works; if it's empty, check the spelling of `OLLAMA_BASE_URL` in the compose file.
+
+**Nothing responds on port 3000?**
+Check status with `docker compose ps`; check logs with `docker compose logs -f open-webui` — the first start downloads images (about 2–5 minutes).
+
+**Can it run on a CPU-only machine?**
+Yes. Chatting with a 3B model is usable (roughly 10 tokens/s); 7B is borderline; 14B and up is not recommended. For GPU acceleration, see [Docker GPU Containers](/en/tutorials/docker-gpu-containers).
+
+**Where is the data stored?**
+Open WebUI's chat/user data lives in the `open-webui` volume; Ollama's models live in the `ollama` volume. Back up those two volumes (`docker volume inspect` shows the paths).
+
+## Next Steps
+
+- Understand the inference engine underneath → [llama.cpp tutorial](/en/tutorials/llama-cpp-inference)
+- Serving many concurrent users and chasing throughput? Swap the backend to [vLLM](/en/tutorials/vllm-serving)
+- Image generation: [local Stable Diffusion](/en/tutorials/stable-diffusion)
+
+> Heads-up: Open WebUI is open-source (BSD-3-Clause license). Back up your data before making system changes. All models are free and open-source — check each model's license on its homepage before commercial use.
+
+---
+
+*This is a pilot English translation. The rest of the tutorial library is available in Chinese at the [main tutorial hub](/tutorials).*

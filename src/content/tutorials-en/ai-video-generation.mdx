@@ -13,7 +13,7 @@ environment: [GPU]
 
 In 2026, local AI video generation is genuinely usable: open-source models produce **~5-second 720p clips** on consumer GPUs, and there are low-barrier options for 8GB VRAM. To be honest, though — it is not yet "type a sentence, get a one-minute film." You have to make explicit trade-offs between speed, VRAM, and what's fun to try.
 
-This tutorial explains how to choose among the mainstream 2026 open-source video models using [ComfyUI](/tutorials/comfyui-basic-workflow) (Chinese guide), then walks through Alibaba's **Wan 2.2** as the main path: text-to-video, image-to-video, and first-and-last-frame interpolation.
+This tutorial explains how to choose among the mainstream 2026 open-source video models using [ComfyUI](/en/tutorials/comfyui-basic-workflow), then walks through Alibaba's **Wan 2.2** as the main path: text-to-video, image-to-video, and first-and-last-frame interpolation.
 
 ## 1. Choosing an Open-Source Video Model in 2026
 
@@ -37,8 +37,8 @@ This tutorial explains how to choose among the mainstream 2026 open-source video
 
 ## 2. Environment Prep
 
-- [ComfyUI](/tutorials/comfyui-basic-workflow) installed (Chinese guide; use a recent build — video nodes are native now)
-- NVIDIA GPU + driver + CUDA (see [Docker GPU Containers](/tutorials/docker-gpu-containers), Chinese)
+- [ComfyUI](/en/tutorials/comfyui-basic-workflow) installed (use a recent build — video nodes are native now)
+- NVIDIA GPU + driver + CUDA (see [Docker GPU Containers](/en/tutorials/docker-gpu-containers))
 - Disk: video models run 20–90GB each — reserve 100GB+ to be safe
 
 ## 3. Main Path: Wan 2.2 TI2V-5B (8GB Entry Point)
@@ -133,10 +133,10 @@ ffmpeg -f concat -safe 0 -i list.txt -c copy output.mp4
 
 ## Next Steps
 
-- Set up the visual environment first → [ComfyUI Workflow Basics](/tutorials/comfyui-basic-workflow) (Chinese)
-- Video frames start from an image → [Stable Diffusion Deployment](/tutorials/stable-diffusion) (Chinese)
+- Set up the visual environment first → [ComfyUI Workflow Basics](/en/tutorials/comfyui-basic-workflow)
+- Video frames start from an image → [Stable Diffusion Deployment](/en/tutorials/stable-diffusion)
 - Voice-over and music for video → [Local TTS: Make Your AI Speak](/en/tutorials/local-tts)
-- Can't run big models? Isolate with [Docker GPU Containers](/tutorials/docker-gpu-containers) (Chinese) or rent cloud GPUs
+- Can't run big models? Isolate with [Docker GPU Containers](/en/tutorials/docker-gpu-containers) or rent cloud GPUs
 
 ---
 

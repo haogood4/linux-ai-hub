@@ -1,0 +1,217 @@
+---
+title: 'RAG Knowledge Base: Connect Your Documents to Local AI'
+slug: rag-knowledge-base
+author: TuxAI
+date: 2026-08-17
+tags: [ai, rag, knowledge-base, ollama, qdrant, vector-database]
+estimatedReadTime: 17
+environment: [服务器, GPU]
+---
+# RAG Knowledge Base: Connect Your Documents to Local AI
+
+## Introduction
+
+LLM chat is great, but it has two built-in weaknesses: **outdated knowledge** (training data has a cutoff date) and **hallucination** (it makes things up when it doesn't know). RAG (Retrieval-Augmented Generation) is the standard solution to both: split your documents into chunks and store them in a vector database, retrieve the relevant chunks when a question comes in, then hand the model "retrieved content + question" to generate the answer.
+
+This tutorial builds a complete RAG pipeline locally with **Ollama (embedding + generation model) + Qdrant (vector database)** — your data never leaves your machine.
+
+> **Before you start**: install Ollama first, following [Ollama Local Deployment](/en/tutorials/ollama-local-deploy). This tutorial uses Python, so a little programming experience helps.
+
+## How RAG Works
+
+The whole flow in one line: **chunk → embed → store in vector DB → retrieve → assemble the prompt → generate**.
+
+```
+Your documents ──chunk──▶ text chunks ──embedding──▶ vectors ──▶ store in Qdrant
+                                                                      ▲
+User question ──embedding──▶ question vector ──similarity search──▶ Top-K chunks
+                                                                      │
+                                                assemble prompt ──▶ LLM generates answer
+```
+
+- **Embedding**: turns text into a list of numbers (a vector); semantically similar texts get similar vectors
+- **Vector database**: stores vectors and performs similarity search. Qdrant is one of the mainstream open-source options (this machine has v1.18 installed, auto-started via systemd, listening on 127.0.0.1 only)
+
+## Requirements
+
+- [Ollama](/en/tutorials/ollama-local-deploy) installed, with a generation model pulled (e.g. `qwen2.5:7b`)
+- [Qdrant](/en/tutorials/docker-gpu-containers) installed (native install or Docker — either works, default `127.0.0.1:6333`)
+- Python 3.10+
+- No GPU needed: embedding models are tiny, and the CPU build of a small generation model is enough
+
+## Step 1: Prepare an Embedding Model
+
+The embedding model's job is "turning text into vectors." Pull a lightweight one with Ollama:
+
+```bash
+ollama pull nomic-embed-text
+```
+
+Common embedding models compared (watch the **vector dimensions** — mixing them up will break things):
+
+| Model | Dimensions | Context length | Notes |
+|-------|-----------|----------------|-------|
+| `nomic-embed-text` | 768 | 8192 tokens | General purpose, strong on English |
+| `bge-m3` | 1024 | 8192 tokens | Strong multilingual (incl. Chinese) |
+| `all-minilm` | 384 | 512 tokens | Tiny, good for quick testing |
+
+For a Chinese knowledge base, use `bge-m3`. Verify it works:
+
+```bash
+curl http://localhost:11434/api/embed \
+  -H "Content-Type: application/json" \
+  -d '{"model": "bge-m3", "input": "Linux 是什么"}'
+# returns {"embeddings": [[0.012, ...]]}
+```
+
+> **Gotcha**: the vector dimension is determined by the model. Use exactly one embedding model for the whole knowledge base — switching models means rebuilding the index.
+
+## Step 2: Install Python Dependencies
+
+```bash
+pip install qdrant-client ollama
+```
+
+These two libraries are Qdrant's Python client and Ollama's official Python library.
+
+## Step 3: Chunking Your Documents
+
+Chunking is where RAG quality is decided: chunks too large are imprecise to retrieve, too small lose context. A good rule of thumb: **200–500 tokens per chunk, 50–100 tokens of overlap, split by paragraph**.
+
+```python
+import re
+
+def split_into_chunks(text: str, max_chars: int = 500, overlap: int = 80) -> list[str]:
+    paragraphs = re.split(r"\n\s*\n", text)
+    chunks, current = [], ""
+    for p in paragraphs:
+        if len(current) + len(p) > max_chars and current:
+            chunks.append(current)
+            current = p
+        else:
+            current += "\n" + p
+    if current:
+        chunks.append(current)
+    # simple overlap: take the tail of the previous chunk and prepend it to the next
+    for i in range(1, len(chunks)):
+        chunks[i] = chunks[i - 1][-overlap:] + "\n" + chunks[i]
+    return chunks
+```
+
+> **Practical tip**: first split by Markdown headings (one chunk per `##` section), then subdivide by length; keep tables and code blocks intact where possible.
+
+## Step 4: Embed and Store in Qdrant
+
+```python
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams
+import ollama
+
+EMBED_MODEL = "bge-m3"
+client = QdrantClient(host="127.0.0.1", port=6333)
+
+COLLECTION = "my_kb"
+DIM = 1024  # bge-m3 dimensions
+
+client.recreate_collection(
+    collection_name=COLLECTION,
+    vectors_config=VectorParams(size=DIM, distance=Distance.COSINE),
+)
+
+def embed(texts: list[str]) -> list[list[float]]:
+    r = ollama.embed(model=EMBED_MODEL, input=texts)
+    return r["embeddings"]
+
+# assume chunks are the text blocks from the previous step
+chunks = split_into_chunks(open("notes.md", encoding="utf-8").read())
+vectors = embed(chunks)
+
+client.upsert(
+    collection_name=COLLECTION,
+    points=[
+        {"id": i, "vector": v, "payload": {"text": chunks[i]}}
+        for i, v in enumerate(vectors)
+    ],
+)
+print(f"已入库 {len(chunks)} 块")
+```
+
+> Qdrant's default port is 6333. If you installed it natively, run `systemctl status qdrant` to confirm it's running.
+
+## Step 5: Retrieve + Generate (Full RAG Q&A)
+
+```python
+def rag_answer(question: str, top_k: int = 3) -> str:
+    # 1. embed the question
+    q_vec = embed([question])[0]
+
+    # 2. search the vector DB for the top_k most similar chunks
+    hits = client.search(
+        collection_name=COLLECTION,
+        query_vector=q_vec,
+        limit=top_k,
+    )
+    context = "\n\n".join(h.payload["text"] for h in hits)
+
+    # 3. assemble the prompt
+    prompt = f"""基于以下资料回答用户问题。资料中没有的信息，请直接说明不知道，不要编造。
+
+资料：
+{context}
+
+问题：{question}
+
+回答："""
+
+    # 4. the generation model answers
+    resp = ollama.generate(model="qwen2.5:7b", prompt=prompt)
+    return resp["response"]
+
+print(rag_answer("笔记里提到的备份方案是什么？"))
+```
+
+At this point you have a working local RAG: ask about anything in your documents and it answers from real material — no more making things up.
+
+## Step 6: Advanced Optimizations (Optional)
+
+| Technique | Effect | Cost |
+|-----------|--------|------|
+| **Reranking** | Coarse-search the top 20 first, then fine-rank to top 3 with a reranker model — noticeably better accuracy | Requires pulling a reranker model (e.g. `bge-reranker-v2-m3`) |
+| **Hybrid search** | Vector search + keyword search (BM25), fused with RRF — finds proper nouns / IDs better | Needs an additional keyword index |
+| **Multi-document partitioning** | Different documents in different collections, or add a source field to the payload and filter by it | Simple — do it from day one |
+| **Citation tracing** | Store document name + page number in the payload, attach citations to answers | Simple — do it from day one |
+
+Rerank example: works with LangChain or direct API calls; the community standard is `bge-reranker-v2-m3` for fine-ranking after Qdrant coarse search.
+
+## FAQ
+
+**Search results unrelated to the question?**
+- Switch embedding models (use `bge-m3` for Chinese)
+- Reduce chunk size (400 → 200 characters)
+- Check whether chunking broke semantic integrity (tables, code cut in half)
+
+**Vector dimension errors / search errors?**
+That's a dimension mismatch — the most common cause is switching embedding models without rebuilding the collection. Delete and rebuild: `client.delete_collection("my_kb")`, then re-index.
+
+**Still can't answer "based on the material"?**
+- Raise `top_k` (3 → 5)
+- Confirm the material was actually chunked and stored (print the chunk count to check)
+- Add "state it if the information isn't in the material" to the prompt
+
+**Slower as data grows?**
+Qdrant supports HNSW indexing (on by default), payload filtering, and sharding. A single machine easily handles under a million vectors; beyond that, consider distributed deployment (see [Docker + GPU Containers](/en/tutorials/docker-gpu-containers)).
+
+**Want a ready-made UI?**
+[Open WebUI](/en/tutorials/open-webui) ships with a built-in knowledge base (RAG) — upload documents and you're done, perfect if you'd rather not write code; this tutorial is for developers who want a custom pipeline.
+
+## Next Steps
+
+- Understand the generation model itself → [llama.cpp Inference](/en/tutorials/llama-cpp-inference) or [vLLM Serving](/en/tutorials/vllm-serving)
+- Build a full visual application → Dify tutorial (planned)
+- Use Open WebUI's built-in RAG → [Open WebUI Tutorial](/en/tutorials/open-webui)
+
+> Note: embedding and generation models are all open-source and free. The data in your vector database belongs to you — remember to back up Qdrant snapshots. Back up your data before any system operations.
+
+---
+
+*This is a pilot English translation. The rest of the tutorial library is available in Chinese at the [main tutorial hub](/tutorials).*

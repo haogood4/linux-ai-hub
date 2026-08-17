@@ -1,0 +1,202 @@
+---
+title: 'Function Calling & MCP: Let Your Local Model Use Tools'
+slug: function-calling-mcp
+author: TuxAI
+date: 2026-08-17
+tags: [ai, function-calling, mcp, ollama, agent, tool-calling]
+estimatedReadTime: 18
+environment: [服务器, GPU]
+---
+# Function Calling & MCP: Let Your Local Model Use Tools
+
+## Introduction
+
+LLMs can "talk" but not "do" — ask one to check the weather, read a file, or make a request, and it will just make up an answer. **Function Calling (tool calling)** fixes this: instead of answering directly, the model first outputs a structured "call request," your program actually executes it, then feeds the result back to the model for the final answer. **MCP (Model Context Protocol)** standardizes that layer: write the tool integration once, and any MCP-capable client can reuse it.
+
+This tutorial builds on [Ollama](/en/tutorials/ollama-local-deploy) to explain how Function Calling works with hands-on code, then covers what MCP is and how to connect a local model to the MCP tool ecosystem.
+
+## 1. How Function Calling Works
+
+In one sentence: **the model never executes tools — it only decides "which tool to call and with what arguments." Execution stays in your hands.**
+
+```
+your program ──▶ sends "question + tool list (JSON Schema)" ──▶ local model
+                                                               │
+                      model returns tool_calls (which tool, what args)
+                                                               ▼
+your program ──▶ actually runs the tool (file lookup / API call)
+                                                               │
+                              result sent back to the model ──▶ final answer
+```
+
+## 2. Model Selection: Not All Models Support It
+
+Tool calling requires the model to have been trained to output structured calls. **Base models won't work — use instruct versions.** Common picks from the Ollama library (field-tested in 2026):
+
+| Model | Params | Chinese | Notes |
+|-------|--------|---------|-------|
+| `qwen3` | 4b/8b/14b/32b | Good | Strong tool-calling understanding, first choice |
+| `qwen2.5` | 7b/14b/32b/72b | Good | Stable, widely validated by the community |
+| `llama3.3` | 70b | Okay | Most standards-compliant JSON output |
+| `deepseek-r1` | Distilled | Good | Strong reasoning, but more likely to mis-pick when many tools are available |
+
+```bash
+ollama pull qwen3:8b
+```
+
+> Checking whether a model supports this: each official model page ([ollama.com/library](https://ollama.com/library)) lists its Tool calling support.
+
+## 3. Code Walkthrough: Make Your Local Model Check the Weather
+
+Using Ollama's native API, this is a complete, runnable Python example:
+
+```python
+import json
+import ollama
+
+# 1. Define the tool (JSON Schema describes it to the model)
+tools = [{
+    "type": "function",
+    "function": {
+        "name": "get_weather",
+        "description": "查询指定城市的天气",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "city": {"type": "string", "description": "城市名，如 北京"}
+            },
+            "required": ["city"]
+        }
+    }
+}]
+
+# 2. The function that actually runs (written by you)
+def get_weather(city: str) -> str:
+    # This can be anything: an API call, reading a file, running a command
+    return f"{city} 今天晴，28℃，空气质量良"
+
+# 3. Round one: ask the model with the tool list attached
+messages = [{"role": "user", "content": "北京今天天气怎么样？"}]
+resp = ollama.chat(model="qwen3:8b", messages=messages, tools=tools)
+
+# 4. The model returns tool_calls (it decides, it doesn't execute)
+tool_calls = resp["message"].get("tool_calls", [])
+for call in tool_calls:
+    fn = call["function"]
+    print("Model wants to call:", fn["name"], fn["arguments"])
+
+    # 5. You execute the tool, then return the result as a tool message
+    result = get_weather(**fn["arguments"])
+    messages.append({"role": "tool", "content": result, "tool_call_id": call["id"]})
+
+# 6. Round two: the model produces the final answer from the tool result
+final = ollama.chat(model="qwen3:8b", messages=messages, tools=tools)
+print("Answer:", final["message"]["content"])
+# Output: 北京今天晴，28℃，空气质量良
+```
+
+**Key points**:
+- The tool list is described with JSON Schema (parameter names, types, descriptions)
+- The `tool_calls` the model returns are "intents to call," not execution results
+- Execution results go back with `role: tool` so the model can continue
+- The loop can repeat: the model may call several tools in sequence (e.g., look up a city first, then its weather)
+
+> Prefer the OpenAI-compatible style? Ollama exposes an OpenAI-compatible endpoint (`http://localhost:11434/v1`) — point the `openai` Python library's `base_url` at it and the `tools` argument works exactly the same. See the [Ollama tutorial](/en/tutorials/ollama-local-deploy).
+
+## 4. Engineering Tips & Common Pitfalls
+
+| Pitfall | Fix |
+|---------|-----|
+| Model returns malformed JSON | Use a bigger model; offer fewer tools at once (≤5); write clear tool descriptions |
+| Tool results too long | Trim results before returning them (truncate large logs), or you'll blow the context window |
+| Tool fails | Don't break the loop — return the error as the tool result and let the model handle it or give up |
+| Mixed-language parameter names | Use English parameter names, Chinese descriptions |
+| Slow tool calls | Each call costs at least 2 model requests; slow local inference is normal — switch to [vLLM](/en/tutorials/vllm-serving) for more throughput |
+| Security | **Validate arguments before executing**; the model is not trustworthy — never let it run dangerous commands directly |
+
+## 5. MCP: Standardizing Tool Integrations
+
+Every app defining its own tool format means reinventing the wheel. **MCP (Model Context Protocol)** is an open protocol (JSON-RPC 2.0) proposed by Anthropic in late 2024 that unifies how "model ↔ tool" integrations work:
+
+- **MCP Server**: a service that exposes Tools, Resources (data), and Prompts — e.g., filesystem, GitHub, PostgreSQL, browser control
+- **MCP Client**: any client that supports MCP — Claude Code, OpenCode, Goose, Cline, Continue.dev, LM Studio, etc.
+- **Transport**: stdio for local processes, HTTP/SSE for remote
+
+```
+your MCP client (Claude Code / OpenCode / Goose ...)
+        │  MCP protocol (JSON-RPC 2.0)
+        ▼
+   MCP Server (filesystem / GitHub / database / search ...)
+```
+
+**Example with a ready-made MCP Server** (Claude Code style — config looks similar in other clients):
+
+```json
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "xxx" }
+    }
+  }
+}
+```
+
+Once configured, just say "list the recent issues" — the client automatically exposes the GitHub tools to the model.
+
+## 6. Local Model + MCP: A Fully Offline Agent
+
+MCP clients default to cloud models, but by 2026 client ecosystems support custom model endpoints — point inference at a local Ollama (`base_url` → `http://localhost:11434/v1`) and you get a fully offline "local model + MCP tools" agent.
+
+Common official reference servers ([modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers)):
+
+| Server | Capability | Risk |
+|--------|------------|------|
+| `filesystem` | Read/write files inside a sandbox directory | Medium — confined to a directory |
+| `sqlite` / `postgres` | Database queries | High — use a read-only role |
+| `puppeteer` / `playwright` | Drive headless browsers | High |
+| `github` | Repos, Issues, PR management | Medium — scope the token |
+
+**Security bottom line (strongly recommended)**:
+1. The model is untrusted — tool permissions are the only barrier; confine the filesystem server to a single directory
+2. Use a read-only account for databases; GitHub tokens scoped to test repos only
+3. Write operations (writing files, sending requests) require manual confirmation by default
+4. Only connect trusted MCP Servers; beware prompt injection (web content can contain malicious instructions)
+5. Keep secrets in local config — never commit them to Git
+
+## 7. Function Calling or MCP?
+
+| | Function Calling | MCP |
+|--|------------------|-----|
+| Essence | A model capability (deciding to call) | An integration standard (protocol) |
+| What you write | Hand-written tools + JSON Schema | Configure a ready-made Server (or write one once) |
+| Reusability | Rewritten every time | Integrate once, use anywhere |
+| Best for | Using a local model inside your own program | Clients + ecosystem tools |
+| Learning cost | Low | Medium |
+
+**Recommendation**: building your own app → start with Function Calling (section 3 above); want to get work done with ready-made clients like Claude Code or OpenCode → use MCP directly, just pick a model that supports tool calling.
+
+## FAQ
+
+**The model never calls tools?** Make sure it's an instruct model; write clear "when to use" descriptions; offer fewer tools at once; lower the temperature (around 0.3).
+
+**Can it call multiple tools in parallel?** Yes — Ollama's `tool_calls` can return several at once; execute them one by one and send all the results back together.
+
+**Does the OpenAI-compatible endpoint support tools?** Yes — the `tools` parameter of `/v1/chat/completions` matches OpenAI, so existing code just needs its `base_url` changed.
+
+**Can I do this without a GPU?** Yes — small models like qwen3:4b run on CPU, just slower.
+
+## Next Steps
+
+- Set up your local model first → [Ollama Local Deployment](/en/tutorials/ollama-local-deploy)
+- Higher-throughput inference → [Deploying vLLM](/en/tutorials/vllm-serving)
+- Use tools from a WebUI → [Open WebUI](/en/tutorials/open-webui)
+- Build agents visually → [Dify](/en/tutorials/dify-visual-ai-platform)
+- Tool calling on top of a [RAG knowledge base](/en/tutorials/rag-knowledge-base) = a complete private assistant
+
+> Note: tool calling hands the model "execution power" — think through the boundaries first: which directories can be written, which commands can run, which APIs can be called. Start experimenting in an isolated environment ([Docker containers](/en/tutorials/docker-gpu-containers)).
+
+---
+
+*This is a pilot English translation. The rest of the tutorial library is available in Chinese at the [main tutorial hub](/tutorials).*

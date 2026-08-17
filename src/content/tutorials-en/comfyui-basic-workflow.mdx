@@ -1,0 +1,189 @@
+---
+title: 'ComfyUI Workflow Basics: Node-Based AI Image Generation'
+slug: comfyui-basic-workflow
+author: TuxAI
+date: 2026-08-17
+tags: [ai, comfyui, stable-diffusion, workflow, image-generation]
+estimatedReadTime: 15
+environment: [GPU]
+---
+# ComfyUI Workflow Basics: Node-Based AI Image Generation
+
+## Introduction
+
+[Stable Diffusion WebUI](/en/tutorials/stable-diffusion) is "button-driven": every parameter is laid out for you, and you just click Generate. **ComfyUI** works differently — it's node-based. Model loading, prompt encoding, sampling, decoding, and saving are each separate nodes, and you wire them together into your own pipeline. It's more flexible, uses less VRAM, generates faster, and you can save a workflow as a file and share it so anyone can reproduce your exact setup.
+
+This tutorial walks you through installing ComfyUI (Windows portable package / Linux from source), understanding the core nodes, running your first text-to-image workflow, and loading a community workflow.
+
+## ComfyUI vs. WebUI: Which One?
+
+| Comparison | ComfyUI | Stable Diffusion WebUI |
+|------|---------|------------------------|
+| Learning curve | Steeper (node logic) | Gentle (form-based) |
+| VRAM usage | Lower, runs on 4GB | Higher |
+| Generation speed | Faster | Standard |
+| Reproducibility | One-click with workflow files | Screenshot parameters |
+| Plugin ecosystem | Fastest-growing, gets new nodes first | Mature and extensive |
+| Best for | Fine-grained control and tinkering | Beginners, quick results |
+
+Bottom line: start with WebUI to get a feel for it, then graduate to ComfyUI. The two can **share the same model files** with no conflict.
+
+## System Requirements
+
+- NVIDIA GPU with **4GB+ VRAM** (below 3GB you can still run with `--lowvram`, just slower; without an NVIDIA GPU, CPU mode works but is noticeably slower)
+- 8GB+ system RAM
+- 20GB+ free disk space (program + one SD model, roughly 2–7GB)
+- Windows 10/11 or Linux
+
+## Step 1: Install
+
+### Windows: Portable Package (Recommended)
+
+1. Download `ComfyUI_windows_portable_nvidia.7z` from [ComfyUI GitHub Releases](https://github.com/comfyanonymous/ComfyUI/releases)
+2. Extract to a non-system drive (e.g. `D:\ComfyUI`)
+3. Double-click `run_nvidia_gpu.bat` and wait for the first-time dependency install
+4. When you see `To see the GUI go to: http://127.0.0.1:8188`, it's up — open that address in your browser
+
+### Linux: From Source
+
+```bash
+git clone https://github.com/comfyanonymous/ComfyUI.git
+cd ComfyUI
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+python main.py
+```
+
+Open `http://127.0.0.1:8188` in your browser. Add `--listen 0.0.0.0` to allow access from your LAN.
+
+## Step 2: Place Your Models
+
+Models live in `ComfyUI/models/`, organized by type:
+
+| Folder | What goes here | Size |
+|------|--------|------|
+| `checkpoints` | Main models (SD1.5 / SDXL / FLUX `.safetensors`) | 2–7GB |
+| `vae` | VAE models (better color/detail, optional) | ~100MB |
+| `loras` | LoRA fine-tunes | 50–300MB |
+| `controlnet` | ControlNet models (pose/depth/edge) | Hundreds of MB–2GB |
+| `upscale_models` | Upscalers (ESRGAN, 4x-UltraSharp) | Tens–hundreds of MB |
+| `embeddings` | Negative-prompt embeddings | Tens of KB |
+
+> Models can be downloaded from [Civitai](https://civitai.com) or Hugging Face. **Already have WebUI installed? Don't re-download** — see the shared-config section below.
+
+### Sharing Models with WebUI
+
+Copy `ComfyUI/extra_model_paths.yaml.example` to `extra_model_paths.yaml` and point `base_path` at your WebUI directory:
+
+```yaml
+stable-diffusion-webui:
+  base_path: D:/stable-diffusion-webui
+  checkpoints: models/Stable-diffusion
+  vae: models/VAE
+  loras: models/Lora
+  controlnet: extensions/sd-webui-controlnet/models
+```
+
+Save and restart ComfyUI — your WebUI models show up in the dropdowns without copying any files.
+
+## Step 3: Understand the Core Nodes (Minimal Text-to-Image Flow)
+
+ComfyUI's default workflow is text-to-image, built from 5 kinds of nodes. Here's what each one does:
+
+```
+CheckpointLoaderSimple (loads the model)
+        │
+CLIPTextEncode (positive prompt) ──┐
+CLIPTextEncode (negative prompt) ──┼──▶ KSampler (samples a latent)
+        │                         │
+        │                         ▼
+        └── LoadImage/EmptyLatent (start image / blank canvas) ──▶ VAEDecode (decodes to image)
+                                                                   │
+                                                                   ▼
+                                                              SaveImage (saves)
+```
+
+- **CheckpointLoaderSimple**: loads the main model (checkpoint, CLIP, and VAE in one)
+- **CLIPTextEncode**: encodes prompts — one positive, one negative
+- **EmptyLatentImage**: sets the canvas size (512×512 by default)
+- **KSampler**: the core sampler. Common settings: `steps: 20`, `cfg: 7~8`, `sampler_name: euler`, `scheduler: normal`, `denoise: 1.0` (< 1 for img2img)
+- **VAEDecode**: decodes the latent into an image; **SaveImage** saves it to the `output/` folder
+
+**Pro tips**:
+- Double-click empty canvas space to search for a node
+- `Ctrl + Enter` queues the generation; `Ctrl + S` saves the workflow (JSON); `Ctrl + O` loads one
+- **Drag a generated PNG back onto the canvas** and ComfyUI rebuilds the entire workflow automatically (its signature feature)
+- A node turns red on error — check the terminal log to locate the issue
+
+## Step 4: Run Your First Workflow
+
+1. Open ComfyUI — the default workflow is already text-to-image (or menu → Load Default)
+2. Pick your model from the **CheckpointLoaderSimple** dropdown
+3. Write a positive prompt in English, e.g. `a cute cat, masterpiece, best quality`
+4. A solid negative prompt: `lowres, bad anatomy, bad hands, watermark`
+5. Click **Queue Prompt** on the right (or `Ctrl+Enter`) to generate
+6. There's your image! It's saved in the `ComfyUI/output/` folder
+
+> Chinese prompts work too, but English is more reliable. To localize the UI, use ComfyUI-Manager to search and install the AIGODLIKE language pack.
+
+## Step 5: Install a Node Manager and Load Community Workflows
+
+Community workflows are where ComfyUI shines — someone else's carefully built pipeline (ControlNet hand-fixing, face swap, video style transfer, low-VRAM FLUX setups, etc.) saved as JSON that you can load and reproduce.
+
+**1. Install ComfyUI-Manager** (the node manager — a must):
+
+```bash
+# Linux
+cd ComfyUI/custom_nodes
+git clone https://github.com/ltdrdata/ComfyUI-Manager.git
+# Windows: run the same git clone command inside the ComfyUI/custom_nodes folder
+```
+
+After restarting ComfyUI, a **Manager** menu appears at the top — search/install/update other nodes in one click, and back up workflows too.
+
+**2. Find a community workflow**:
+
+- [OpenArt Workflows](https://openart.ai/workflows/): high traffic, supports online testing
+- [ComfyWorkflows](https://comfyworkflows.com/): filter by model / use case
+- [Flowt.ai](https://flowt.ai/community): community sharing
+
+**3. Load it**: download the JSON file → drag it onto the canvas (or Ctrl+O) → install any missing nodes when Manager prompts you → place the required models → generate.
+
+**Common gotchas**: workflow says a node is missing → click Install Custom Nodes in Manager and search for it; model missing → check the model filename in the node, download it from Civitai/HF into the right folder; node turned red → read the terminal error.
+
+## Common Launch Flags
+
+Append these to your launch command (`run_nvidia_gpu.bat` or `python main.py`):
+
+| Flag | What it does |
+|------|------|
+| `--lowvram` | For VRAM below 4GB — lowers usage at the cost of speed |
+| `--highvram` | With plenty of VRAM (12GB+), keeps the model resident — fastest |
+| `--port 8189` | Change the port if 8188 is taken |
+| `--listen 0.0.0.0` | Allow LAN access (mind your firewall) |
+| `--force-fp16` | Half-precision inference, saves VRAM (incompatible with some models) |
+| `--cpu` | CPU mode for systems without an NVIDIA GPU |
+
+## FAQ
+
+**Black images or noise?** Make sure the KSampler's latent is properly connected to VAEDecode; restore common parameters (steps 20, cfg 7–8, euler/normal, denoise 1.0); try a different model to verify.
+
+**CUDA out of memory?** Add `--lowvram`; lower the resolution (512→384); make sure no other program is hogging VRAM.
+
+**Model not showing in the dropdown?** Check it's in the right subfolder (checkpoints for main models); refresh the page.
+
+**ModuleNotFoundError from a custom node?** The node is missing dependencies — go into `custom_nodes/<that node's folder>` and run `pip install -r requirements.txt`.
+
+**Port already in use?** Launch with a different `--port`; on Windows, `taskkill /f /im python.exe` clears leftover processes.
+
+## Next Steps
+
+- Want to learn the classic WebUI first? → [Stable Diffusion Deployment](/en/tutorials/stable-diffusion)
+- Running on a server or in Docker? → [Docker + GPU Containers](/en/tutorials/docker-gpu-containers)
+- Video generation workflows (AnimateDiff, etc.) are in the pipeline
+
+> Caution: community workflows may ship with models and scripts of unknown origin — check the source and license before downloading. Respect model and platform licenses when using copyrighted material, and follow local laws for generated content. Back up your workflows with Manager before upgrading nodes.
+
+---
+
+*This is a pilot English translation. The rest of the tutorial library is available in Chinese at the [main tutorial hub](/tutorials).*

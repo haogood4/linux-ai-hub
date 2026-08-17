@@ -1,0 +1,188 @@
+---
+title: 'llama.cpp: Quantized CPU/GPU Inference on Linux'
+slug: llama-cpp-inference
+author: TuxAI
+date: 2026-08-17
+tags: [ai, llama-cpp, llm, quantization, local-deployment, inference]
+estimatedReadTime: 18
+environment: [服务器, GPU]
+---
+# llama.cpp: Quantized CPU/GPU Inference on Linux
+
+## Introduction
+
+llama.cpp is one of the most mature local LLM inference engines around: a pure C/C++ implementation with almost no external dependencies, it runs on CPU, gets faster with an NVIDIA/AMD GPU, and can turn a model into an OpenAI-compatible API service. At its core is the **GGUF quantization format** — it compresses a 10+ GB model down to a few gigabytes, so an ordinary laptop can run it.
+
+If you just want the fastest path to a working local model, start with the [Ollama tutorial](/en/tutorials/ollama-local-deploy); if you want to understand the underlying mechanics, control VRAM and speed precisely, or expose a model as an API service, this one is for you.
+
+## Requirements
+
+- A Linux system (Ubuntu / Debian / Fedora / Arch all work)
+- Disk: reserve at least 10GB (model 4–6GB + build artifacts)
+- RAM: 8GB+ recommended for pure CPU inference; with 6GB+ VRAM you can use GPU acceleration
+- Build toolchain (source builds only): `git`, `cmake`, `gcc/g++`
+
+> No GPU? No problem — llama.cpp is designed for CPU inference in the first place; it's just about an order of magnitude slower than GPU, which is fine for trying things out and light use.
+
+## Step 1: Install llama.cpp
+
+Two options — pick either one.
+
+### Option A: Prebuilt release binaries (fastest)
+
+Download the Linux archive from [llama.cpp Releases](https://github.com/ggml-org/llama.cpp/releases) (choose `bin-linux-x64-cpu`; with an NVIDIA GPU you can pick `bin-linux-x64-cuda-cu12.x`). If GitHub is slow on your network, use the Gitee mirror: `https://gitee.com/mirrors/llama.cpp` (a source mirror — you'll need to compile it yourself).
+
+After extracting, drop `llama-cli` and `llama-server` from `build/bin` into any directory and use them — no installation needed.
+
+### Option B: Build from source (recommended, CUDA support)
+
+```bash
+git clone https://github.com/ggml-org/llama.cpp.git
+cd llama.cpp
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j $(nproc)
+```
+
+Verify:
+
+```bash
+./build/bin/llama-cli --version
+```
+
+**NVIDIA GPU-accelerated build** (CUDA Toolkit 12.x required):
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DGGML_CUDA=ON
+cmake --build build -j $(nproc)
+```
+
+> Building the CUDA version takes a while (10–30 minutes depending on your CPU core count) — that's normal.
+
+## Step 2: Download a GGUF Quantized Model
+
+llama.cpp only runs **GGUF** models. Where to download:
+
+- Overseas: [HuggingFace](https://huggingface.co/) — search "model name + GGUF"
+- China mirrors: [hf-mirror.com](https://hf-mirror.com/) (faster); [ModelScope](https://www.modelscope.cn/) (domestic platform, no proxy needed)
+
+```bash
+pip install huggingface_hub
+export HF_ENDPOINT=https://hf-mirror.com
+huggingface-cli download Qwen/Qwen3-4B-GGUF qwen3-4b-q4_k_m.gguf --local-dir ./models
+```
+
+### Choosing a Quantization
+
+| Quantization | 4B model size | Best for |
+|--------------|---------------|----------|
+| Q2_K | ~2.5GB | Extreme memory limits, noticeably lower quality |
+| **Q4_K_M** | ~2.8GB | **Daily default — best size/quality balance** |
+| Q5_K_M | ~3.2GB | Better quality, when memory allows |
+| Q8_0 | ~4.5GB | Close to original precision, large size |
+
+For daily use, pick **Q4_K_M**; if VRAM/RAM is tight, go with Q2_K or Q3_K_S.
+
+## Step 3: Command-Line Inference
+
+One-shot Q&A:
+
+```bash
+./build/bin/llama-cli -m ./models/qwen3-4b-q4_k_m.gguf -p "用一句话介绍 Linux"
+```
+
+Interactive chat:
+
+```bash
+./build/bin/llama-cli -m ./models/qwen3-4b-q4_k_m.gguf -i -ins
+```
+
+On pure CPU, set the thread count (physical cores, not hyperthreads):
+
+```bash
+./build/bin/llama-cli -m ./models/qwen3-4b-q4_k_m.gguf -t 8 -i -ins
+```
+
+## Step 4: GPU Acceleration (with an NVIDIA GPU)
+
+First confirm your driver works:
+
+```bash
+nvidia-smi
+```
+
+The `-ngl` flag controls how many model layers go onto the GPU; `-ngl 999` means "as many as possible":
+
+```bash
+./build/bin/llama-cli -m ./models/qwen3-4b-q4_k_m.gguf -ngl 999 -i -ins
+```
+
+**Not enough VRAM for the whole model?** Lower `-ngl` so the remaining layers run in CPU memory — slower, but no crash:
+
+```bash
+./build/bin/llama-server -m ./models/qwen3-4b-q4_k_m.gguf -ngl 32   # only 32 layers on the GPU
+```
+
+## Step 5: Start an OpenAI-Compatible API Service
+
+One of llama.cpp's most practical features — a local HTTP service whose interface is fully compatible with OpenAI, so existing code that calls OpenAI works after changing the base URL:
+
+```bash
+./build/bin/llama-server \
+  -m ./models/qwen3-4b-q4_k_m.gguf \
+  --host 127.0.0.1 --port 8080 \
+  -ngl 999
+```
+
+After it starts:
+
+- Built-in web chat UI: `http://localhost:8080`
+- API endpoint: `http://localhost:8080/v1/chat/completions`
+
+Test with curl:
+
+```bash
+curl http://localhost:8080/v1/chat/completions -H "Content-Type: application/json" -d '{
+  "model": "qwen3-4b",
+  "messages": [{"role": "user", "content": "用一句话介绍 Linux"}]
+}'
+```
+
+> By default it only listens on `127.0.0.1`, so data stays on the machine. For remote access, use an SSH tunnel or a reverse proxy with authentication (`--api-key`) — don't expose it bare by switching to `0.0.0.0`.
+
+## Quick Parameter Reference
+
+| Parameter | Purpose |
+|-----------|---------|
+| `-m <path>` | Path to the GGUF model file |
+| `-ngl N` | Number of layers on the GPU (`999` = as many as possible; `0` = pure CPU) |
+| `-t N` | CPU thread count (set to physical cores) |
+| `-c N` | Context length (default 4096; larger uses more memory) |
+| `--flash-attn` | Enable Flash Attention, cuts KV cache VRAM by roughly 30–50% |
+| `--parallel N` | Number of concurrent inference slots (for multi-user API serving) |
+| `--api-key <key>` | API auth key (required when exposed publicly) |
+
+## FAQ
+
+**Garbage output or answers that don't make sense?**
+Check that the model has an `Instruct` or `chat` variant (the conversational one), and use `-i -ins` for the chat template; a context `-c` set too short can also truncate answers.
+
+**CPU too slow?**
+Switch to a smaller model (quantized 3B/1.5B), set `-t` to your physical core count, use Q4_K_M or better quantization.
+
+**Out of VRAM (OOM)?**
+Lower `-ngl`; use a lower quantization (Q4_K_S); shrink the context with `-c 2048`; enable `--flash-attn`.
+
+**llama.cpp or vLLM?**
+Personal machine / single node, limited VRAM, quantization needed → llama.cpp; multi-user high-concurrency production, enterprise GPUs → vLLM (tutorial in progress). They serve different roles — llama.cpp is the first choice in resource-constrained setups.
+
+## Next Steps
+
+- Add a GUI to Ollama: Open WebUI (tutorial in progress)
+- Containerized deployment: Docker + GPU containers (tutorial in progress)
+- Need a more serious hardware setup? See the [Hardware Compatibility Guide](/hardware)
+
+> Note: Before any system installation, driver, or partitioning operations, please back up your important data. Models and frameworks are free and open-source; check each model's license on its homepage before commercial use.
+
+---
+
+*This is a pilot English translation. The rest of the tutorial library is available in Chinese at the [main tutorial hub](/tutorials).*

@@ -109,7 +109,7 @@ EOF
 
 ## 5. Connecting to Your Local AI: Giving Your Agent a Mouth
 
-Following the ideas in [Function Calling & MCP](/tutorials/function-calling-mcp) (Chinese), let the LLM decide when to speak:
+Following the ideas in [Function Calling & MCP](/en/tutorials/function-calling-mcp), let the LLM decide when to speak:
 
 1. Wrap TTS as a tool: `text_to_speech(text, voice)` → returns an audio file path
 2. The model calls the tool during a conversation
@@ -122,7 +122,7 @@ def text_to_speech(text: str, voice: str = "中文女") -> str:
     return "output.wav"  # path returned for the frontend to play
 ```
 
-You can also use [Open WebUI](/tutorials/open-webui)'s TTS plugin (Chinese) to read replies aloud right in the chat UI.
+You can also use [Open WebUI](/en/tutorials/open-webui)'s TTS plugin to read replies aloud right in the chat UI.
 
 ## FAQ
 
@@ -142,10 +142,10 @@ You can also use [Open WebUI](/tutorials/open-webui)'s TTS plugin (Chinese) to r
 
 ## Next Steps
 
-- Give your model tools and a brain → [Function Calling & MCP](/tutorials/function-calling-mcp) (Chinese)
-- Chat UI with voice integration → [Open WebUI](/tutorials/open-webui) (Chinese)
+- Give your model tools and a brain → [Function Calling & MCP](/en/tutorials/function-calling-mcp)
+- Chat UI with voice integration → [Open WebUI](/en/tutorials/open-webui)
 - Voice-over for videos (TTS + video generation) → [Local AI Video Generation](/en/tutorials/ai-video-generation)
-- Isolate the TTS service with [Docker GPU Containers](/tutorials/docker-gpu-containers) (Chinese) for a clean, stable setup
+- Isolate the TTS service with [Docker GPU Containers](/en/tutorials/docker-gpu-containers) for a clean, stable setup
 
 ---
 

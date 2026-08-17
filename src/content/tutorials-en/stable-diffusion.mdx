@@ -1,0 +1,133 @@
+---
+title: 'Stable Diffusion: Set Up Local AI Image Generation on Linux'
+slug: stable-diffusion
+author: TuxAI
+date: 2026-08-17
+tags: [ai, stable-diffusion, comfyui, image-generation, text-to-image]
+estimatedReadTime: 15
+environment: [GPU]
+---
+# Stable Diffusion: Set Up Local AI Image Generation on Linux
+
+## Introduction
+
+Want unlimited free image generation, no data uploads, and the freedom to swap models? Stable Diffusion is the most mature open-source image generation solution around. This tutorial deploys a local AI image generation environment on **Linux** from scratch, taking you from "type a sentence" to "get an image."
+
+First, pick your interface — one of two:
+
+| | WebUI (AUTOMATIC1111) | ComfyUI |
+|---|---|---|
+| Style | Form-based, quick to learn, feature-complete | Node-based workflows, lighter on VRAM, faster, more tinkering-friendly |
+| VRAM | 6GB+ | 4GB minimum |
+| Best for | Your first setup | Reproducible workflows, advanced play |
+
+> Recommendation: start with WebUI to learn the ropes, then try ComfyUI later (both share the same model files).
+
+## Requirements
+
+- NVIDIA GPU with working drivers (`nvidia-smi` returns output)
+- VRAM: at least 6GB for WebUI (12GB+ for SDXL models); 4GB is enough to run SD1.5 on ComfyUI
+- Disk space: program + models — reserve 20GB+ to be safe
+- Python 3.10 (recommended), Git
+
+## Step 1: Deploy WebUI
+
+```bash
+# 1. clone the repo
+git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
+cd stable-diffusion-webui
+
+# 2. create a virtual environment
+python3.10 -m venv venv
+source venv/bin/activate
+
+# 3. install dependencies (add the Tsinghua mirror for faster downloads in China)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+pip install -r requirements.txt
+```
+
+Launch it (the first run downloads dependencies — be patient):
+
+```bash
+./webui.sh
+```
+
+Once you see `http://127.0.0.1:7860`, open it in your browser.
+
+> If your GPU is strong enough, add `--xformers` to `./webui.sh` for a speed boost; if VRAM is tight, add `--medvram` (recommended below 8GB) or `--lowvram` (around 4GB).
+
+## Step 2: Download Models
+
+Drop model files (`.safetensors`) into the `models/Stable-diffusion/` directory:
+
+```bash
+mkdir -p models/Stable-diffusion
+# put your downloads here, e.g.:
+# Realistic Vision (photorealistic), DreamShaper (anime), SDXL Base (high-res)
+```
+
+Common sources for models:
+
+- **Civitai** (civitai.com — the world's largest model community, overseas)
+- **China mirrors**: platforms like liblib.art and tusi.art let you download directly
+- **HuggingFace**: official SD1.5 / SDXL base models
+
+Once they're in place, return to the WebUI page and pick the new model from the dropdown at the top left.
+
+| Model | Use case | VRAM |
+|-------|----------|------|
+| SD 1.5 family (v1-5, Realistic Vision, DreamShaper) | Getting started, photorealistic / anime | 6–8GB |
+| SDXL Base | High resolution, better composition | 12GB+ |
+
+## Step 3: Generate Your First Image
+
+In the WebUI:
+
+1. Select the model at the top
+2. In the "txt2img" tab, enter a prompt:
+   - Positive: `a beautiful landscape, mountain, river, sunset, highly detailed`
+   - Negative prompt: `low quality, blurry, watermark`
+3. Settings: Steps 20, CFG Scale 7, resolution 512×512
+4. Hit **Generate** — your image appears in seconds to tens of seconds
+
+Prompt-writing tips:
+
+- Separate multiple descriptions with English commas: subject, scene, style, quality words
+- Order affects weight: earlier words matter more
+- Want a specific style? Just write `anime style` / `oil painting` / `photorealistic`
+
+## Advanced Play
+
+- **Image-to-image (img2img)**: restyle an uploaded image, extend it
+- **LoRA**: small model files (tens of MB) that layer a specific character or style onto your base model — no base swap needed
+- **ControlNet**: use line art / pose images to control the composition
+- **Upscale**: generate at low resolution first, then upscale
+- **ComfyUI**: load other people's workflow files (drag and drop) to reproduce expert generation setups
+
+## FAQ
+
+**`CUDA out of memory`?**
+Lower the resolution (512→384), reduce the batch size, add the `--medvram/--lowvram` launch flags, or switch to a smaller model (SD1.5 instead of SDXL).
+
+**Model not showing in the dropdown?**
+Make sure the file is in `.safetensors` format, in the right directory (`models/Stable-diffusion/`), and click the refresh icon on the page.
+
+**Generation too slow?**
+- Check your driver is up to date (old drivers accelerate PyTorch poorly)
+- Add `--xformers`
+- With enough VRAM, a higher resolution can actually be faster (avoids multiple upscale passes)
+
+**Can AMD GPUs work?**
+Yes, but it's more involved: on Linux use a ROCm build of PyTorch, or ComfyUI's ROCm support. NVIDIA is the smoothest path.
+
+## Next Steps
+
+- Learn how inference works → [llama.cpp Tutorial](/en/tutorials/llama-cpp-inference) — same local AI ecosystem
+- For batch generation or serving, check out ComfyUI's API mode
+- Short on VRAM? See [Docker + GPU Containers](/en/tutorials/docker-gpu-containers) to isolate the environment in a container
+
+> Note: Stable Diffusion model weights are open-source (base model licenses vary — see each model's page). Follow platform and local laws for AI-generated content, and confirm model licenses before commercial use (some models forbid it). Back up your data before any system operations.
+
+---
+
+*This is a pilot English translation. The rest of the tutorial library is available in Chinese at the [main tutorial hub](/tutorials).*

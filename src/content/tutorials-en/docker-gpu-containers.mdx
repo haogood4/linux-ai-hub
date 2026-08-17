@@ -1,0 +1,164 @@
+---
+title: 'Docker + GPU Containers: Containerize Your AI Services'
+slug: docker-gpu-containers
+author: TuxAI
+date: 2026-08-17
+tags: [ai, docker, gpu, containers, nvidia, local-deployment]
+estimatedReadTime: 15
+environment: [服务器, GPU]
+---
+# Docker + GPU Containers: Containerize Your AI Services
+
+## Introduction
+
+The biggest win of putting AI services into Docker containers is **environment consistency**: the same image produces the same results on any machine, so "works on my machine" stops being a problem. This tutorial walks you through three things on Linux: install Docker → configure the NVIDIA Container Toolkit so containers can use your GPU → run a real GPU container to verify.
+
+This guide is for users with an NVIDIA GPU. No NVIDIA GPU? No problem — the first two steps for installing Docker apply just as well (pure CPU containers don't need the Toolkit).
+
+## Requirements
+
+- A Linux system (Ubuntu / Debian / Fedora, etc.)
+- An NVIDIA GPU + official driver (`nvidia-smi` outputs correctly)
+- Disk: at least 10GB of free space (images + models)
+
+> Note: Docker Desktop (the GUI version of Docker on Windows/macOS) cannot pass a physical GPU through directly. This tutorial targets native Docker Engine on Linux.
+
+## Step 1: Install Docker Engine
+
+Ubuntu / Debian, installed from official repos:
+
+```bash
+# Install dependencies
+sudo apt update
+sudo apt install -y ca-certificates curl
+# Add Docker's official GPG key and repository
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+Let your current user use docker without sudo (takes effect after re-login):
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+Verify:
+
+```bash
+sudo systemctl enable --now docker
+docker --version
+```
+
+> If pulling images is slow on your network, configure a registry mirror in `/etc/docker/daemon.json` (for example, addresses from Alibaba Cloud or Tencent Cloud container registry services), then `sudo systemctl restart docker`.
+
+## Step 2: Install the NVIDIA Container Toolkit
+
+The NVIDIA Container Toolkit is the standard way to let Docker containers use the host GPU (the old `nvidia-docker2` is deprecated — on new installs, use the Toolkit directly):
+
+```bash
+# Add the NVIDIA repository
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+  sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+  sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+sudo apt update
+sudo apt install -y nvidia-container-toolkit
+```
+
+Configure Docker to use the NVIDIA runtime and restart:
+
+```bash
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker
+```
+
+Verify the configuration took effect:
+
+```bash
+docker info | grep -i runtime
+```
+
+> If `nvidia.github.io` is unreliable on your network, switch the repository to the USTC mirror `https://mirrors.ustc.edu.cn/libnvidia-container` (everything else stays the same).
+
+## Step 3: Verify a GPU Container
+
+Run an official CUDA image and execute `nvidia-smi` inside the container:
+
+```bash
+docker run --rm --gpus all nvidia/cuda:12.6-base-ubuntu24.04 nvidia-smi
+```
+
+If it prints the GPU model, driver version, and CUDA version, the GPU has been successfully passed into the container.
+
+Target a specific GPU (multi-GPU machines):
+
+```bash
+docker run --rm --gpus '"device=0"' nvidia/cuda:12.6-base-ubuntu24.04 nvidia-smi
+```
+
+## Step 4: In Practice — Run Ollama in a Container
+
+Ollama's official image ships with GPU support — the most direct way to see "container + GPU + AI" working:
+
+```bash
+docker run -d --name ollama --gpus all \
+  -v ollama:/root/.ollama \
+  -p 11434:11434 \
+  ollama/ollama
+```
+
+- `--gpus all`: the container can access all GPUs
+- `-v ollama:/root/.ollama`: models live in a data volume, so deleting the container doesn't lose them
+- `-p 11434:11434`: expose the API port
+
+Pull a model from inside the container (Qwen3 4B as an example):
+
+```bash
+docker exec -it ollama ollama pull qwen3:4b
+```
+
+Call the containerized model from the host:
+
+```bash
+curl http://localhost:11434/api/generate -d '{"model": "qwen3:4b", "prompt": "用一句话介绍 Linux"}'
+```
+
+## Quick Command Reference
+
+| Command | Purpose |
+|---------|---------|
+| `docker ps` | List running containers |
+| `docker logs <container>` | View container logs |
+| `docker stop <container>` / `docker start <container>` | Stop / start a container |
+| `docker rm -f <container>` | Force-delete a container (models in volumes are kept) |
+| `docker volume ls` | List data volumes |
+| `nvidia-smi` | Check GPU usage on the host (container usage shows too) |
+
+## FAQ
+
+**`docker run --gpus all` fails with "could not select device driver"?**
+The NVIDIA Container Toolkit isn't installed correctly, or Docker wasn't restarted. Check in order: `nvidia-ctk runtime configure --runtime=docker` → `sudo systemctl restart docker` → `docker info | grep -i runtime` should show `nvidia`.
+
+**`nvidia-smi` says command not found inside the container?**
+Wrong image. Base images (like `ubuntu`, `python`) don't ship `nvidia-smi` — use the `nvidia/cuda` series or official PyTorch images (which bundle a CUDA environment).
+
+**No NVIDIA GPU, want to practice anyway?**
+Skip the two Toolkit steps and use a pure CPU image; run the same commands without `--gpus all`.
+
+**My container is gone after reboot?**
+Containers don't auto-start on boot. Add `--restart unless-stopped` when creating one (for an existing container: `docker update --restart unless-stopped <container>`).
+
+## Next Steps
+
+- Deploy an inference service in a container: vLLM high-throughput inference (tutorial in progress)
+- For image generation: local Stable Diffusion deployment (tutorial in progress)
+- Want to warm up with the package manager game before containers? [terminal-game](/terminal-game) — one minute to get started
+
+> Note: Before any system installation, driver, or partitioning operations, please back up your important data. Containers and tools are free and open-source; check each model's license on its homepage before commercial use.
+
+---
+
+*This is a pilot English translation. The rest of the tutorial library is available in Chinese at the [main tutorial hub](/tutorials).*

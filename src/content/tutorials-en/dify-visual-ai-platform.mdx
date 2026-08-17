@@ -1,0 +1,129 @@
+---
+title: 'Dify: Build AI Apps Visually'
+slug: dify-visual-ai-platform
+author: TuxAI
+date: 2026-08-17
+tags: [ai, dify, docker, workflow, knowledge-base, agent]
+estimatedReadTime: 16
+environment: [服务器, 容器]
+---
+# Dify: Build AI Apps Visually
+
+## Introduction
+
+[Open WebUI](/en/tutorials/open-webui) is a "chat interface"; **Dify** is an "AI application development platform": drag and drop in the browser to build knowledge-base Q&A, agents, and automated workflows, then publish them as accessible apps or APIs with one click. It ships without models — plug in [Ollama](/en/tutorials/ollama-local-deploy) local models or any cloud API, and your data can stay entirely on your own machine.
+
+This tutorial walks you through deploying Dify with Docker Compose (version 1.13+ as of August 2026), connecting it to local Ollama, and getting a knowledge-base Q&A app running end to end.
+
+> Prerequisites: [Docker GPU Containers](/en/tutorials/docker-gpu-containers) and [Ollama Local Deployment](/en/tutorials/ollama-local-deploy). If you're not familiar with RAG yet, read [RAG Knowledge Base in Practice](/en/tutorials/rag-knowledge-base) first.
+
+## What Dify Can Do
+
+| Feature | Description |
+|---------|-------------|
+| Chat Assistant | ChatGPT-style apps with custom prompts and opening messages |
+| Knowledge-Base Q&A | Upload documents, RAG built automatically, answers cite their sources |
+| Agent | The model autonomously calls tools (search, calculator, HTTP requests) |
+| Workflow | A visual canvas to orchestrate multi-model, multi-step flows |
+| App Publishing | Three ways: web link / iframe embed / OpenAI-compatible API |
+
+## Environment Requirements
+
+- Docker + Docker Compose V2 (`docker compose`, not `docker-compose`)
+- RAM: **4GB minimum** for the platform + external APIs only; **8GB recommended** with a local 3B model; 16GB recommended for 7B models (Dify ships ~11 containers, idling at about 1.6–1.8GB)
+- Disk: reserve 10GB+ (images + data)
+- Model: one already pulled via Ollama (e.g. `qwen3:4b`) — see the [Ollama tutorial](/en/tutorials/ollama-local-deploy)
+
+## Step 1: Clone and Start Dify
+
+```bash
+git clone https://github.com/langgenius/dify.git --depth 1
+cd dify/docker
+cp .env.example .env
+docker compose up -d
+```
+
+The first start pulls a dozen or so images (API, Worker, Web, PostgreSQL, Redis, vector database, Nginx, sandbox, etc.); how long it takes depends on your bandwidth. To pin a stable version, use `git clone --branch 1.13.0 --depth 1` (check [GitHub Releases](https://github.com/langgenius/dify/releases) for the current version number).
+
+Verify:
+
+```bash
+docker compose ps
+# All services should show Up or healthy
+```
+
+## Step 2: Initialize the Admin Account
+
+Open `http://<your-IP>/install` in a browser, set an admin email and password, then log in to the workspace.
+
+> On a local machine visit `http://localhost/install`; on a server visit `http://server-IP/install`. If port 80 is taken, change `EXPOSE_NGINX_PORT` in `.env` and restart.
+
+## Step 3: Connect Local Ollama
+
+Dify ships without models — you add model providers yourself. Here we connect the Ollama on the same machine:
+
+**1. Make Ollama listen on all interfaces** (Dify's containers need to reach it):
+
+```bash
+# Linux/macOS: temporary
+export OLLAMA_HOST=0.0.0.0
+# To persist: write it into the systemd service config or shell profile, then restart Ollama
+# Windows: setx OLLAMA_HOST 0.0.0.0
+```
+
+**2. Add the model in Dify**: avatar (top right) → Settings → Model Providers → find **Ollama** → install the plugin → add a model:
+
+| Field | Value |
+|-------|-------|
+| Model Name | The model name you pulled in Ollama, e.g. `qwen3:4b` |
+| Base URL | `http://host.docker.internal:11434` |
+| Model Type | LLM |
+| Context Length | Per your model, e.g. 32768 |
+
+**Key gotcha: don't put `localhost` or `127.0.0.1` in Base URL.** Dify's containers run inside Docker's network, where `localhost` points at the container itself, not the host. `host.docker.internal` is Docker's alias for the host machine; on older Docker versions that don't support it, use the host's LAN IP instead (e.g. `http://192.168.1.10:11434`).
+
+## Step 4: Build a Knowledge-Base Q&A App
+
+Using the "Knowledge Base + Chatbot" template, runnable in 5 minutes:
+
+1. Workspace → **Create from app template** → pick "Knowledge Base + Chatbot"
+2. "Knowledge Base" on the left → create a knowledge base → upload your documents (txt / markdown / PDF all work)
+3. Dify chunks and vectorizes them automatically. **Note**: this requires an embedding model — go back to Model Providers and add Ollama's embedding model (e.g. `bge-m3`), or set one in "System Model Settings"
+4. Back on the canvas, swap the LLM node to the local model you just added
+5. Click **Publish** (top right) → open the preview link and ask a question — answers will cite their sources
+
+That's it — a fully local knowledge-base Q&A app is live. Conceptually this matches the [RAG tutorial](/en/tutorials/rag-knowledge-base), but Dify handles chunking, vectorization, and retrieval for you, all visually.
+
+## Advanced Features
+
+- **Workflows**: build "multi-step flows" from a blank canvas — e.g. intent detection → knowledge-base retrieval → model generation → result post-processing; drag and connect nodes, chaining multiple models
+- **Agents**: configure tools (HTTP requests, calculator, etc.) and let the model decide which tool to call to complete a task
+- **Publish outward**: every app gets its own web URL and an OpenAI-compatible API endpoint you can plug into your own programs
+- **Multiple models side by side**: configure DeepSeek API, OpenAI, Zhipu, and more at once, switching per app
+
+## FAQ
+
+**Containers restarting repeatedly?** Check the logs: `docker compose logs api` / `docker compose logs worker`. Common causes: not enough memory, ports taken (80/443), or disk full.
+
+**Connection errors when testing the Ollama model?**
+1. Make sure Ollama listens on `0.0.0.0` (`OLLAMA_HOST=0.0.0.0`) — by default it listens on 127.0.0.1 only, which Docker containers can't reach
+2. Don't use localhost in Base URL — use `host.docker.internal:11434` or the host IP
+3. Verify on the host: `curl http://localhost:11434` should return `Ollama is running`
+
+**Knowledge base says "No embedding model configured"?** Add an embedding model under Model Providers (e.g. Ollama's `bge-m3`) and set it in System Model Settings.
+
+**Dify or Open WebUI?** Just want to chat → [Open WebUI](/en/tutorials/open-webui), one-command deployment and a small footprint; want to build knowledge-base/agent/workflow apps → Dify. Both can coexist on the same machine.
+
+**How to update?** In `dify/docker`: `docker compose down` → `git pull origin main` in the repo root (or check out a new tag) → diff `.env` against `.env.example` and merge new variables → `docker compose up -d`. Before updating, back up: after `docker compose down`, archive the `volumes/` directory.
+
+## Next Steps
+
+- Understand the theory behind knowledge bases → [RAG Knowledge Base in Practice](/en/tutorials/rag-knowledge-base)
+- Swap in a faster inference backend → [vLLM Serving](/en/tutorials/vllm-serving)
+- Understand how the model itself runs → [llama.cpp Inference](/en/tutorials/llama-cpp-inference)
+
+> Heads-up: Dify exposes port 80 by default. If you deploy on a public server, **set a strong admin password**, add firewall restrictions if needed, and configure HTTPS in production. Back up the `volumes/` data directory before any upgrade or backup.
+
+---
+
+*This is a pilot English translation. The rest of the tutorial library is available in Chinese at the [main tutorial hub](/tutorials).*
