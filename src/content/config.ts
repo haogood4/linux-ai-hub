@@ -1,15 +1,22 @@
 import { defineCollection, z } from 'astro:content';
 
+const tutorialSchema = z.object({
+  title: z.string(),
+  author: z.string().default('TuxAI'),
+  date: z.coerce.date(),
+  tags: z.array(z.string()).default([]),
+  estimatedReadTime: z.number().int().positive(),
+  environment: z.array(z.enum(['虚拟机', 'U盘', '双系统', '服务器', 'GPU', '容器'])).default([]),
+});
+
 const tutorials = defineCollection({
   type: 'content',
-  schema: z.object({
-    title: z.string(),
-    author: z.string().default('TuxAI'),
-    date: z.coerce.date(),
-    tags: z.array(z.string()).default([]),
-    estimatedReadTime: z.number().int().positive(),
-    environment: z.array(z.enum(['虚拟机', 'U盘', '双系统', '服务器', 'GPU', '容器'])).default([]),
-  }),
+  schema: tutorialSchema,
+});
+
+const tutorialsEn = defineCollection({
+  type: 'content',
+  schema: tutorialSchema,
 });
 
 const paths = defineCollection({
@@ -77,4 +84,11 @@ const distros = defineCollection({
   }),
 });
 
-export const collections = { tutorials, paths, tools, blog, distros };
+export const collections = {
+  tutorials,
+  'tutorials-en': tutorialsEn,
+  paths,
+  tools,
+  blog,
+  distros,
+} as const;

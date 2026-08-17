@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 320" font-family="'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif" role="img" aria-labelledby="title desc">
+  <title id="title">本地 TTS 语音合成流水线</title>
+  <desc id="desc">从输入文本到输出语音的四个阶段：文本前端、声学模型、声码器、语音输出</desc>
+  <rect width="1000" height="320" rx="16" fill="#f8fafc"/>
+  <rect x="40" y="40" width="920" height="240" rx="12" fill="none" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="6 4"/>
+  <g font-size="15" fill="#64748b">
+    <text x="52" y="70">输入文本</text>
+    <text x="52" y="90" font-size="13" fill="#94a3b8">你好，今天天气不错</text>
+  </g>
+
+  <rect x="40" y="110" width="170" height="90" rx="10" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+  <text x="125" y="145" text-anchor="middle" font-size="17" font-weight="600" fill="#065f46">文本前端</text>
+  <text x="125" y="170" text-anchor="middle" font-size="13" fill="#059669">分词 / 音素 / 标点</text>
+
+  <path d="M210 155 H260" stroke="#10b981" stroke-width="3" marker-end="url(#ar1)"/>
+  <defs><marker id="ar1" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#10b981"/></marker></defs>
+
+  <rect x="270" y="110" width="170" height="90" rx="10" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+  <text x="355" y="145" text-anchor="middle" font-size="17" font-weight="600" fill="#065f46">声学模型</text>
+  <text x="355" y="170" text-anchor="middle" font-size="13" fill="#059669">LLM / Flow Matching</text>
+
+  <path d="M440 155 H490" stroke="#10b981" stroke-width="3" marker-end="url(#ar2)"/>
+  <defs><marker id="ar2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#10b981"/></marker></defs>
+
+  <rect x="500" y="110" width="170" height="90" rx="10" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+  <text x="585" y="145" text-anchor="middle" font-size="17" font-weight="600" fill="#065f46">声码器</text>
+  <text x="585" y="170" text-anchor="middle" font-size="13" fill="#059669">生成波形</text>
+
+  <path d="M670 155 H720" stroke="#10b981" stroke-width="3" marker-end="url(#ar3)"/>
+  <defs><marker id="ar3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#10b981"/></marker></defs>
+
+  <g>
+    <rect x="730" y="110" width="200" height="90" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+    <text x="830" y="145" text-anchor="middle" font-size="17" font-weight="600" fill="#1e3a8a">语音输出</text>
+    <text x="830" y="170" text-anchor="middle" font-size="13" fill="#3b82f6">output.wav</text>
+  </g>
+
+  <g font-size="13" fill="#64748b">
+    <text x="52" y="230">可选：参考音频（3–10 秒）→ 零样本音色克隆</text>
+    <text x="52" y="252">主流方案：CosyVoice（中文最佳）/ Fish Speech（多语言）/ GPT-SoVITS（克隆）/ Kokoro（CPU）</text>
+  </g>
+</svg>

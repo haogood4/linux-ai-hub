@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 340" font-family="'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif" role="img" aria-labelledby="title desc">
+  <title id="title">Wan 2.2 本地视频生成管线</title>
+  <desc id="desc">文本与首帧条件经编码器处理后，由高噪声与低噪声两个 DiT 模型生成潜空间，再经 VAE 解码输出视频</desc>
+  <rect width="1000" height="340" rx="16" fill="#f8fafc"/>
+
+  <g font-size="15" fill="#64748b">
+    <text x="40" y="50">输入条件</text>
+  </g>
+  <rect x="40" y="60" width="200" height="80" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
+  <text x="140" y="95" text-anchor="middle" font-size="16" font-weight="600" fill="#334155">提示词文本</text>
+  <text x="140" y="118" text-anchor="middle" font-size="13" fill="#64748b">+ 首帧图像（图生视频）</text>
+
+  <path d="M240 100 H300" stroke="#94a3b8" stroke-width="3" marker-end="url(#a1)"/>
+  <defs><marker id="a1" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+
+  <g font-size="15" fill="#64748b">
+    <text x="320" y="50">条件编码</text>
+  </g>
+  <rect x="300" y="60" width="200" height="80" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
+  <text x="400" y="95" text-anchor="middle" font-size="16" font-weight="600" fill="#334155">UMT5-XXL 文本编码</text>
+  <text x="400" y="118" text-anchor="middle" font-size="13" fill="#64748b">+ CLIP 视觉编码</text>
+
+  <path d="M500 100 H560" stroke="#94a3b8" stroke-width="3" marker-end="url(#a2)"/>
+  <defs><marker id="a2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+
+  <g font-size="15" fill="#065f46">
+    <text x="580" y="50">双专家 DiT 去噪（Wan 2.2 14B）</text>
+  </g>
+  <rect x="560" y="60" width="200" height="80" rx="10" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+  <text x="660" y="95" text-anchor="middle" font-size="16" font-weight="600" fill="#065f46">高噪声 DiT</text>
+  <text x="660" y="118" text-anchor="middle" font-size="13" fill="#059669">低噪声 DiT</text>
+
+  <path d="M760 100 H820" stroke="#10b981" stroke-width="3" marker-end="url(#a3)"/>
+  <defs><marker id="a3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#10b981"/></marker></defs>
+
+  <g font-size="15" fill="#64748b">
+    <text x="835" y="50">解码输出</text>
+  </g>
+  <rect x="820" y="60" width="150" height="80" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="895" y="95" text-anchor="middle" font-size="16" font-weight="600" fill="#1e3a8a">VAE 解码</text>
+  <text x="895" y="118" text-anchor="middle" font-size="13" fill="#3b82f6">→ 视频文件</text>
+
+  <g font-size="14" fill="#475569">
+    <text x="40" y="180" font-weight="600">关键路径与常见坑</text>
+  </g>
+  <g font-size="13" fill="#64748b">
+    <text x="40" y="205">1. 14B 用 wan_2.1_vae（16 通道）；5B 用 wan2.2_vae（48 通道）——互换必报通道不匹配</text>
+    <text x="40" y="228">2. 显存门槛：TI2V-5B 约 8GB；14B MoE 双专家 FP8 约 24GB（或 GGUF Q5 约 21GB）</text>
+    <text x="40" y="251">3. 提速三板斧：LightX2V 4 步蒸馏 / GGUF 量化 / SageAttention（Hopper 架构+）</text>
+    <text x="40" y="274">4. 长视频：T2V 多分镜 ffmpeg 拼接，或 I2V 链式取末帧接力</text>
+    <text x="40" y="297" fill="#94a3b8">速度参考（L40S 48GB + LightX2V）：5 秒 ≈ 30 秒；30 秒 ≈ 12 分钟</text>
+  </g>
+</svg>

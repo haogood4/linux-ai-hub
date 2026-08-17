@@ -4,10 +4,14 @@ import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
   const tutorials = await getCollection('tutorials');
-  return tutorials.map((t) => ({ params: { slug: t.slug }, props: { tutorial: t } }));
+  const enTutorials = await getCollection('tutorials-en');
+  return tutorials.map((t) => ({
+    params: { slug: t.slug },
+    props: { tutorial: t, hasEn: enTutorials.some((e) => e.slug === t.slug) },
+  }));
 }
 
-const { tutorial } = Astro.props;
+const { tutorial, hasEn } = Astro.props;
 const { Content } = await render(tutorial);
 const { title, tags, estimatedReadTime, date, environment } = tutorial.data;
 ---
@@ -42,6 +46,11 @@ const { title, tags, estimatedReadTime, date, environment } = tutorial.data;
           <span class="rounded-full bg-gray-100 text-gray-600 px-2.5 py-0.5 text-xs">{tag}</span>
         ))}
       </div>
+      {hasEn && (
+        <a href={`/en/tutorials/${tutorial.slug}`} class="inline-block mt-4 text-sm text-primary underline underline-offset-2 hover:opacity-80 no-underline">
+          English version →
+        </a>
+      )}
     </header>
 
     <div class="prose-linux">

@@ -1,0 +1,60 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const tutorials = await getCollection('tutorials-en');
+  return tutorials.map((t) => ({ params: { slug: t.slug }, props: { tutorial: t } }));
+}
+
+const { tutorial } = Astro.props;
+const { Content } = await render(tutorial);
+const { title, tags, estimatedReadTime, date, environment } = tutorial.data;
+---
+<BaseLayout
+  title={`${title} | TuxAI`}
+  description={`${title} — Linux + AI tutorial (English).`}
+>
+  <article class="max-w-3xl mx-auto px-4 py-12">
+    <nav aria-label="Breadcrumb" class="text-sm text-gray-500 mb-4">
+      <a href="/" class="hover:text-primary no-underline">Home</a>
+      <span aria-hidden="true"> / </span>
+      <a href="/en/tutorials" class="hover:text-primary no-underline">Tutorials (EN)</a>
+      <span aria-hidden="true"> / </span>
+      <span class="text-gray-700">{title}</span>
+    </nav>
+
+    <header class="mb-8">
+      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-4">{title}</h1>
+      <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-4">
+        <span>{estimatedReadTime} min read</span>
+        <span aria-hidden="true">·</span>
+        <span>{date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+        {environment.length > 0 && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span>Environment: {environment.join(' / ')}</span>
+          </>
+        )}
+      </div>
+      <div class="flex flex-wrap gap-1.5">
+        {tags.map((tag) => (
+          <span class="rounded-full bg-gray-100 text-gray-600 px-2.5 py-0.5 text-xs">{tag}</span>
+        ))}
+      </div>
+      <a href={`/tutorials/${tutorial.slug}`} class="inline-block mt-4 text-sm text-primary underline underline-offset-2 hover:opacity-80 no-underline">
+        阅读中文版
+      </a>
+    </header>
+
+    <div class="prose-linux">
+      <Content />
+    </div>
+
+    <nav aria-label="Footer navigation" class="mt-12 border-t border-gray-200 pt-6">
+      <a href="/en/tutorials" class="inline-block rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 no-underline hover:bg-gray-100 transition-colors">
+        ← Back to tutorials
+      </a>
+    </nav>
+  </article>
+</BaseLayout>
