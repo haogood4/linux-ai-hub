@@ -101,3 +101,5 @@
 | Dify 可视化 AI 应用搭建教程 | ✅ | 2026-08-17 | Docker Compose 部署（11 容器、版本 1.13+、4G 内存起步）+ 对接 Ollama（OLLAMA_HOST=0.0.0.0 + host.docker.internal 避坑）+ 知识库问答应用实操，经 2026-08 多源核查 |
 
 | ComfyUI 工作流入门教程 | ✅ | 2026-08-17 | Windows 便携包/Linux 源码两种安装 + 核心节点讲解（CheckpointLoader/KSampler/VAEDecode）+ 与 WebUI 共用模型（extra_model_paths.yaml）+ ComfyUI-Manager + 社区工作流加载，经 2026-08 多源核查（端口 8188、显存 4GB 起步、启动参数） |
+
+| Function Calling 与 MCP 教程 | ✅ | 2026-08-17 | Ollama tool calling 原理 + Python 全流程代码（JSON Schema/tool_calls/tool 回传）+ 模型选型表 + MCP 协议讲解（client/server/stdio）+ 本地模型接 MCP 生态 + 安全底线，经 2026-08 多源核查（Ollama 原生 tools、qwen3/llama3.3 支持、客户端生态 Goose/Cline/Continue.dev/LM Studio） |

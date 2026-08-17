@@ -1,0 +1,196 @@
+---
+title: Function Calling 与 MCP：让本地模型调用工具
+slug: function-calling-mcp
+author: TuxAI
+date: 2026-08-17
+tags: [ai, function-calling, mcp, ollama, agent, 工具调用]
+estimatedReadTime: 18
+environment: [服务器, GPU]
+---
+# Function Calling 与 MCP：让本地模型调用工具
+
+## 写在前面
+
+大模型只会「说」不会「做」——让它查天气、读文件、发请求，它只会编一个答案给你。**Function Calling（函数调用 / 工具调用）** 让模型在回答时先输出一段结构化的「调用请求」，由你的程序真正去执行，再把结果交还模型生成最终回答。**MCP（Model Context Protocol，模型上下文协议）** 则把这一层标准化：写一次工具接入，任何支持 MCP 的客户端都能复用。
+
+本教程基于 [Ollama](/tutorials/ollama-local-deploy) 讲透 Function Calling 原理与代码实战，再讲 MCP 是什么、如何让本地模型接入 MCP 工具生态。
+
+## 一、Function Calling 是怎么工作的
+
+一句话：**模型不执行工具，它只负责决定「调哪个、传什么参数」，执行权在你手里。**
+
+```
+你的程序 ──▶ 发送「问题 + 工具清单(JSON Schema)」──▶ 本地模型
+                                                      │
+                          模型返回 tool_calls（调哪个工具、什么参数）
+                                                      ▼
+你的程序 ──▶ 真正执行工具（查文件/调 API）──▶ 把结果回传模型 ──▶ 最终回答
+```
+
+## 二、模型选择：不是所有模型都支持
+
+工具调用需要模型在训练时就支持输出结构化调用，**base 模型不行，要 instruct 版本**。Ollama 模型库中常用可选（2026 年实测参考）：
+
+| 模型 | 参数 | 中文 | 说明 |
+|------|------|------|------|
+| `qwen3` | 4b/8b/14b/32b | 好 | 工具调用理解力强，首选 |
+| `qwen2.5` | 7b/14b/32b/72b | 好 | 稳定，社区验证多 |
+| `llama3.3` | 70b | 一般 | JSON 格式最标准 |
+| `deepseek-r1` | 蒸馏版 | 好 | 推理强，但工具多了容易选错 |
+
+```bash
+ollama pull qwen3:8b
+```
+
+> 检查模型是否支持：官方模型页面（[ollama.com/library](https://ollama.com/library)）标注了 Tool calling 支持情况。
+
+## 三、代码实战：让本地模型查天气
+
+以 Ollama 原生 API 为例，Python 完整可跑：
+
+```python
+import json
+import ollama
+
+# 1. 定义工具（JSON Schema 描述给模型听）
+tools = [{
+    "type": "function",
+    "function": {
+        "name": "get_weather",
+        "description": "查询指定城市的天气",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "city": {"type": "string", "description": "城市名，如 北京"}
+            },
+            "required": ["city"]
+        }
+    }
+}]
+
+# 2. 真正执行的函数（你写的）
+def get_weather(city: str) -> str:
+    # 这里可以是任何东西：查 API、读文件、执行命令
+    return f"{city} 今天晴，28℃，空气质量良"
+
+# 3. 第一轮：带工具清单问模型
+messages = [{"role": "user", "content": "北京今天天气怎么样？"}]
+resp = ollama.chat(model="qwen3:8b", messages=messages, tools=tools)
+
+# 4. 模型返回 tool_calls（它不执行，只决定）
+tool_calls = resp["message"].get("tool_calls", [])
+for call in tool_calls:
+    fn = call["function"]
+    print("模型要调用:", fn["name"], fn["arguments"])
+
+    # 5. 你执行工具，把结果作为 tool 消息回传
+    result = get_weather(**fn["arguments"])
+    messages.append({"role": "tool", "content": result, "tool_call_id": call["id"]})
+
+# 6. 第二轮：模型基于工具结果生成最终回答
+final = ollama.chat(model="qwen3:8b", messages=messages, tools=tools)
+print("回答:", final["message"]["content"])
+# 输出：北京今天晴，28℃，空气质量良
+```
+
+**关键点**：
+- 工具清单用 JSON Schema 描述（参数名、类型、说明）
+- 模型返回的 `tool_calls` 里是「调用意图」，不是执行结果
+- 执行结果以 `role: tool` 回传，模型才能继续作答
+- 循环可多轮：模型可以连续调用多个工具（比如先查城市再查天气）
+
+> 兼容 OpenAI 写法？Ollama 提供 OpenAI 兼容端点（`http://localhost:11434/v1`），用 `openai` Python 库把 `base_url` 指过去，`tools` 参数写法完全一致，见 [Ollama 教程](/tutorials/ollama-local-deploy)。
+
+## 四、工程要点与常见坑
+
+| 坑 | 对策 |
+|----|------|
+| 模型返回 JSON 格式错误 | 换更大模型；减少一次给出的工具数量（≤5 个）；工具描述写清楚 |
+| 工具结果太长 | 精简结果再回传（大日志截断），否则超上下文 |
+| 工具失败 | 别中断循环，把错误信息作为 tool 结果返回，让模型自己处理或放弃 |
+| 参数名中英混用 | 参数名用英文，描述用中文 |
+| 工具调用慢 | 每次调用至少 2 次模型请求，本地推理慢属正常；用 [vLLM](/tutorials/vllm-serving) 换吞吐 |
+| 安全 | **执行前校验参数**；模型不可信，绝不直接让它执行危险命令 |
+
+## 五、MCP：把工具接入标准化
+
+每个应用都自己定义工具格式，重复造轮子。**MCP（Model Context Protocol）** 是 Anthropic 于 2024 年底提出的开放协议（JSON-RPC 2.0），统一了「模型 ↔ 工具」的接入方式：
+
+- **MCP Server**：暴露工具（Tools）、数据（Resources）、提示词（Prompts）的服务，如文件系统、GitHub、PostgreSQL、浏览器控制
+- **MCP Client**：Claude Code、OpenCode、Goose、Cline、Continue.dev、LM Studio 等支持 MCP 的客户端
+- **传输**：本地进程间用 stdio，远程用 HTTP/SSE
+
+```
+你的 MCP 客户端（Claude Code / OpenCode / Goose ...）
+        │  MCP 协议（JSON-RPC 2.0）
+        ▼
+   MCP Server（文件系统 / GitHub / 数据库 / 搜索 ...）
+```
+
+**用现成 MCP Server 举个例**（Claude Code 风格，各客户端配置大同小异）：
+
+```json
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "xxx" }
+    }
+  }
+}
+```
+
+配置后直接说「把最近的 issue 列出来」，客户端自动把 GitHub 工具暴露给模型调用。
+
+## 六、本地模型 + MCP：全离线智能体
+
+MCP 客户端默认对接云端模型，但 2026 年的客户端生态已支持自定义模型端点，可把推理切到本地 Ollama（`base_url` 指向 `http://localhost:11434/v1`），从而实现「本地模型 + MCP 工具」的完全离线智能体。
+
+官方参考服务器（[modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers)）常用几个：
+
+| 服务器 | 能力 | 风险 |
+|--------|------|------|
+| `filesystem` | 沙箱目录内读写文件 | 中，限目录 |
+| `sqlite` / `postgres` | 数据库查询 | 高，建议只读角色 |
+| `puppeteer` / `playwright` | 驱动无头浏览器 | 高 |
+| `github` | 仓库、Issue、PR 管理 | 中，限 token 权限 |
+
+**安全底线（强烈建议）**：
+1. 模型不可信——工具权限是唯一屏障，filesystem 限定单一目录
+2. 数据库用只读账号；GitHub token 只授权测试仓库
+3. 写操作（写文件、发请求）默认需人工确认
+4. 只接入可信 MCP Server，小心提示词注入（网页内容可能是恶意指令）
+5. 密钥放本地配置，绝不提交 Git
+
+## 七、Function Calling 还是 MCP？
+
+| | Function Calling | MCP |
+|--|------------------|-----|
+| 本质 | 模型能力（决定调用） | 接入标准（协议） |
+| 你写代码 | 手写工具 + JSON Schema | 配置现成 Server（或写一次） |
+| 复用性 | 每次重写 | 一次接入，随处可用 |
+| 适用 | 自己程序里用本地模型 | 客户端 + 生态工具 |
+| 学习成本 | 低 | 中 |
+
+**建议**：自己写应用 → 先学 Function Calling（本文第三节）；想用 Claude Code / OpenCode 等现成客户端干活 → 直接用 MCP，本地模型选支持工具调用的模型即可。
+
+## 常见问题
+
+**模型就是不调用工具？** 确认是 instruct 模型；工具描述写清「什么时候用」；一次少给几个工具；温度调低（0.3 左右）。
+
+**能并行调用多个工具吗？** 可以，Ollama 的 `tool_calls` 一次可返回多个，逐个执行后一起回传。
+
+**OpenAI 兼容端点支持 tools 吗？** 支持，`/v1/chat/completions` 的 `tools` 参数与 OpenAI 一致，老代码改 `base_url` 即用。
+
+**没有 GPU 能玩吗？** 能，qwen3:4b 等小模型 CPU 可跑，只是慢一点。
+
+## 下一步
+
+- 搭好本地模型 → [Ollama 本地部署](/tutorials/ollama-local-deploy)
+- 想要更高吞吐的推理服务 → [vLLM 部署](/tutorials/vllm-serving)
+- 在 WebUI 里用工具 → [Open WebUI](/tutorials/open-webui)
+- 可视化搭 Agent → [Dify](/tutorials/dify-visual-ai-platform)
+- 基于 [RAG 知识库](/tutorials/rag-knowledge-base) 再叠加工具调用 = 完整私有助理
+
+> 提示：工具调用给了模型「执行权」，务必先想清楚边界：哪些目录可写、哪些命令可跑、哪些 API 可调。建议在隔离环境（[Docker 容器](/tutorials/docker-gpu-containers)）里先做实验。
