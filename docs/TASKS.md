@@ -97,3 +97,5 @@
 | 教程库规划清单更新 | ✅ | 2026-08-17 | Phase 3 全部 5 篇上线；新规划：RAG/Dify/MCP/ComfyUI/AI 视频/TTS |
 
 | RAG 知识库实战教程 | ✅ | 2026-08-17 | Ollama embedding（nomic/bge-m3/all-minilm 对照）+ Qdrant 入库/检索/生成全流程 + rerank/混合检索进阶，经 2026-08 多源核查（embedding 维度、chunking 经验值、Qdrant 6333 端口） |
+
+| Dify 可视化 AI 应用搭建教程 | ✅ | 2026-08-17 | Docker Compose 部署（11 容器、版本 1.13+、4G 内存起步）+ 对接 Ollama（OLLAMA_HOST=0.0.0.0 + host.docker.internal 避坑）+ 知识库问答应用实操，经 2026-08 多源核查 |

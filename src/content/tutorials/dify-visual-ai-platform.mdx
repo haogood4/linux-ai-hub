@@ -1,0 +1,125 @@
+---
+title: Dify：可视化搭建 AI 应用平台
+slug: dify-visual-ai-platform
+author: TuxAI
+date: 2026-08-17
+tags: [ai, dify, docker, 工作流, 知识库, agent]
+estimatedReadTime: 16
+environment: [服务器, 容器]
+---
+# Dify：可视化搭建 AI 应用平台
+
+## 写在前面
+
+[Open WebUI](/tutorials/open-webui) 是「聊天界面」，而 **Dify** 是「AI 应用开发平台」：在网页上拖拖拽拽，就能搭出知识库问答、智能体（Agent）、自动化工作流，并一键发布成可访问的应用或 API。它本身不带模型，对接 [Ollama](/tutorials/ollama-local-deploy) 本地模型或任意云端 API 都行，数据可完全留在你自己的机器上。
+
+本教程带你用 Docker Compose 部署 Dify（2026 年 8 月版本 1.13+），并接上本地 Ollama，跑通一个知识库问答应用。
+
+> 前置：[Docker + GPU 容器](/tutorials/docker-gpu-containers) 与 [Ollama 本地部署](/tutorials/ollama-local-deploy)。如果还没理解 RAG 概念，先看 [RAG 知识库实战](/tutorials/rag-knowledge-base)。
+
+## Dify 能做什么
+
+| 功能 | 说明 |
+|------|------|
+| 聊天助手 | 类 ChatGPT 应用，可自定义提示词、开场白 |
+| 知识库问答 | 上传文档自动建 RAG，附引用来源 |
+| Agent 智能体 | 让模型自主调用工具（搜索、计算、HTTP 请求） |
+| 工作流 | 可视化画布编排多模型、多步骤的复杂流程 |
+| 应用发布 | 网页链接 / 嵌入 iframe / OpenAI 兼容 API 三种方式 |
+
+## 环境要求
+
+- Docker + Docker Compose V2（`docker compose`，不是 `docker-compose`）
+- 内存：只跑平台 + 外部 API 最少 **4GB**；平台 + 本地 3B 模型建议 **8GB**；7B 模型建议 16GB（Dify 全套约 11 个容器，常驻约 1.6~1.8GB）
+- 磁盘：预留 10GB 以上（镜像 + 数据）
+- 模型：已通过 Ollama 拉好模型（如 `qwen3:4b`），见 [Ollama 教程](/tutorials/ollama-local-deploy)
+
+## 第一步：克隆并启动 Dify
+
+```bash
+git clone https://github.com/langgenius/dify.git --depth 1
+cd dify/docker
+cp .env.example .env
+docker compose up -d
+```
+
+首次启动会拉取十余个镜像（API、Worker、Web、PostgreSQL、Redis、向量库、Nginx、沙箱等），耗时取决于网速。想锁定稳定版本，用 `git clone --branch 1.13.0 --depth 1`（版本号以 [GitHub Releases](https://github.com/langgenius/dify/releases) 为准）。
+
+验证：
+
+```bash
+docker compose ps
+# 所有服务应为 Up 或 healthy
+```
+
+## 第二步：初始化管理员
+
+浏览器访问 `http://<你的IP>/install`，设置管理员邮箱和密码，然后登录进入工作台。
+
+> 本机部署访问 `http://localhost/install`；服务器部署访问 `http://服务器IP/install`。若 80 端口被占用，在 `.env` 中改 `EXPOSE_NGINX_PORT` 后重启。
+
+## 第三步：对接本地 Ollama
+
+Dify 本身不含模型，需要添加模型供应商。这里以对接本机 Ollama 为例：
+
+**1. 让 Ollama 监听所有网卡**（Dify 容器要访问它）：
+
+```bash
+# Linux/macOS：临时生效
+export OLLAMA_HOST=0.0.0.0
+# 持久化：写入 systemd 服务配置或 shell 配置文件后重启 Ollama
+# Windows：setx OLLAMA_HOST 0.0.0.0
+```
+
+**2. 在 Dify 中添加模型**：右上角头像 → 设置 → 模型供应商 → 找到 **Ollama** → 安装插件 → 添加模型：
+
+| 字段 | 填写 |
+|------|------|
+| Model Name | 你在 Ollama 拉取的模型名，如 `qwen3:4b` |
+| Base URL | `http://host.docker.internal:11434` |
+| Model Type | LLM |
+| Context Length | 按模型填写，如 32768 |
+
+**关键坑：Base URL 不要填 `localhost` 或 `127.0.0.1`。** Dify 的容器运行在 Docker 网络里，`localhost` 指向容器自身而不是宿主机。`host.docker.internal` 是 Docker 提供的宿主机别名；部分旧版 Docker 不支持时，改为宿主机局域网 IP（如 `http://192.168.1.10:11434`）。
+
+## 第四步：搭一个知识库问答应用
+
+以「知识库 + 聊天机器人」模板为例，5 分钟跑通：
+
+1. 工作台 → **从应用模板创建** → 选「知识库 + 聊天机器人」
+2. 左侧「知识库」→ 创建知识库 → 上传你的文档（txt / markdown / PDF 均可）
+3. Dify 自动切块并向量化。**注意**：这需要配置一个 Embedding 模型——回到模型供应商添加 Ollama 的 embedding 模型（如 `bge-m3`），或在「系统模型设置」中指定
+4. 回到画布，把 LLM 节点换成你刚才添加的本地模型
+5. 右上角「发布」→ 打开预览链接提问，回答会附上引用来源
+
+至此，一个纯本地的知识库问答应用就上线了——概念上与 [RAG 实战教程](/tutorials/rag-knowledge-base) 一致，但 Dify 帮你把切块、向量化、检索全部可视化搞定。
+
+## 进阶玩法
+
+- **工作流**：从空白画布搭建「多步流程」，例如：意图判断 → 检索知识库 → 模型生成 → 结果后处理，各节点可拖拽连线、串多个模型
+- **Agent**：配置工具（HTTP 请求、计算器等），让模型自主决定调用哪个工具完成任务
+- **对外发布**：每个应用都有独立的网页访问链接，也提供 OpenAI 兼容的 API 端点，可接入你自己的程序
+- **多模型并存**：可同时配置 DeepSeek API、OpenAI、智谱等多家供应商，按应用自由切换
+
+## 常见问题
+
+**容器反复重启？** 查日志定位：`docker compose logs api` / `docker compose logs worker`。常见原因：内存不足、端口被占（80/443）、磁盘空间不够。
+
+**添加 Ollama 模型后测试报连接错误？**
+1. 确认 Ollama 在监听 `0.0.0.0`（`OLLAMA_HOST=0.0.0.0`）——默认只监听 127.0.0.1，Docker 容器访问不到
+2. Base URL 不要用 localhost，用 `host.docker.internal:11434` 或宿主机 IP
+3. 在宿主机验证：`curl http://localhost:11434` 应返回 `Ollama is running`
+
+**知识库报「No embedding model configured」？** 在模型供应商中加一个 embedding 模型（如 Ollama 的 `bge-m3`），并在系统模型设置里指定。
+
+**Dify 和 Open WebUI 怎么选？** 只想聊天 → [Open WebUI](/tutorials/open-webui)，一条命令部署、占用小；要搭知识库/智能体/工作流应用 → Dify。两者可共存于同一台机器。
+
+**怎么更新？** 进入 `dify/docker`：`docker compose down` → 在仓库根目录 `git pull origin main`（或切换到新版 tag）→ 对比 `.env` 与 `.env.example` 合并新变量 → `docker compose up -d`。更新前建议备份：`docker compose down` 后打包 `volumes/` 目录。
+
+## 下一步
+
+- 想搞懂知识库背后的原理 → [RAG 知识库实战](/tutorials/rag-knowledge-base)
+- 想给 Dify 换更快的推理后端 → [vLLM 部署](/tutorials/vllm-serving)
+- 想理解模型本身怎么跑 → [llama.cpp 推理](/tutorials/llama-cpp-inference)
+
+> 提示：Dify 默认暴露 80 端口，部署在公网服务器时请务必设置强管理员密码，必要时加防火墙限制访问；生产环境建议配置 HTTPS。升级与备份前请先备份 `volumes/` 数据目录。
