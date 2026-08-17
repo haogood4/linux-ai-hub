@@ -1,0 +1,185 @@
+---
+title: ComfyUI 工作流入门：节点式 AI 绘画
+slug: comfyui-basic-workflow
+author: TuxAI
+date: 2026-08-17
+tags: [ai, comfyui, stable-diffusion, 工作流, 图像生成]
+estimatedReadTime: 15
+environment: [GPU]
+---
+# ComfyUI 工作流入门：节点式 AI 绘画
+
+## 写在前面
+
+[Stable Diffusion WebUI](/tutorials/stable-diffusion) 是「按钮式」的：参数都给你摆好，点一下生成。而 **ComfyUI** 是「节点式」的：把模型加载、提示词编码、采样、解码、保存拆成一个个节点，你自己连线组成流水线。更灵活、显存占用更低、出图更快，还能把工作流保存成文件分享给任何人复现。
+
+本教程带你安装 ComfyUI（Windows 便携版 / Linux 源码版），理解核心节点，跑通第一个文生图工作流，并加载一个社区工作流。
+
+## ComfyUI 与 WebUI 怎么选
+
+| 对比 | ComfyUI | Stable Diffusion WebUI |
+|------|---------|------------------------|
+| 上手难度 | 较高（节点逻辑） | 低（表单式） |
+| 显存占用 | 更低，4GB 可跑 | 较高 |
+| 出图速度 | 更快 | 标准 |
+| 可复现性 | 工作流文件一键复现 | 需截图参数 |
+| 生态插件 | 增长最快，先进节点先支持 | 老牌丰富 |
+| 适用人群 | 想精细控制、折腾进阶的 | 新手、快速出图 |
+
+结论：先玩 WebUI 找感觉，进阶上 ComfyUI。两者可以**共用一套模型文件**，不冲突。
+
+## 环境要求
+
+- NVIDIA 显卡，**显存 ≥ 4GB**（显存 3GB 以下加 `--lowvram` 也能跑但较慢；无 NVIDIA 显卡可用 CPU 模式，速度会明显下降）
+- 系统内存 ≥ 8GB
+- 磁盘预留 20GB 以上（程序 + 一个 SD 模型约 2~7GB）
+- Windows 10/11 或 Linux
+
+## 第一步：安装
+
+### Windows：便携包（推荐）
+
+1. 到 [ComfyUI GitHub Releases](https://github.com/comfyanonymous/ComfyUI/releases) 下载 `ComfyUI_windows_portable_nvidia.7z`
+2. 解压到非系统盘（如 `D:\ComfyUI`）
+3. 双击 `run_nvidia_gpu.bat`，等待首次依赖安装
+4. 看到 `To see the GUI go to: http://127.0.0.1:8188` 即启动成功，浏览器打开该地址
+
+### Linux：源码安装
+
+```bash
+git clone https://github.com/comfyanonymous/ComfyUI.git
+cd ComfyUI
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+python main.py
+```
+
+浏览器访问 `http://127.0.0.1:8188`。需要局域网访问加 `--listen 0.0.0.0`。
+
+## 第二步：放置模型
+
+模型放在 `ComfyUI/models/` 下按类型分目录：
+
+| 目录 | 放什么 | 大小 |
+|------|--------|------|
+| `checkpoints` | 主模型（SD1.5 / SDXL / FLUX 的 `.safetensors`） | 2~7GB |
+| `vae` | VAE 模型（改善色彩细节，可选） | 百 MB |
+| `loras` | LoRA 微调模型 | 50~300MB |
+| `controlnet` | ControlNet 控制模型（姿态/深度/边缘） | 数百 MB~2GB |
+| `upscale_models` | 放大模型（ESRGAN、4x-UltraSharp） | 数十~百 MB |
+| `embeddings` | 反向提示词嵌入 | 几十 KB |
+
+> 模型可去 [Civitai](https://civitai.com) 或 Hugging Face 下载。**已经装过 WebUI？不用重复下载**——见下方共享配置。
+
+### 与 WebUI 共用模型
+
+把 `ComfyUI/extra_model_paths.yaml.example` 复制为 `extra_model_paths.yaml`，改 `base_path` 指向你的 WebUI 目录：
+
+```yaml
+stable-diffusion-webui:
+  base_path: D:/stable-diffusion-webui
+  checkpoints: models/Stable-diffusion
+  vae: models/VAE
+  loras: models/Lora
+  controlnet: extensions/sd-webui-controlnet/models
+```
+
+保存后重启 ComfyUI，模型下拉框里就会出现 WebUI 的模型，无需复制文件。
+
+## 第三步：理解核心节点（文生图最小流程）
+
+ComfyUI 的默认工作流就是文生图，由 5 类节点组成，先看懂它们各自干什么：
+
+```
+CheckpointLoaderSimple（加载模型）
+        │
+CLIPTextEncode（正面提示词）──┐
+CLIPTextEncode（负面提示词）──┼──▶ KSampler（采样生成 latent）
+        │                         │
+        │                         ▼
+        └── LoadImage/EmptyLatent（起点图/空白画布）──▶ VAEDecode（解码成图像）
+                                                           │
+                                                           ▼
+                                                      SaveImage（保存）
+```
+
+- **CheckpointLoaderSimple**：加载主模型（模型、CLIP、VAE 一体）
+- **CLIPTextEncode**：编码提示词，正面 + 负面各一个
+- **EmptyLatentImage**：设定画布宽高（默认 512×512）
+- **KSampler**：核心采样器。常用参数：`steps: 20`、`cfg: 7~8`、`sampler_name: euler`、`scheduler: normal`、`denoise: 1.0`（图生图时 ＜1）
+- **VAEDecode**：把 latent 解码为图片；**SaveImage** 保存到 `output/` 目录
+
+**操作技巧**：
+- 双击画布空白处搜索节点
+- `Ctrl + Enter` 提交生成；`Ctrl + S` 保存工作流（JSON）；`Ctrl + O` 加载
+- 把生成好的 PNG **拖回画布**，会自动还原整个工作流（ComfyUI 的招牌功能）
+- 报错时节点会变红，看终端日志定位
+
+## 第四步：跑第一个工作流
+
+1. 打开 ComfyUI，默认就是文生图工作流（或菜单 Load Default）
+2. 在 **CheckpointLoaderSimple** 下拉框选择你放入的模型
+3. 正面提示词写英文描述，如 `a cute cat, masterpiece, best quality`
+4. 负面提示词常用：`lowres, bad anatomy, bad hands, watermark`
+5. 点右侧 **Queue Prompt**（或 `Ctrl+Enter`）生成
+6. 出图了！存到 `ComfyUI/output/` 目录
+
+> 中文提示词也可以，但英文效果更稳定。想汉化界面，用 ComfyUI-Manager 搜索安装 AIGODLIKE 汉化包。
+
+## 第五步：安装节点管理器，加载社区工作流
+
+ComfyUI 的精髓在社区工作流——别人搭好的复杂流水线（ControlNet 修手、换脸、视频转绘、FLUX 低显存方案等）存成 JSON，你加载就能复现。
+
+**1. 安装 ComfyUI-Manager**（节点管理器，必装）：
+
+```bash
+# Linux
+cd ComfyUI/custom_nodes
+git clone https://github.com/ltdrdata/ComfyUI-Manager.git
+# Windows：在 ComfyUI/custom_nodes 目录执行同样的 git clone 命令
+```
+
+重启 ComfyUI 后，顶部出现 **Manager** 菜单，可一键搜索安装/更新其他节点，还能备份工作流。
+
+**2. 找一个社区工作流**：
+
+- [OpenArt Workflows](https://openart.ai/workflows/)：流量大，支持在线试玩
+- [ComfyWorkflows](https://comfyworkflows.com/)：按模型/用途筛选
+- [Flowt.ai](https://flowt.ai/community)：社区分享
+
+**3. 加载**：下载 JSON 文件 → 拖进 ComfyUI 画布（或 Ctrl+O 打开）→ 按提示安装缺失节点（Manager 会提示）→ 放好对应模型 → 生成。
+
+**常见坑**：工作流提示缺节点 → Manager 里点 Install Custom Nodes 搜索安装；提示缺模型 → 看节点里模型文件名，去 Civitai/HF 下载放进对应目录；节点红了 → 看终端报错。
+
+## 常用启动参数
+
+在启动命令（`run_nvidia_gpu.bat` 或 `python main.py`）后追加：
+
+| 参数 | 作用 |
+|------|------|
+| `--lowvram` | 显存 ＜4GB 时使用，降低占用换速度损失 |
+| `--highvram` | 显存充足（12GB+）时模型常驻显存，最快 |
+| `--port 8189` | 8188 被占用时换端口 |
+| `--listen 0.0.0.0` | 允许局域网访问（注意防火墙） |
+| `--force-fp16` | 半精度推理，省显存（部分模型不兼容） |
+| `--cpu` | 无 NVIDIA 显卡的 CPU 模式 |
+
+## 常见问题
+
+**生成全黑图或噪点？** 确认 KSampler 的 latent 正确连到 VAEDecode；参数恢复常用值（steps 20、cfg 7-8、euler/normal、denoise 1.0）；换一个模型验证。
+
+**CUDA out of memory？** 加 `--lowvram`；降低分辨率（512→384）；确认没有其他程序占用显存。
+
+**模型不显示在下拉框？** 检查模型是否放在正确的子目录（checkpoints 放主模型）；刷新页面。
+
+**节点报错 ModuleNotFoundError？** 该自定义节点缺依赖，进入 `custom_nodes/该节点目录` 执行 `pip install -r requirements.txt`。
+
+**端口被占用？** 换 `--port` 启动；Windows 下 `taskkill /f /im python.exe` 清理残留进程。
+
+## 下一步
+
+- 想先学会传统 WebUI 操作 → [Stable Diffusion 部署](/tutorials/stable-diffusion)
+- 想在服务器/Docker 里跑 → [Docker + GPU 容器](/tutorials/docker-gpu-containers)
+- 视频生成类工作流（AnimateDiff 等）在规划中
+
+> 提示：社区工作流可能附带来源不明的模型与脚本，下载前注意文件来源与许可；涉及版权素材遵守模型与平台许可。生成内容请遵守当地法律法规。升级节点前先用 Manager 备份工作流。
