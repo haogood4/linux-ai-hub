@@ -1,0 +1,55 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import CommentSection from '@/components/CommentSection.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog-en');
+  return posts.map((p) => ({ params: { slug: p.slug }, props: { post: p } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const { title, tags, date, author } = post.data;
+---
+<BaseLayout
+  title={`${title} | TuxAI`}
+  description={`${post.data.excerpt}`}
+>
+  <article class="max-w-3xl mx-auto px-4 py-12">
+    <nav aria-label="Breadcrumb" class="text-sm text-gray-500 mb-4">
+      <a href="/" class="hover:text-primary no-underline">Home</a>
+      <span aria-hidden="true"> / </span>
+      <a href="/en/blog" class="hover:text-primary no-underline">Blog (EN)</a>
+      <span aria-hidden="true"> / </span>
+      <span class="text-gray-700">{title}</span>
+    </nav>
+
+    <header class="mb-8">
+      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-4">{title}</h1>
+      <p class="text-xs text-gray-500 mb-4">
+        {author} · {date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+      </p>
+      <div class="flex flex-wrap gap-1.5">
+        {tags.map((tag) => (
+          <span class="rounded-full bg-gray-100 text-gray-600 px-2.5 py-0.5 text-xs">{tag}</span>
+        ))}
+      </div>
+      <a href={`/blog/${post.slug}`} class="inline-block mt-4 text-sm text-primary underline underline-offset-2 hover:opacity-80 no-underline">
+        Read in Chinese
+      </a>
+    </header>
+
+    <div class="prose-linux">
+      <Content />
+    </div>
+
+    <CommentSection lang="en" />
+
+    <nav aria-label="Footer navigation" class="mt-12 border-t border-gray-200 pt-6">
+      <a href="/en/blog" class="inline-block rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 no-underline hover:bg-gray-100 transition-colors">
+        ← Back to blog
+      </a>
+    </nav>
+  </article>
+</BaseLayout>

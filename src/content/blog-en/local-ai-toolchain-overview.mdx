@@ -1,0 +1,60 @@
+---
+title: 'Building a Local AI Toolchain in 2026: The Full Landscape'
+slug: local-ai-toolchain-overview
+author: TuxAI
+date: 2026-08-17
+tags: [ai, local-deployment, toolchain, deep-read]
+excerpt: 'From model runtimes and chat UIs to image generation, workflows, knowledge bases, and voice — one map of every piece of the local AI ecosystem, and which tutorial to start with for each.'
+---
+# Building a Local AI Toolchain in 2026: The Full Landscape
+
+"Running AI locally" sounds like a hobbyist rabbit hole, but today it's a genuinely mature path: every piece has multiple solid open-source projects, good docs, and a decent chunk runs on ordinary hardware. This post unfolds the whole chain — not to convince you to install everything, but to give you a map: what each piece is, and when you'll need it.
+
+## 1. Model runtimes: the foundation of everything
+
+The first step of local AI is "getting a model to run" — this layer is called the runtime. Today there are two mainstream routes:
+
+- **Ollama**: installs with one command and works out of the box; `ollama run qwen3` gets you chatting. Great for beginners and daily use, and it's the default backend most GUI tools expect
+- **llama.cpp / vLLM**: lower-level and more controllable. llama.cpp focuses on single-machine inference and quantization (GGUF format); vLLM targets high-concurrency serving (OpenAI-compatible API, multi-user throughput)
+
+Suggestion: if it's just for yourself, start with Ollama; when you want to squeeze performance or deploy a service, learn llama.cpp or vLLM. We have matching tutorials: [Ollama local deployment](/en/tutorials/ollama-local-deploy), [llama.cpp inference](/en/tutorials/llama-cpp-inference), and [vLLM serving](/en/tutorials/vllm-serving).
+
+## 2. Chat UI: give the model a shell
+
+The command line can run models, but most people want a graphical interface. Open WebUI is currently the most popular choice: chat, file upload, multi-model switching, local knowledge base management — all available through the browser. See the [Open WebUI tutorial](/en/tutorials/open-webui).
+
+## 3. Image and video: creative models
+
+- **Stable Diffusion WebUI**: the most mature option with a rich plugin ecosystem; a great entry to text-to-image, see the [Stable Diffusion tutorial](/en/tutorials/stable-diffusion)
+- **ComfyUI**: node-based workflows with extreme flexibility — advanced tuning, batch generation, and reproducing community workflows all rely on it, see the [ComfyUI tutorial](/en/tutorials/comfyui-basic-workflow)
+- **AI video generation**: open-source video models became usable in 2026; Wan, LTX and others run on consumer GPUs, see the [AI video generation tutorial](/en/tutorials/ai-video-generation)
+
+## 4. Voice: hearing you, talking to you
+
+For speech synthesis (TTS), open-source projects like CosyVoice are close to human voices and can clone a voice; for speech recognition (ASR), Whisper and friends are mature. See the [local TTS tutorial](/en/tutorials/local-tts).
+
+## 5. Knowledge bases and automation: putting your data to work
+
+- **RAG knowledge base**: chunk, vectorize, retrieve, then let the model answer — solving "the model doesn't know my private data," see the [RAG tutorial](/en/tutorials/rag-knowledge-base)
+- **Dify**: visually build AI apps, wiring models, knowledge bases, and tool calls into workflows without writing code, see the [Dify tutorial](/en/tutorials/dify-visual-ai-platform)
+- **Function Calling / MCP**: letting models call external tools (weather, files, APIs) — the key to moving AI from "chatting" to "doing work," see the [Function Calling and MCP tutorial](/en/tutorials/function-calling-mcp)
+
+## 6. Hardware and containers: the foundation
+
+- VRAM decides how big a model you can run; the [hardware guide](/hardware) page has detailed recommendations
+- When running multiple services, Docker keeps everything manageable; GPU containers are covered in the [Docker GPU tutorial](/en/tutorials/docker-gpu-containers)
+
+## How to start
+
+Don't chase the full stack. Install on demand, along a gradual path:
+
+1. Install Ollama + Open WebUI first — solves "can I chat"
+2. Add Stable Diffusion or ComfyUI when you need images
+3. Add RAG / Dify when your data piles up
+4. Only then voice, video, MCP and other advanced pieces
+
+## Summary
+
+The local AI toolchain has matured to the point where "an ordinary person can assemble it by following a map." It's not free (hardware and electricity cost money), but in exchange you get data that never leaves your machine, no per-use fees, and offline availability. This post is the map; for each concrete step, our 13 tutorials have already walked the path once for you.
+
+> Further reading: [Ollama local deployment](/en/tutorials/ollama-local-deploy), [Try Linux without risk](/en/blog/try-linux-without-risk), [Hardware guide](/hardware)

@@ -83,6 +83,22 @@
 | sitemap 完整性 | ✅ | 46 条目 = 47 页 − 404（正确排除），无缺失无多余 |
 | 内容真实性核查 | ✅ | ollama 教程命令/模型名/API 端口全部正确，事实表述保守；terminal-game 三派系 30 题命令全部正确（normalize 小写匹配设计合理） |
 
+## 后续规划（2026-08-18 起，按优先级）
+
+> 架构约束：Astro 纯静态 SSG + 香港共享虚拟主机（非 VPS）→ 无 Node/数据库/常驻服务；评论（giscus）与搜索（Pagefind）已就绪，无需后端。
+
+| 优先级 | 任务 | 状态 | 备注 |
+|--------|------|------|------|
+| P0 | 11 篇教程英文版翻译全量补齐 | ✅ | 2026-08-17 commit 52dc28b；含全站站内互链统一 /en/ 前缀 |
+| P0 | 博客英文版 8 篇 | ✅ | 2026-08-18；新增 blog-en 集合 + /en/blog 列表页 + /en/blog/[slug] 详情页（含 Read in Chinese 互链）；8 篇全翻译；构建 87 页 + check-links 2429 无死链 |
+| P0 | CDN 缓存刷新 + giscus 上线验证 | ⬜ | 等用户 2026-08-18 上午在 hcp.xinnet.com 面板刷新；验证：`curl -s https://tuxai.cn/blog/vram-quantization-gguf/ \| grep -c client.js`（期望 ≥1） |
+| P1 | 站点统计 | ⬜ | PROJECT_PLAN 已列 Plausible 待办；虚拟主机跑不了自托管 → Plausible Cloud（约 €9/月）或免费 GoatCounter |
+| P1 | 结构化数据（Article/FAQ/Breadcrumb schema） | ⬜ | 静态站纯加分项；博客详情页 Article + 教程页 Breadcrumb/FAQ 优先 |
+| P2 | 图片优化（astro:assets + WebP/AVIF） | ⬜ | 教程 SVG 已轻量；博客封面/OG 图注意体积 |
+| P2 | 可用性监控 | ⬜ | UptimeRobot 免费档 + 面板日志；断站第一时间知道 |
+| P2 | 备份策略确认 | ⬜ | 内容全在 GitHub（代码侧安全）；确认面板自动备份周期，保证服务器配置可重建 |
+| P2 | 部署流程自动化收尾 | 🔄 | deploy-vhost.sh 已可用（构建 4s + scp 全量上传）；78 页全量上传成本低，暂无需增量/CI |
+
 ## 验收提醒
 
 - 涉及安装 / 分区 / 双系统的页面必须包含备份风险提示（AGENTS.md §7）

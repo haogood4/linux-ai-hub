@@ -64,6 +64,11 @@ const blog = defineCollection({
   }),
 });
 
+const blogEn = defineCollection({
+  type: 'content',
+  schema: blog._schema,
+});
+
 const distros = defineCollection({
   type: 'content',
   schema: z.object({
@@ -90,5 +95,6 @@ export const collections = {
   paths,
   tools,
   blog,
+  'blog-en': blogEn,
   distros,
 } as const;

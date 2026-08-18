@@ -1,0 +1,41 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog-en')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+---
+<BaseLayout
+  title="Blog (EN): Linux + AI Deep Reads | TuxAI"
+  description="English deep reads on the Linux + AI ecosystem: why AI runs on Linux, industry observations, tool comparisons — the 'why' behind the tutorials."
+>
+  <PageHeader
+    breadcrumb="EN / Blog"
+    title="Deep Reads"
+    subtitle="Tutorials teach you 'how'; this blog explores 'why': AI ecosystem observations, tool comparisons, and industry trends. Posts are less frequent than the tutorial library, but each one rewards a slow read."
+  />
+  <div class="max-w-3xl mx-auto px-4 py-12">
+    {posts.length === 0 ? (
+      <p class="text-gray-500">Posts are being written — stay tuned.</p>
+    ) : (
+      <div class="space-y-6">
+        {posts.map((p) => (
+          <a href={`/en/blog/${p.slug}`} class="block rounded-xl border border-gray-200 bg-white p-6 hover:shadow-md transition-shadow no-underline">
+            <h2 class="text-xl font-semibold text-gray-900 mb-2 leading-snug">{p.data.title}</h2>
+            <p class="text-sm text-gray-600 mb-3">{p.data.excerpt}</p>
+            <p class="text-xs text-gray-500">
+              {p.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} · {p.data.author}
+              <span class="ml-2">
+                {p.data.tags.map((tag) => (
+                  <span class="inline-block rounded-full bg-gray-100 text-gray-500 px-2 py-0.5 mr-1">{tag}</span>
+                ))}
+              </span>
+            </p>
+          </a>
+        ))}
+      </div>
+    )}
+  </div>
+</BaseLayout>
