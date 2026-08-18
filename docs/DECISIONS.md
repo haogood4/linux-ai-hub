@@ -213,3 +213,29 @@ hook 参数结构不同），导致构建失败且 sitemap 缺失。修复：sit
 - 仓库可见性 public；Discussions 已启用
 - 评论加载依赖 giscus.app + GitHub API（国内访问基本可用，偶发慢）
 - 无构建期影响（script 运行时注入），check 全绿、构建 67 页不变
+
+## Decision: GitHub Trending 页面静态化 + 中文简介
+
+日期：2026-08-18
+
+### 背景
+/github-trending 原本由浏览器实时请求 GitHub Search API。两个问题：
+1. 大陆用户直连 api.github.com 经常超时/限流（未认证 10 次/分钟），列表经常加载失败；
+2. 仓库描述为英文，中文用户阅读门槛高。
+
+### 选择
+改为构建时抓取 + AI 翻译，生成静态数据文件 public/data/github-trending.json，页面只读本地 JSON。
+
+### 原因
+- 零运行时外部依赖：页面加载不依赖 GitHub API，任何网络下都能正常显示
+- 翻译质量：DeepSeek 批量翻译描述，专有名词保留原文；翻译失败/无 key 时自动降级为原文
+- 数据在每次构建时更新，与站点发布节奏一致
+
+### 替代方案
+- 浏览器端调翻译 API：免费服务质量/配额不可控，付费服务需暴露 key，否决
+- 保持实时拉取不改：超时问题无解，否决
+
+### 影响
+- 新增 src/scripts/fetch-github-trending.mjs（`pnpm fetch:trending`，需 DEEPSEEK_API_KEY 环境变量，取自 ~/.codex/config.toml 的 DeepSeek key，不写入仓库）
+- 页面 UI：移除"刷新"按钮，显示数据更新时间，中文简介为主 + 原文小字
+- 数据文件随 git 跟踪，每日构建时更新

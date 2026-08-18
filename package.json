@@ -25,7 +25,8 @@
     "release-prep": "node src/scripts/release-prep.mjs",
     "release-prep:json": "node src/scripts/release-prep.mjs --json",
     "build:inject-version": "node src/scripts/inject-version.mjs",
-    "build:search-index": "node src/scripts/build-search-index.mjs"
+    "build:search-index": "node src/scripts/build-search-index.mjs",
+    "fetch:trending": "node src/scripts/fetch-github-trending.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^3.1.0",
