@@ -2,6 +2,7 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import CommentSection from '@/components/CommentSection.astro';
 import { getCollection, render } from 'astro:content';
+import { articleJsonLd, breadcrumbJsonLd, extractFaq, faqJsonLd } from '@/lib/seo';
 
 export async function getStaticPaths() {
   const tutorials = await getCollection('tutorials-en');
@@ -11,10 +12,22 @@ export async function getStaticPaths() {
 const { tutorial } = Astro.props;
 const { Content } = await render(tutorial);
 const { title, tags, estimatedReadTime, date, environment } = tutorial.data;
+const url = new URL(`/en/tutorials/${tutorial.slug}/`, Astro.site ?? 'https://tuxai.cn').toString();
+const faq = extractFaq(tutorial.body, 'FAQ');
+const jsonLd = JSON.stringify([
+  breadcrumbJsonLd([
+    { name: 'Home', url: 'https://tuxai.cn/' },
+    { name: 'Tutorials (EN)', url: 'https://tuxai.cn/en/tutorials/' },
+    { name: title, url },
+  ]),
+  articleJsonLd({ title, description: `${title} — Linux + AI tutorial (English).`, url, datePublished: date.toISOString(), tags }),
+  ...(faqJsonLd(faq) ? [faqJsonLd(faq)!] : []),
+]);
 ---
 <BaseLayout
   title={`${title} | TuxAI`}
   description={`${title} — Linux + AI tutorial (English).`}
+  jsonLd={jsonLd}
 >
   <article class="max-w-3xl mx-auto px-4 py-12">
     <nav aria-label="Breadcrumb" class="text-sm text-gray-500 mb-4">
