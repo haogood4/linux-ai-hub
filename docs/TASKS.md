@@ -94,7 +94,7 @@
 | P0 | CDN 缓存刷新 + giscus 上线验证 | ✅ | 2026-08-18 20:30 用户面板刷新；version.json 显示本次构建时间（12:28:39Z）、giscus client.js=1，线上已是最新版 |
 | P1 | 站点统计 | ⬜ | PROJECT_PLAN 已列 Plausible 待办；虚拟主机跑不了自托管 → Plausible Cloud（约 €9/月）或免费 GoatCounter |
 | P1 | 结构化数据（Article/FAQ/Breadcrumb schema） | ✅ | 2026-08-18；src/lib/seo.ts（extractFaq/Article/Breadcrumb/FAQ builder）；教程详情页（中英）注入 BreadcrumbList+Article+FAQPage（13 篇 FAQ 自动提取），博客详情页（中英）BreadcrumbList+Article；已部署上线 |
-| P2 | 图片优化（astro:assets + WebP/AVIF） | ⬜ | 教程 SVG 已轻量；博客封面/OG 图注意体积 |
+| P2 | 图片优化（astro:assets + WebP/AVIF） | ✅ | 2026-08-18；审计结论：全站位图仅 og-image.png（85K→70K，Pillow 无损优化，1200x630 不变），SVG 均 ≤4K 无需处理；博客无封面图，无需 WebP/AVIF 管线 |
 | P2 | 可用性监控 | ⬜ | UptimeRobot 免费档 + 面板日志；断站第一时间知道 |
 | P2 | 备份策略确认 | ⬜ | 内容全在 GitHub（代码侧安全）；确认面板自动备份周期，保证服务器配置可重建 |
 | P2 | 部署流程自动化收尾 | 🔄 | deploy-vhost.sh 已可用（构建 4s + scp 全量上传）；78 页全量上传成本低，暂无需增量/CI |
