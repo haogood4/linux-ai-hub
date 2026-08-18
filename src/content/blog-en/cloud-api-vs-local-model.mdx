@@ -1,55 +1,84 @@
 ---
-title: 'Cloud API or Local Model? A Decision Table'
+title: "Cloud API or local model? Choose by cost, privacy, latency and quality"
 slug: cloud-api-vs-local-model
 author: TuxAI
 date: 2026-08-17
-tags: [ai, decision, deep-read]
-excerpt: 'Not every AI need belongs on a local machine, and not everything needs to be paid for. This post compares both routes across cost, privacy, latency, and quality, then gives a decision table you can use directly.'
+tags: [ai, selection, deep-read]
+excerpt: "Not every AI need must run locally, and not everything must cost money. Compare cloud APIs and local models across cost, privacy, latency and quality, with a scenario decision table and the hybrid option."
 ---
-# Cloud API or Local Model? A Decision Table
+# Cloud API or local model? A choice based on cost, privacy, latency and quality
 
-"Should I use cloud APIs or local models?" is the most-asked question in the local AI community. The answer isn't "which is better" but "which fits your scenario." This post breaks the comparison into four dimensions and ends with a decision table you can apply directly.
+## Foreword
+
+Xiao Zhou uses AI daily to write code and summarize meeting notes, and occasionally asks a model to analyze the company's product documents. At first he simply used cloud services — stable results, easy to call. Later, worried about uploading internal materials to a third-party platform, he bought a GPU and planned to run local models with Ollama at home.
+
+Once he actually started tinkering, new questions piled up: how long until the GPU investment pays off? Is a local model really immune to data leaks? Will it work offline? How big is the gap between open-source models and flagship cloud models? And if you only ask a few questions a day, is it worth maintaining a local setup at all?
+
+This article compares the two routes on four dimensions and ends with a decision table you can apply directly. The answer is not "which is better" — it is "which fits your scenario".
 
 ## Four dimensions of comparison
 
 ### 1. Cost
 
-- **Cloud API**: pay per token. Light daily chat and writing help stay cheap, but heavy use (batch processing, data analysis) will show up on the bill
-- **Local model**: one-time hardware cost (GPU), then just electricity. Hardware may cost thousands, but the "marginal cost is zero" — the harder you use it, the better the value
+- **Cloud API**: billed per token. Everyday chat and writing assistance cost little per month, but high-frequency calls (batch processing, data analysis) make the bill climb noticeably.
+- **Local model**: a one-time hardware investment (GPU), then only electricity. Hardware can cost several thousand yuan, but marginal cost is near zero — the harder you use it, the cheaper it gets.
 
 ### 2. Privacy and data
 
-- **Cloud API**: your data leaves your machine. Think carefully before uploading sensitive corporate or personal data
-- **Local model**: data never leaves your machine and works offline. This is the one irreplaceable advantage of local
+- **Cloud API**: your data leaves your machine. Sensitive corporate material and personal information deserve careful evaluation before upload.
+- **Local model**: data stays on your machine end to end, and works offline. This is the biggest irreplaceable advantage of the local route.
+
+But "local" does not automatically mean secure. The OS, web UI, plugins, shared disks, backups and remote-access configuration can all still leak data. Treat local as a boundary you manage, not a guarantee.
 
 ### 3. Latency and availability
 
-- **Cloud API**: no local hardware needed — phones and thin laptops work; but it depends on the network, fails offline, and can queue during peak hours
-- **Local model**: inference happens locally, latency is stable and works offline; but speed depends on your GPU, and big models crawl on weak cards
+- **Cloud API**: no local hardware needed — phones and thin laptops work; but it depends on the network. Offline means unusable, and peak hours may queue.
+- **Local model**: inference happens locally, latency is stable, works offline; but speed depends on the GPU — large models crawl on weak cards.
 
-### 4. Quality
+### 4. Output quality
 
-- **Cloud API**: closed flagship models (the latest from each vendor) are generally stronger at complex reasoning, long text, and multilingual tasks
-- **Local model**: open models improve fast; mid- and low-difficulty tasks are close to flagship level, but the very best capability still lags
+- **Cloud API**: closed-source flagship models are generally stronger on complex reasoning, long context and multilingual tasks.
+- **Local model**: open-source models are improving fast and approach flagship level on low-to-medium difficulty tasks, but the very top capability still lags.
 
-## Decision table: pick by scenario
+## Decision table: choose by scenario
 
-| Your scenario | Recommendation | Why |
-|---------------|----------------|-----|
-| Occasional questions, writing help | Cloud API free tier / light plan | Zero cost to start, best quality |
-| Heavy writing, batch jobs, data runs | Local model | Marginal cost of zero, cheaper the more you use |
-| Sensitive or corporate data | Local model | Data never leaves your machine |
-| Thin laptop, no discrete GPU | Cloud API | Local can't run big models |
-| Offline / long-term air-gapped | Local model | The only viable option |
-| Maximum reasoning power | Cloud flagship | Top quality still lives in the cloud |
-| Tinkering with hardware, learning AI | Local model | The process itself is the learning |
+| Your scenario | Suggestion | Why |
+|---|---|---|
+| Ask a few questions a week | Cloud | No GPU or environment to maintain; pay per call; low entry barrier |
+| High-frequency batch generation, summaries or code processing | Cloud or hybrid | Cloud scales elastically; local suits fixed high-frequency tasks; hybrid routes by task |
+| Handling source code, customer data, contracts and other sensitive data | Local or hybrid | Sensitive content can stay on the intranet; non-sensitive tasks keep calling the cloud |
+| No discrete GPU, only an ordinary office computer | Cloud | Avoid new hardware for occasional use; no local speed penalty |
+| Frequent network outages or environments without external access | Local | Model and inference service run on-device or on the intranet; basic tasks still work offline |
+| Pursuing the strongest overall quality today | Cloud | Flagship closed models are more consistent on complex reasoning, long context and tool calling |
+| Enjoy researching models and willing to tinker with deployment | Local or hybrid | Learn quantization, inference frameworks, knowledge bases and service orchestration; keep a cloud model as a quality baseline |
 
-## What most people actually do: hybrid
+## The mainstream practice in the real world: hybrid
 
-Most people end up **hybrid**: local models for daily chat and writing, switching to a cloud flagship for hard problems; or local models in automated pipelines with the cloud handling only high-value tasks. Tool-wise the two routes don't conflict — Ollama and llama.cpp both offer OpenAI-compatible APIs, and many apps switch between "local" and "cloud" with a one-line config change. That's also why platforms like Dify and Open WebUI support multiple backends at once, see the [Dify tutorial](/en/tutorials/dify-visual-ai-platform).
+Most people end up using a mix: daily chat and writing with local models, switching to a cloud flagship for hard problems; or running a basic local model in an automation pipeline while the cloud handles only high-value tasks.
 
-## Summary
+On the tooling level the two routes do not conflict. Local tools such as Ollama (a tool for running local models) and llama.cpp (an open-source project supporting quantized model inference) expose OpenAI-compatible APIs. An application only needs to switch the request address from a cloud endpoint to a local one — the core call format usually needs no redesign.
 
-In one line: **want quality and zero hassle with no hardware → cloud; want privacy, heavy use, or offline → local; want it all → hybrid.** Think about your main scenario first, then decide whether to buy hardware for a local setup — far more rational than buying a GPU first and hunting for a use later.
+Using Ollama as an example, after starting a model you can expose an interface on the machine:
 
-> Further reading: [Building a local AI toolchain in 2026](/en/blog/local-ai-toolchain-overview), [Ollama local deployment](/en/tutorials/ollama-local-deploy), [Hardware guide](/hardware)
+```bash
+ollama serve
+curl http://localhost:11434/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"qwen2.5:7b","messages":[{"role":"user","content":"你好"}]}'
+```
+
+At the management and workflow layer, Dify (a visual AI application development platform) and Open WebUI (a web interface for local models) both support multiple backends, depending on version and configuration. You can configure several model providers and route by application, user, task or failover strategy; in many cases you only need to swap a Base URL and model name to switch backends. See the [Dify tutorial](/tutorials/dify-visual-ai-platform).
+
+Hybrid also needs boundaries: limit the listening address and access permissions of local services instead of exposing the interface to the public internet; set reasonable permissions for model files, logs and upload directories; filter cloud request fields so an automatic fallback never sends an entire sensitive document out. Hybrid is not simply putting two buttons side by side — it means deciding explicitly which data may leave the device and which tasks must stay offline.
+
+## Summary: look at the scenario first, then buy hardware
+
+Want the best quality, zero hassle, and have no suitable hardware? Prefer the cloud.
+
+Need privacy, high frequency, and stable offline operation? Prefer local.
+
+Want it all? Use a hybrid: the cloud handles complex and elastic needs, local handles sensitive, fixed and offline tasks.
+
+Before buying a GPU or building a server, write down your tasks, call frequency, data boundary and quality requirements. Choosing is not a statement of loyalty to one technology — it is confirming which solution reduces cost, risk and waiting in your actual workflow.
+
+> Further reading: [Deploy Ollama locally](/tutorials/ollama-local-deploy), [Build your own all-in-one AI setup in 2026](/blog/local-ai-toolchain-overview), [AI hardware buying guide](/hardware)

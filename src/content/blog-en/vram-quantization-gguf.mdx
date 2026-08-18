@@ -1,49 +1,92 @@
 ---
-title: 'Not Enough VRAM? Quantization and GGUF: Squeezing Big Models Into Small GPUs'
+title: "Out of VRAM? Quantization and GGUF: cram a large model into a small GPU"
 slug: vram-quantization-gguf
 author: TuxAI
 date: 2026-08-17
 tags: [ai, quantization, gguf, hardware, deep-read]
-excerpt: >
-  Model too big for your GPU? Quantization is the standard way to "compress" a model into VRAM. This post explains the principle, the tiers, and the practical path in plain language.
+excerpt: "Model too big for your GPU? Quantization is the standard way to compress a model into VRAM. Plain-language principles, tier selection and hands-on paths."
 ---
-# Not Enough VRAM? Quantization and GGUF: Squeezing Big Models Into Small GPUs
+# Only 8GB of VRAM? Quantization and GGUF: a practical guide to running large models locally
 
-Seeing a model that needs 24GB of VRAM while your GPU has 8GB makes local AI feel out of reach. Hold on — "not enough VRAM" is the most common barrier to local AI, and it has a standard solution: **quantization**.
+You downloaded a 14B or 32B model and the page says "24GB VRAM recommended". Then you look at your GPU: 8GB, maybe 12GB. The model has not even started, and the VRAM requirement has already scared you off.
 
-## What quantization is: "compressing" a model into VRAM
+This situation is common. The VRAM figures on model pages usually correspond to FP16 (16-bit floating point) or higher-precision full models. In practice, you can use **quantization** to lower the numerical precision of the model's parameters and compress the model into the range a consumer GPU can handle.
 
-Model weights default to high-precision storage (16-bit float, FP16). "Quantization" shrinks the size by lowering weight precision: e.g., from 16-bit to 8-bit (INT8) or 4-bit (INT4), halving or quartering the size. A model that won't fit in 8GB VRAM often fits after quantization.
+## What quantization is: squeezing the model into limited VRAM
 
-The trade-off is precision loss. But research and practice show that for most chat, writing, and coding scenarios, a 4-bit quantized model performs very close to the original — hard for ordinary users to tell apart.
+A large language model consists of many parameters. Each parameter is essentially a number, and the model needs to load those numbers into VRAM or RAM at runtime. By default, parameters are stored at high precision (FP16). Quantization lowers that precision: from 16 bits to 8 bits (INT8) or 4 bits (INT4), roughly halving or quartering the size.
 
-## GGUF: the "universal format" for quantized models
+A model that does not fit in 8GB may fit after quantization.
 
-GGUF is the model format introduced by the llama.cpp project, designed with "quantization-friendly" as a goal. Today, most mainstream open models on Hugging Face have GGUF versions (filenames often carry tags like `Q4_K_M`, `Q8_0`), and Ollama uses the format directly.
+The cost is precision loss. In practice, on most chat, writing and code scenarios, a 4-bit quantized model performs very close to the original — the difference is hard for ordinary people to notice.
 
-### Common quantization tiers (smaller Q number = smaller size, lower precision)
+## GGUF: the de facto format for quantized models
 
-| Tier | Relative size | Use case |
-|------|---------------|----------|
-| Q8_0 | ~8-bit of original | Plenty of VRAM, quality first |
-| Q6_K | ~6-bit of original | Balance of quality and size |
-| Q4_K_M | ~4-bit of original | Most common, best value |
-| Q3_K_S | ~3-bit of original | Extremely tight VRAM, emergency |
+GGUF (GPT-Generated Unified Format) is a file format for LLM inference, driven by the llama.cpp ecosystem, and it has become the common choice for running quantized models locally. Most mainstream open-source models on Hugging Face ship GGUF versions, with filenames marked like `Q4_K_M` and `Q8_0`.
 
-## The practical path
+- llama.cpp is the framework that loads and runs GGUF files.
+- Ollama uses a llama.cpp-compatible inference backend underneath, wrapping model management, chat API and configuration.
 
-**With Ollama (simplest)**: when you run `ollama run <model>`, Ollama uses the 4-bit quantized version by default — no manual steps. To pick a specific tier, specify it in the model tag (e.g., `qwen3:14b-q4_K_M`).
+So when you see a GGUF file, think: it can usually run in llama.cpp, and can also be imported into Ollama via a `Modelfile`.
 
-**With llama.cpp (more flexible)**: download the GGUF file and run it directly; the `-ngl` flag offloads some layers to the GPU, and the CPU automatically takes over when VRAM runs out — another trick that makes "small VRAM can still run." See the [llama.cpp tutorial](/en/tutorials/llama-cpp-inference).
+### Quantization tiers (smaller Q = smaller size, lower precision)
+
+| Tier | Precision | Relative size | Quality | Best for |
+|------|-----------|---------------|---------|----------|
+| `Q8_0` | 8-bit | about half of FP16 | close to full precision | Plenty of VRAM; cares about code, reasoning, stability |
+| `Q6_K` | 6-bit | about one-third to half of FP16 | good, loss usually invisible | Balancing quality and VRAM |
+| `Q4_K_M` | 4-bit | about one-quarter to one-third of FP16 | solid overall | Default choice for consumer GPUs |
+| `Q3_K_S` | 3-bit | smaller | more visible loss | Very tight VRAM; prioritize getting the model to start |
+
+The sizes above are rough ranges for model weights; actual size varies with architecture, vocabulary and metadata. Runtime also needs extra VRAM/RAM for context cache — do not judge by file size alone.
+
+**Q8_0: quality first.** Usually close to FP16, good for code generation, complex reasoning and stable output. Its downside is size: a 7B model at Q8 needs roughly 7-8GB of weights alone, plus context cache at runtime, so 8GB GPUs often cannot fit it fully in VRAM.
+
+**Q4_K_M: the default.** The best overall balance for consumer GPUs. A 14B model at Q4_K_M fits within a 12GB card's budget for many workloads.
+
+**Q3_K_S: last resort.** Further shrinks the model for very limited VRAM, but more likely to affect complex reasoning, code and long-text tasks.
+
+## Practice 1: Ollama — run quantized models with zero manual steps
+
+Ollama suits people who do not want to manage model files and inference parameters. See the full [Ollama deployment tutorial](/tutorials/ollama-local-deploy). Before installing, check:
+
+- GPU driver and VRAM; system RAM should not be too small, because models may use RAM when VRAM is insufficient.
+- Disk space for model files.
+
+Ollama's official models already ship quantization suited for local use, commonly close to 4-bit. In other words, `ollama run qwen2.5:7b` works without you downloading FP16 files and compressing them by hand. If you want a specific tier, write it in the tag:
+
+```bash
+ollama run qwen3:14b-q4_K_M
+```
+
+With 8GB VRAM, start with the default quantized 7B or 8B model. With 12GB, try a 14B model.
+
+## Practice 2: llama.cpp — fine control with -ngl
+
+llama.cpp gives you precise control over how many layers go to the GPU. The `-ngl` (number of GPU layers) parameter offloads part of the model to the GPU; when VRAM is insufficient, the CPU automatically backs up the rest — another reason "small VRAM can still run". See the [llama.cpp inference tutorial](/tutorials/llama-cpp-inference).
 
 ## Common misconceptions
 
-- **Quantization ≠ dumb model**: 4-bit quantization loses little on modern models; in many scenarios it's hard to tell apart in practice
-- **VRAM isn't the only bottleneck**: insufficient RAM or slow disk reads also cause lag. When model weights partially sit in RAM/disk, speed drops noticeably
-- **Quantization can't fix "specs"**: a model that's too small (e.g., 3B) has limited headroom however you optimize — better to use a bigger model; and a 70B model still needs ~40GB even at 4-bit, beyond consumer GPUs
+- **Quantization ≠ making the model stupid**: on modern models, 4-bit quantization loses little; in many real tests it is hard to tell apart.
+- **VRAM is not the only bottleneck**: insufficient RAM or slow disk reads also cause lag. When part of the model lives in RAM or on disk, speed drops noticeably.
+- **Quantization cannot fix "specs"**: a tiny model (e.g. 3B) has limited room to improve — lowering the tier beats switching models only up to a point; and a 70B model quantized to 4-bit still needs about 40GB, which consumer GPUs struggle with.
 
-## Summary
+## Summary: start with Q4_K_M
 
-Quantization + GGUF is local AI's "money-saving lesson": a mainstream GPU (8–12GB) with 4-bit quantization can run 14B-class chat models and mainstream image models. Remember two takeaways: **default to Q4_K_M, and Ollama has already quantized it for you.**
+For 8-12GB consumer GPUs, the local-model thinking goes like this:
 
-> Further reading: [llama.cpp inference tutorial](/en/tutorials/llama-cpp-inference), [Ollama local deployment](/en/tutorials/ollama-local-deploy), [Hardware buying guide](/hardware)
+- 7B or 8B: prefer Q4_K_M.
+- 14B: 12GB cards can try Q4_K_M; 8GB cards should prepare CPU fallback.
+- Code and complex reasoning: go up to Q6_K or Q8_0 when VRAM allows.
+- Extremely tight VRAM: only then Q3_K_S.
+- Ollama: official models are usually pre-quantized — just `ollama run`.
+- llama.cpp: use `-ngl` to control how many layers go to the GPU.
+- Startup failure or slowness: reduce context length, lower GPU layers, and check system RAM.
+
+The mantra:
+
+> **Default to Q4_K_M; Ollama usually pre-quantizes; lower `-ngl` when VRAM runs out; leave headroom for RAM and disk; go Q6 for stability, Q3 only at the limit.**
+
+Quantization's value is not disguising a small GPU as a big one — it is an adjustable balance between model scale, precision and hardware resources. If you accept partial CPU participation and keep context length reasonable, an 8GB GPU can reach the practical range of local large models.
+
+> Further reading: [llama.cpp inference](/tutorials/llama-cpp-inference), [Ollama local deployment](/tutorials/ollama-local-deploy), [Hardware buying guide](/hardware)
