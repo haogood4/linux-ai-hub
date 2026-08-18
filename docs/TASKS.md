@@ -91,7 +91,7 @@
 |--------|------|------|------|
 | P0 | 11 篇教程英文版翻译全量补齐 | ✅ | 2026-08-17 commit 52dc28b；含全站站内互链统一 /en/ 前缀 |
 | P0 | 博客英文版 8 篇 | ✅ | 2026-08-18；新增 blog-en 集合 + /en/blog 列表页 + /en/blog/[slug] 详情页（含 Read in Chinese 互链）；8 篇全翻译；构建 87 页 + check-links 2429 无死链 |
-| P0 | CDN 缓存刷新 + giscus 上线验证 | ⬜ | 等用户 2026-08-18 上午在 hcp.xinnet.com 面板刷新；验证：`curl -s https://tuxai.cn/blog/vram-quantization-gguf/ \| grep -c client.js`（期望 ≥1） |
+| P0 | CDN 缓存刷新 + giscus 上线验证 | ✅ | 2026-08-18 20:30 用户面板刷新；version.json 显示本次构建时间（12:28:39Z）、giscus client.js=1，线上已是最新版 |
 | P1 | 站点统计 | ⬜ | PROJECT_PLAN 已列 Plausible 待办；虚拟主机跑不了自托管 → Plausible Cloud（约 €9/月）或免费 GoatCounter |
 | P1 | 结构化数据（Article/FAQ/Breadcrumb schema） | ⬜ | 静态站纯加分项；博客详情页 Article + 教程页 Breadcrumb/FAQ 优先 |
 | P2 | 图片优化（astro:assets + WebP/AVIF） | ⬜ | 教程 SVG 已轻量；博客封面/OG 图注意体积 |
