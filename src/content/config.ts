@@ -53,20 +53,22 @@ const tools = defineCollection({
   }),
 });
 
+const blogSchema = z.object({
+  title: z.string(),
+  author: z.string().default('TuxAI'),
+  date: z.coerce.date(),
+  tags: z.array(z.string()).default([]),
+  excerpt: z.string(),
+});
+
 const blog = defineCollection({
   type: 'content',
-  schema: z.object({
-    title: z.string(),
-    author: z.string().default('TuxAI'),
-    date: z.coerce.date(),
-    tags: z.array(z.string()).default([]),
-    excerpt: z.string(),
-  }),
+  schema: blogSchema,
 });
 
 const blogEn = defineCollection({
   type: 'content',
-  schema: blog._schema,
+  schema: blogSchema,
 });
 
 const distros = defineCollection({
