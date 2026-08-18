@@ -24,15 +24,18 @@ fi
 [ -d dist ] || { echo "错误：dist/ 不存在，请先构建" >&2; exit 1; }
 
 ASKPASS=$(mktemp /tmp/opencode/askpass.XXXXXX)
+PWFILE=$(mktemp /tmp/opencode/pw.XXXXXX)
 chmod 700 "$ASKPASS"
-printf '#!/bin/sh\necho "%s"\n' "$DEPLOY_VHOST_PWD" > "$ASKPASS"
+chmod 600 "$PWFILE"
+printf '%s' "$DEPLOY_VHOST_PWD" > "$PWFILE"
+printf '#!/bin/sh\ncat "%s"\n' "$PWFILE" > "$ASKPASS"
 
 echo "==> 上传 dist/ 全部文件到 $VHOST_HOST…"
 SSH_ASKPASS="$ASKPASS" SSH_ASKPASS_REQUIRE=force \
   scp -r -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null \
   -oConnectTimeout=15 -P "$VHOST_PORT" dist/. "$VHOST_USER@$VHOST_HOST:$REMOTE_DIR/"
 
-rm -f "$ASKPASS"
+rm -f "$ASKPASS" "$PWFILE"
 echo "==> 上传完成，验证站点…"
 for p in "" "what-is-linux/" "distros/ubuntu/" "tools/ollama/" "llms.txt" "en/tutorials/"; do
   code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$VHOST_SITE/$p")
