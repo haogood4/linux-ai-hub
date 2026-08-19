@@ -1,0 +1,137 @@
+---
+title: llama.cpp 推理速度慢如何优化？
+slug: llama-cpp-inference-speed-optimization
+author: TuxAI
+date: 2026-08-19
+tags: [ai, llama.cpp, 大模型, 性能, 优化, 推理]
+estimatedReadTime: 5
+environment: [服务器, GPU]
+---
+
+## 问题现象
+
+模型可以正常加载，但生成速度只有每秒几个 token；或者短问题还能接受，一旦进入长上下文，首 token 等待时间明显变长，后续生成也持续卡顿。这通常不是单个参数导致，而是 GPU、线程、量化模型和上下文设置共同造成的。
+
+## 根本原因
+
+影响 llama.cpp 速度的主要因素有五个：
+
+1. **GPU offload 是否生效**：`-ngl` 决定多少层放入 GPU。只使用 CPU 时，生成速度可能只有个位数；显卡显存足够时，GPU 推理通常比 CPU 快一个量级，但实际差距取决于模型、显卡和上下文长度。
+2. **线程数是否合理**：CPU 推理使用 `-t` 设置线程数。线程过少会浪费 CPU，线程过多又可能带来调度和内存带宽开销，通常从物理核心数开始测试。
+3. **量化等级（Quantization）**：Q8、Q6 保留更多精度，但模型更大、显存带宽压力更高；Q4_K_M 通常是速度、内存和效果之间较均衡的选择。
+4. **编译指令集**：没有启用 CUDA、Metal、AVX2 或其他后端时，即使参数正确，也可能实际运行在低效路径。
+5. **上下文长度**：`-c` 越大，KV Cache 占用越高，长上下文的预填充和注意力计算也越慢。上下文不是越大越好。
+
+## 解决方案
+
+### 1. 优先确认 GPU offload 和后端
+
+NVIDIA 显卡应使用启用了 CUDA 的构建版本。自行编译时：
+
+```bash
+cmake -B build -DGGML_CUDA=ON
+cmake --build build --config Release -j
+```
+
+编译参数会改变后端和依赖环境，不能在不了解驱动、CUDA Toolkit 与显卡架构的情况下随意修改。启动时让尽可能多的层进入 GPU：
+
+```bash
+./build/bin/llama-cli \
+  -m ./models/model.Q4_K_M.gguf \
+  -ngl 99 \
+  -t 8 \
+  -c 4096 \
+  -n 256
+```
+
+`-ngl 99` 表示尽量全部 offload；如果显存不足，日志会显示无法装入的层，此时降低 `-ngl`，或改用更小的模型。`-t 8` 适合 8 个物理核心的 CPU，实际应按物理核心数测试，而不是盲目填写逻辑线程数。
+
+### 2. 控制生成量和上下文
+
+`-n` 限制最多生成的 token 数，避免模型在没有必要时持续输出；`-c` 控制上下文窗口。一般问答可以先用：
+
+```bash
+./build/bin/llama-cli \
+  -m ./models/model.Q4_K_M.gguf \
+  -ngl 99 \
+  -t 8 \
+  -c 2048 \
+  -n 128 \
+  --flash-attn on
+```
+
+闪存注意力（Flash Attention）可能降低长上下文的显存和计算开销，但是否提速取决于 llama.cpp 版本、GPU 后端和显卡。若当前版本不识别 `--flash-attn on`，应查看 `llama-cli --help`，使用该版本对应的 `-fa` 写法或升级构建版本。
+
+### 3. 选择更适合的模型量化
+
+显存紧张或生成速度慢时，可从 Q8 降到 Q6、Q5 或 Q4_K_M。不要只看模型参数量，还要看 GGUF 文件大小、KV Cache 和上下文空间是否能同时放入显存。CPU 没有 CUDA GPU 时，优先选择 Q4_K_M 等较低量化，并使用启用本机指令集的 Release 构建；也可以减少 `-c`、降低 `-n`，并测试 `-t 4`、`-t 8`、`-t 12`，找出实际最快值。
+
+## 验证是否解决
+
+启动日志重点看后端、offload 层数、显存占用，以及最后的 `eval rate`、`sample rate` 或 `tokens/s`。不要只比较首 token 延迟：预填充速度和生成速度是两个指标。
+
+可以用基准工具比较参数（工具名可能随版本不同，如 `llama-bench`）：
+
+```bash
+./build/bin/llama-bench \
+  -m ./models/model.Q4_K_M.gguf \
+  -ngl 99 \
+  -t 8
+```
+
+NVIDIA 显卡同时观察：
+
+```bash
+nvidia-smi -l 1
+```
+
+如果生成时 GPU 利用率长期接近 0%，通常是 CUDA 后端未启用、模型没有 offload，或 CPU 线程成为瓶颈。优化前后应固定模型、提示词、上下文和生成长度，记录生成阶段的 tokens/s 再比较。示例中的“个位数提升到几十 token/s”只能作为常见现象参考，不能替代本机实测。
+
+## 常见问题 FAQ
+
+### 默认配置为什么慢？
+
+默认线程数、上下文长度和 GPU offload 并不一定适合当前硬件；某些预编译版本也可能没有包含 CUDA 或 Metal。先看启动日志确认后端，再显式设置 `-ngl 99`、`-t`、`-c` 和 `-n`。
+
+### 批量 prompt 或连续对话能加速吗？
+
+批量 prompt 可以提高 GPU 利用率，尤其适合服务端并发请求；连续对话可以复用 KV Cache，减少重复处理历史内容。但上下文越长，KV Cache 占用和注意力开销也越高，因此仍应限制历史消息和 `-c`。单个请求的生成速度不会因为简单增加批量而必然提升。
+
+### M1/M2 Mac 怎么用 Metal 优化？
+
+使用启用 Metal 的构建：
+
+```bash
+cmake -B build -DGGML_METAL=ON
+cmake --build build --config Release -j
+```
+
+运行时将模型层尽量放入 Apple GPU：
+
+```bash
+./build/bin/llama-cli \
+  -m ./models/model.Q4_K_M.gguf \
+  -ngl 99 \
+  -c 4096 \
+  -n 256
+```
+
+### 能用多 GPU 吗？
+
+llama.cpp 支持多 GPU 分层 offload，但多 GPU 参数（如 `--split-mode`、`--tensor-split`）在不同版本写法可能不同，应以你安装版本的 `llama-cli --help` 和官方文档为准。示例（仅供参考，需结合各卡显存调整比例）：
+
+```bash
+./build/bin/llama-cli \
+  -m ./models/model.Q4_K_M.gguf \
+  -ngl 99 \
+  --split-mode layer \
+  --tensor-split 1,1 \
+  -c 4096 \
+  -n 256
+```
+
+多 GPU 之间的 PCIe 或互联带宽可能成为瓶颈，实测不一定比单卡更快。
+
+> 进阶参数（`--flash-attn`、多 GPU 相关等）因 llama.cpp 版本差异可能不同，若命令报 `unknown option`，请用 `llama-cli --help` 确认你版本的准确写法。
+
+快速排查口诀：**GPU 全上、低量化、短上下文、线程按物理核心调**。基础命令可参考 [llama.cpp 推理入门](/tutorials/llama-cpp-inference)。
