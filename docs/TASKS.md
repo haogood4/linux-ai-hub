@@ -92,12 +92,15 @@
 | P0 | 11 篇教程英文版翻译全量补齐 | ✅ | 2026-08-17 commit 52dc28b；含全站站内互链统一 /en/ 前缀 |
 | P0 | 博客英文版 8 篇 | ✅ | 2026-08-18；新增 blog-en 集合 + /en/blog 列表页 + /en/blog/[slug] 详情页（含 Read in Chinese 互链）；8 篇全翻译；构建 87 页 + check-links 2429 无死链 |
 | P0 | CDN 缓存刷新 + giscus 上线验证 | ✅ | 2026-08-18 20:30 用户面板刷新；version.json 显示本次构建时间（12:28:39Z）、giscus client.js=1，线上已是最新版 |
-| P1 | 站点统计 | ⬜ | PROJECT_PLAN 已列 Plausible 待办；虚拟主机跑不了自托管 → Plausible Cloud（约 €9/月）或免费 GoatCounter |
+| P1 | 站点统计 | ✅ 2026-08-19 | 用户选定 Plausible Cloud；待注册后接入（BaseLayout 注入 script，data-domain=tuxai.cn） |
 | P1 | 结构化数据（Article/FAQ/Breadcrumb schema） | ✅ | 2026-08-18；src/lib/seo.ts（extractFaq/Article/Breadcrumb/FAQ builder）；教程详情页（中英）注入 BreadcrumbList+Article+FAQPage（13 篇 FAQ 自动提取），博客详情页（中英）BreadcrumbList+Article；已部署上线 |
 | P2 | 图片优化（astro:assets + WebP/AVIF） | ✅ | 2026-08-18；审计结论：全站位图仅 og-image.png（85K→70K，Pillow 无损优化，1200x630 不变），SVG 均 ≤4K 无需处理；博客无封面图，无需 WebP/AVIF 管线 |
 | P2 | 可用性监控 | ✅ | 2026-08-18 用户注册 UptimeRobot 并建立监控（免费档 5 分钟间隔，通知走邮件） |
-| P2 | 备份策略确认 | ⬜ | 内容全在 GitHub（代码侧安全）；确认面板自动备份周期，保证服务器配置可重建 |
-| P2 | 部署流程自动化收尾 | 🔄 | deploy-vhost.sh 已可用（构建 4s + scp 全量上传）；78 页全量上传成本低，暂无需增量/CI |
+| P2 | 备份策略确认 | ⬜ | 内容全在 GitHub（代码侧安全）；待用户向新网确认面板自动备份周期，保证服务器配置可重建 |
+| P2 | 部署流程自动化收尾 | ✅ 2026-08-19 | deploy-vhost.sh 已可用（构建 4s + scp 全量上传，askpass 特殊字符 bug 已修）；78 页全量上传成本低，暂无需增量/CI |
+| P2 | 博客 8 篇研墨重写 + 中英部署 | ✅ 2026-08-19 | 研墨双模型流水线重写（opinion/list/review/howto），英文翻译同步；提交 485548e → CI 通过 → 部署 → CDN 刷新生效，线上全绿 |
+| P2 | GitHub 动态页上线 | ✅ 2026-08-19 | 2026-08-17 已提交（b211371 GitHub Trending 静态化 + DeepSeek 翻译）；本次部署已上线，首页动态区块验证 200 |
+| P2 | linux-promo-site 远程仓库清理 | 🔄 | 本地已删（废纸篓）；GitHub 需 delete_repo 授权（设备码 D33F-4254）；Gitee 用户网页自删 |
 
 ## 验收提醒
 
@@ -105,7 +108,7 @@
 - 每次构建通过 + 移动端检查后再标记完成
 | llama.cpp 量化推理教程 | ✅ | 2026-08-17 | GGUF/Q4_K_M/llama-cli/llama-server OpenAI 兼容 API，内容经 2026-08 真实资料核查（b10369） |
 | Docker + GPU 容器教程 | ✅ | 2026-08-17 | nvidia-container-toolkit（nvidia-docker2 已弃用）、CUDA 镜像验证、容器跑 Ollama 实战 |
-| GitHub 动态页上线 | 🔄 | 2026-08-17 | 页面+导航已提交并 CI 全绿；等待 SFTP 密码部署 |
+| GitHub 动态页上线 | 🔄 | 2026-08-17 | 页面+导航已提交并 CI 全绿；等待 SFTP 密码部署（已并入上方 P2 行，2026-08-19 部署完成） |
 
 | vLLM 高吞吐推理教程 | ✅ | 2026-08-17 | vllm serve / OpenAI 兼容 API / 多卡并行 / AWQ，经 2026-08 官方文档核查 |
 | Open WebUI 教程 | ✅ | 2026-08-17 | Docker Compose（Ollama+WebUI）、模型选型表、接 vLLM/llama.cpp 进阶 |
