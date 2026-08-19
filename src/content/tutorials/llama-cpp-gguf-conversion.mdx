@@ -1,0 +1,152 @@
+---
+title: llama.cpp 怎么把模型转成 GGUF 格式？
+slug: llama-cpp-gguf-conversion
+author: TuxAI
+date: 2026-08-19
+tags: [ai, llama.cpp, GGUF, 模型转换, safetensors]
+estimatedReadTime: 4
+environment: [服务器, GPU]
+---
+
+## 问题现象
+
+从 HuggingFace 下载的 `Qwen2.5-0.5B-Instruct` 模型目录中，通常能看到多个 `.safetensors` 文件。直接执行 `llama-cli -m model.safetensors` 时，可能出现格式不支持、无法读取模型或缺少 GGUF header 等错误。
+
+这不是模型文件损坏，而是 `llama.cpp` 的加载入口需要 GGUF 格式。
+
+## 根本原因
+
+`safetensors`（Safetensors）是 HuggingFace（Hugging Face）生态中常见的通用权重格式，主要保存神经网络参数；GGUF（GGUF）则是 `llama.cpp` 使用的模型封装格式，除了权重，还可以保存架构、词表、上下文长度等推理所需的元数据。
+
+因此，转换和量化是两个独立步骤：
+
+1. safetensors 转换为 GGUF，通常先得到 `f16` 精度文件。
+2. 再把 f16 GGUF 量化为 Q4、Q5 或 Q8 等更小的文件。
+
+一句话记忆：**转换得到 f16，量化才能瘦身。**
+
+## 解决方案
+
+### 方法一：使用 `convert_hf_to_gguf.py` 转换
+
+先确认模型目录中包含配置文件、Tokenizer 文件和 safetensors 权重，例如：
+
+```text
+Qwen2.5-0.5B-Instruct/
+├── config.json
+├── tokenizer.json
+├── tokenizer_config.json
+└── model-*.safetensors
+```
+
+在 llama.cpp 源码或安装目录中找到 `convert_hf_to_gguf.py`，进入该脚本所在目录后执行：
+
+```bash
+python3 convert_hf_to_gguf.py ./Qwen2.5-0.5B-Instruct \
+  --outfile ./Qwen2.5-0.5B-Instruct-f16.gguf \
+  --outtype f16
+```
+
+> ⚠️ 注意：网上有些教程会给 `convert_hf_to_gguf.py` 加上 `--trust-remote-code`，但该参数**不属于这个转换脚本**（它是 transformers 等其他工具的参数）。如果报 `unrecognized arguments` 或 `no such option`，请移除它；新版转换脚本会自动处理模型文件，无需该参数。
+不同版本对参数的支持可能不同，先查看帮助信息：
+
+```bash
+python3 convert_hf_to_gguf.py --help
+```
+
+命令路径因版本而异，以你的安装为准。不要直接假设脚本一定位于 `examples` 目录，也不要照抄某个固定绝对路径。
+
+转换成功后，输出文件通常是：
+
+```text
+Qwen2.5-0.5B-Instruct-f16.gguf
+```
+
+### 方法二：使用发行版提供的 GGUF 工具
+
+部分打包版本会提供 `llama-gguf` 或相关 GGUF 转换工具。可以先确认当前安装包含哪些命令：
+
+```bash
+llama-gguf --help
+```
+
+如果该版本提供从 HuggingFace 模型目录转换的子命令，应以本机帮助信息显示的参数为准。不同构建版本的工具名称和参数可能不同，`convert_hf_to_gguf.py` 通常更容易与 llama.cpp 源码版本对应。
+
+### 方法三：量化为更小的 Q4_K_M 文件
+
+f16 GGUF 可以直接推理，但文件体积较大。使用 llama.cpp 编译出的 `llama-quantize` 进行量化：
+
+```bash
+./llama-quantize \
+  ./Qwen2.5-0.5B-Instruct-f16.gguf \
+  ./Qwen2.5-0.5B-Instruct-Q4_K_M.gguf \
+  Q4_K_M
+```
+
+如果 `llama-quantize` 已加入系统 PATH，也可以直接执行：
+
+```bash
+llama-quantize \
+  Qwen2.5-0.5B-Instruct-f16.gguf \
+  Qwen2.5-0.5B-Instruct-Q4_K_M.gguf \
+  Q4_K_M
+```
+
+常见量化等级可以这样选择：
+
+- `Q4_K_M`：体积小、速度和效果平衡，适合大多数本地运行场景。
+- `Q5_K_M`：比 Q4 更保留精度，文件也更大。
+- `Q8_0`：精度接近 f16，但占用空间明显增加。
+- `F16`：未量化的半精度版本，适合作为量化输入或进行效果对比。
+
+量化细节和不同等级的选择，可继续参考站内的 [llama.cpp 本地推理完整教程](/tutorials/llama-cpp-inference)。
+
+## 验证是否解决
+
+先用转换后的 f16 文件测试：
+
+```bash
+./llama-cli \
+  -m ./Qwen2.5-0.5B-Instruct-f16.gguf \
+  -p "用一句话介绍你自己" \
+  -n 64
+```
+
+再测试量化文件：
+
+```bash
+./llama-cli \
+  -m ./Qwen2.5-0.5B-Instruct-Q4_K_M.gguf \
+  -p "用一句话介绍你自己" \
+  -n 64
+```
+
+如果能正常加载模型并生成文本，说明转换和量化都成功。排查加载问题时可以打开详细日志：
+
+```bash
+./llama-cli --verbose \
+  -m ./Qwen2.5-0.5B-Instruct-Q4_K_M.gguf \
+  -p "你好"
+```
+
+也可以使用当前版本提供的 `llama-gguf` 工具查看 GGUF 元数据：
+
+```bash
+llama-gguf --help
+```
+
+重点检查模型架构、词表、上下文长度和张量信息是否能正常读取。
+
+## 常见问题 FAQ
+
+### 必须自己转换吗，还是可以直接下载 GGUF？
+
+不一定要自己转换。很多模型作者或社区会直接发布 GGUF 版本，下载后即可交给 `llama.cpp` 使用。只有在没有合适的 GGUF 文件、需要指定转换精度，或想自行选择量化等级时，才需要从 safetensors 开始转换。
+
+### 转换失败，提示 tokenizer 不支持怎么办？
+
+先升级 llama.cpp 和转换脚本，并确认模型目录没有缺少 `tokenizer.json`、`tokenizer_config.json` 或相关配置文件。某些新模型需要较新的模型架构支持；如果当前版本仍提示 tokenizer 或架构不支持，应查看脚本的 `--help` 输出，并使用与模型发布时间更接近的新版本。
+
+### 量化会损失多少精度？
+
+量化会损失一部分数值精度，但实际影响取决于模型大小、任务类型和量化等级。`Q4_K_M` 通常是体积与效果的常用平衡点；对代码生成、长文本或严格评测更敏感的场景，可以优先尝试 `Q5_K_M` 或 `Q8_0`，并用自己的提示词对比 f16 输出。
