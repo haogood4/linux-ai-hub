@@ -1,0 +1,215 @@
+---
+title: Ollama 如何开通 OpenAI 兼容 API？
+slug: ollama-openai-compatible-api
+author: TuxAI
+date: 2026-08-19
+tags: [ai, ollama, OpenAI API, 本地推理, 集成]
+estimatedReadTime: 3
+environment: [服务器, GPU]
+---
+
+## 问题现象
+
+已经通过 `ollama run llama2` 跑起了本地模型，但在 OpenAI Python 库、Node 客户端、Open WebUI、Cursor 或 Continue 中，不知道 `base_url` 应该填什么。直接使用默认配置时，客户端通常会请求 OpenAI 官方 API，而不是本机的 Ollama。
+
+## 根本原因
+
+Ollama 默认在本机 `11434` 端口提供 OpenAI 兼容 API（OpenAI-compatible API）。它不需要额外安装插件，也不需要创建真正的 OpenAI 密钥。
+
+兼容端点的根地址是：
+
+```text
+http://localhost:11434/v1
+```
+
+注意，配置 SDK 时通常要把 `/v1` 写进 `base_url`。模型名称则使用 `ollama list` 中显示的名称，例如 `llama2`、`qwen2.5:7b`。
+
+## 解决方案
+
+### 方法一：先用 curl 测试聊天接口
+
+确保 Ollama 正在运行，并且本地已有模型：
+
+```bash
+ollama list
+```
+
+使用 OpenAI 风格的聊天接口：
+
+```bash
+curl http://localhost:11434/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ollama" \
+  -d '{
+    "model": "llama2",
+    "messages": [
+      {
+        "role": "user",
+        "content": "用一句话解释什么是本地大语言模型"
+      }
+    ],
+    "temperature": 0.7,
+    "stream": false
+  }'
+```
+
+这里的 `Authorization` 只是为了满足部分客户端的请求格式，`ollama` 可以替换成任意字符串。Ollama 默认不会校验这个密钥。
+
+### 方法二：使用 Python OpenAI SDK
+
+先安装官方 Python 客户端：
+
+```bash
+pip install openai
+```
+
+创建并运行 Python 程序：
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:11434/v1",
+    api_key="ollama",
+)
+
+response = client.chat.completions.create(
+    model="llama2",
+    messages=[
+        {
+            "role": "user",
+            "content": "列出三个使用 Ollama 的常见场景",
+        }
+    ],
+)
+
+print(response.choices[0].message.content)
+```
+
+关键配置只有三项：`base_url` 指向 Ollama，`api_key` 填任意非空字符串，`model` 填本机实际安装的模型名。
+
+### 方法三：使用 Node.js OpenAI 客户端
+
+安装依赖：
+
+```bash
+npm install openai
+```
+
+保存为 `index.mjs`：
+
+```javascript
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  baseURL: "http://localhost:11434/v1",
+  apiKey: "ollama",
+});
+
+const response = await client.chat.completions.create({
+  model: "llama2",
+  messages: [
+    {
+      role: "user",
+      content: "用简洁语言说明 Ollama 和 OpenAI API 的区别",
+    },
+  ],
+});
+
+console.log(response.choices[0].message.content);
+```
+
+如果项目使用 CommonJS，可以根据当前 Node.js 项目配置改用对应的 `require` 写法；接口参数不变。
+
+### 方法四：配置第三方工具
+
+Open WebUI、Cursor、Continue 等工具通常需要填写以下信息：
+
+```text
+Base URL: http://localhost:11434/v1
+API Key: ollama
+Model: llama2
+```
+
+有些工具会自动在 `base_url` 后拼接 `/chat/completions`，这时应按工具说明填写 `http://localhost:11434/v1`，不要重复添加路径。若工具单独要求“OpenAI API URL”，则填写完整地址：
+
+```text
+http://localhost:11434/v1/chat/completions
+```
+
+更完整的 Ollama 安装与调用说明可参考 [Ollama 本地部署教程](/tutorials/ollama-local-deploy)。
+
+## 常用端点与原生 API 的区别
+
+Ollama 的 OpenAI 兼容端点主要包括：
+
+| 用途 | OpenAI 兼容端点 |
+|---|---|
+| 查看模型 | `GET /v1/models` |
+| 多轮对话 | `POST /v1/chat/completions` |
+| 生成嵌入向量（embeddings） | `POST /v1/embeddings` |
+
+例如查看模型：
+
+```bash
+curl http://localhost:11434/v1/models
+```
+
+Ollama 原生接口则使用 `/api` 路径，例如：
+
+```bash
+curl http://localhost:11434/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "llama2",
+    "prompt": "什么是向量数据库？",
+    "stream": false
+  }'
+```
+
+两者的主要区别是请求格式：
+
+- `/api/generate` 使用单个 `prompt` 字段，适合直接调用 Ollama 原生能力。
+- `/v1/chat/completions` 使用 `messages` 数组，更适合复用 OpenAI SDK 和第三方生态。
+- 已经依赖 OpenAI 工具链时，优先选择 `/v1`。
+- 需要 Ollama 特有参数或原生行为时，再使用 `/api`。
+
+记住这句即可：**改 `base_url`，`api_key` 随便填，`model` 用 `ollama list` 里的名字。**
+
+## 验证是否解决
+
+先确认兼容 API 能返回模型列表：
+
+```bash
+curl http://localhost:11434/v1/models
+```
+
+再运行 Python 示例或发送聊天请求。如果返回 `choices[0].message.content`，说明 OpenAI 兼容接口已经可用。
+
+如果模型名称报错，重新执行：
+
+```bash
+ollama list
+```
+
+然后把代码中的 `llama2` 改成列表里真实存在的名称。
+
+## 常见问题 FAQ
+
+### `localhost` 能让其他电脑访问吗？
+
+不能。`localhost` 只表示当前电脑。远程访问需要让 Ollama 监听外部网卡，启动前设置 `OLLAMA_HOST`，例如 Linux 或 macOS：
+
+```bash
+OLLAMA_HOST=0.0.0.0:11434 ollama serve
+```
+
+Windows 可以在系统环境变量中设置 `OLLAMA_HOST=0.0.0.0:11434`，然后重启 Ollama。开放监听会让局域网甚至更大范围的设备访问本地模型；不要直接暴露到公网，至少配合防火墙、反向代理鉴权和访问来源限制。
+
+### `api_key` 必须填真实的 OpenAI Key 吗？
+
+不需要。默认本地 Ollama 不做 API Key 鉴权，填 `ollama`、`local` 等任意非空字符串即可。但第三方工具可能强制校验字段不能为空，所以不要留空。
+
+### 开启 OpenAI 兼容 API 还要安装其他依赖吗？
+
+Ollama 本身已经提供 `/v1` 接口，不需要额外服务。只有在使用 Python 或 Node 客户端时，才需要分别安装 `openai` 包。若还要接入函数调用（function calling）或 MCP（Model Context Protocol），需根据客户端能力配置工具，具体可参考 [函数调用与 MCP 教程](/tutorials/function-calling-mcp)。
