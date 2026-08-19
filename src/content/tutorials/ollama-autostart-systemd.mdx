@@ -1,0 +1,239 @@
+---
+title: 如何让 Ollama 开机自动启动？
+slug: ollama-autostart-systemd
+author: TuxAI
+date: 2026-08-19
+tags: [ai, ollama, systemd, 开机自启, 服务管理]
+estimatedReadTime: 3
+environment: [服务器, GPU]
+---
+
+## 问题现象
+
+Linux 重启后执行 `ollama run llama3`，可能出现无法连接 `localhost:11434` 的错误。必须先打开终端执行 `ollama serve`，模型服务才恢复正常。
+
+这通常不是模型损坏，而是 Ollama 服务没有随系统启动。
+
+## 根本原因
+
+Ollama 依赖后台服务 `ollama serve` 提供 API。安装脚本通常会创建 systemd（Linux 系统服务管理器）服务，但服务可能没有启用；如果是手动复制二进制文件安装，则可能根本没有服务文件。
+
+systemd 是 Ubuntu、Debian、Fedora 等发行版标准的开机自启方案。配置完成后，系统会在网络初始化后自动启动 Ollama，并在进程异常退出时自动重启。
+
+## 解决方案
+
+### 方法一：检查并启用已有服务
+
+先确认官方服务文件是否存在：
+
+```bash
+ls -l /etc/systemd/system/ollama.service
+```
+
+如果文件存在，直接执行：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable ollama
+sudo systemctl start ollama
+```
+
+其中：
+
+- `daemon-reload`：让 systemd 重新读取服务文件；
+- `enable`：设置为开机自动启动；
+- `start`：立即启动当前服务。
+
+如果服务已经在运行，`start` 不会重复启动进程。
+
+### 方法二：缺少服务文件时手动创建
+
+如果提示文件不存在，先确认 Ollama 二进制文件位于任务要求的路径：
+
+```bash
+ls -l /usr/bin/ollama
+```
+
+如果该文件存在，创建专用系统用户：
+
+```bash
+id ollama >/dev/null 2>&1 || sudo useradd -r -s /bin/false -U -m -d /usr/share/ollama ollama
+```
+
+> 这条命令与 Ollama 官方 install 脚本一致：`-r` 建系统用户，`-s /bin/false` 禁止该用户登录，`-U` 创建同名组，`-m -d /usr/share/ollama` 指定 home 目录并有则创建。
+
+然后写入完整的 systemd 单元文件。此操作需要 `sudo` 权限：
+
+```bash
+sudo tee /etc/systemd/system/ollama.service >/dev/null <<'EOF'
+[Unit]
+Description=Ollama Service
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/ollama serve
+User=ollama
+Group=ollama
+Restart=always
+RestartSec=3
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+加载配置、设置自启并立即启动：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable ollama
+sudo systemctl start ollama
+```
+
+如果手动安装的二进制文件不在 `/usr/bin/ollama`，不要直接修改服务文件猜路径。先使用下面的命令查找实际位置：
+
+```bash
+command -v ollama
+```
+
+然后将服务文件中的 `ExecStart` 改成实际路径。
+
+### 方法三：修改监听地址或其他环境变量
+
+推荐使用 systemd 的 drop-in 配置，不直接修改主服务文件：
+
+```bash
+sudo systemctl edit ollama
+```
+
+在编辑器中写入：
+
+```ini
+[Service]
+Environment="OLLAMA_HOST=127.0.0.1:11434"
+```
+
+保存后执行：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart ollama
+```
+
+如果需要让局域网其他设备访问，可以改为：
+
+```ini
+[Service]
+Environment="OLLAMA_HOST=0.0.0.0:11434"
+```
+
+监听所有网卡会扩大访问范围，应同时配置防火墙，并避免直接暴露到公网。修改端口时，例如使用 `22434`：
+
+```ini
+[Service]
+Environment="OLLAMA_HOST=127.0.0.1:22434"
+```
+
+客户端测试地址也要同步改为 `http://localhost:22434`。
+
+## 验证是否解决
+
+查看当前服务状态：
+
+```bash
+systemctl status ollama
+```
+
+看到 `Active: active (running)` 即表示服务正在运行。也可以直接检查 API：
+
+```bash
+curl http://localhost:11434
+```
+
+随后重启系统验证真正的开机自启：
+
+```bash
+sudo reboot
+```
+
+系统恢复后再次执行：
+
+```bash
+systemctl is-enabled ollama
+systemctl status ollama
+```
+
+`is-enabled` 返回 `enabled`，并且状态显示 `active (running)`，说明配置已经生效。最后可以直接运行模型：
+
+```bash
+ollama run llama3
+```
+
+如果启动失败，查看本次启动以来的服务日志：
+
+```bash
+journalctl -e -u ollama
+```
+
+持续观察实时日志可使用：
+
+```bash
+journalctl -f -u ollama
+```
+
+重点检查二进制路径、`ollama` 用户是否存在、端口是否被占用，以及模型目录的读写权限。
+
+## 常见问题 FAQ
+
+### 提示找不到 `/usr/bin/ollama` 怎么办？
+
+执行：
+
+```bash
+command -v ollama
+```
+
+如果没有输出，说明 Ollama 不在当前 `PATH` 中，或尚未正确安装。若输出的是其他路径，修改 `/etc/systemd/system/ollama.service` 中的 `ExecStart`，然后执行：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart ollama
+```
+
+### 如何修改 Ollama 监听地址和端口？
+
+使用：
+
+```bash
+sudo systemctl edit ollama
+```
+
+加入类似配置：
+
+```ini
+[Service]
+Environment="OLLAMA_HOST=127.0.0.1:22434"
+```
+
+然后执行：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart ollama
+```
+
+### 非 systemd 发行版如何自启动？
+
+Alpine Linux 使用 OpenRC，可以创建 `/etc/init.d/ollama`，让 OpenRC 调用 `/usr/bin/ollama serve`，并设置开机启动。安装 OpenRC 服务脚本后通常执行：
+
+```bash
+sudo rc-update add ollama default
+sudo rc-service ollama start
+```
+
+具体脚本格式应按发行版的 OpenRC 规范编写；不要把 systemd 的 `.service` 文件直接当作 OpenRC 配置使用。
+
+记住小结口诀：**daemon-reload、enable、start、status 四步走**。
+
+更多 Ollama 部署细节请参考 [本地部署教程](/tutorials/ollama-local-deploy)
