@@ -1,0 +1,161 @@
+---
+title: Ollama 显存不足怎么办？
+slug: ollama-vram
+author: TuxAI
+date: 2026-08-19
+tags: [ai, ollama, 大模型, GPU, 显存, 故障排查]
+estimatedReadTime: 5
+environment: [服务器, GPU]
+---
+
+## 问题现象
+
+运行 `ollama run` 加载 Llama 2、Qwen 等模型时，终端可能出现 `CUDA out of memory`、`CUDA error: out of memory`、`failed to allocate memory` 或 `failed to load model`。有时模型能启动，但输入较长内容后才突然报显存不足。
+
+> 还没装 Ollama？先看 [Ollama 本地部署教程](/tutorials/ollama-local-deploy)。
+
+## 根本原因
+
+显存主要被三部分占用：
+
+- **模型权重**：参数量越大，占用越多；量化模型通常比全精度模型省显存。
+- **KV cache（键值缓存）**：保存对话上下文，`num_ctx` 越大，占用越多；长对话和长提示词尤其明显。
+- **GPU offload（GPU 分载）**：Ollama 会尽可能把模型层放进 GPU，显存不足时可能加载失败，而不是自动得到理想的 CPU/GPU 混合比例。
+
+因此，模型“能不能运行”不仅取决于参数量，还取决于量化格式、上下文长度、GPU 层数和其他程序的显存占用。
+
+## 解决方案
+
+### 1. 先缩小上下文长度（num_ctx / OLLAMA_CONTEXT_LENGTH）
+
+KV cache 占用会随上下文窗口增长，通常比你想的更费显存。Ollama 默认上下文是 2048，但很多场景会把它拉大。先把上下文缩到 2048 或 1024，是**官方支持、立即见效**的做法。
+
+在交互会话里修改当前模型：
+
+```text
+/set parameter num_ctx 2048
+```
+
+也可以让服务端默认用一个小上下文，之后每次对话都用同一个窗口：
+
+```bash
+OLLAMA_CONTEXT_LENGTH=2048 ollama serve
+```
+
+> `num_ctx` 是 [Ollama 官方 Modelfile 参数](https://docs.ollama.com/modelfile) 之一，`OLLAMA_CONTEXT_LENGTH` 也是官方环境变量，两者都可靠，选一种即可。上下文变小会削弱长文档问答能力，但普通对话通常不受影响。
+
+### 2. 换用更小的模型
+
+如果 7B 模型仍无法加载，优先换成 3B、1.5B 或更小的版本：
+
+```bash
+ollama pull qwen2.5:3b
+ollama run qwen2.5:3b
+```
+
+也可以使用更小的编码或通用模型。不要只看模型名称，确认实际下载的参数规模和量化标签，避免误把大模型当成小模型使用。
+
+### 4. 让模型跑在 CPU（不占显存，应急用）
+
+如果既想保住模型规模、又不想为显存发愁，可以让 Ollama 把模型加载进**系统内存**而不是 GPU，完全不占显存（代价是速度慢一个量级）：
+
+```bash
+CUDA_VISIBLE_DEVICES='' ollama run qwen2.5:7b
+```
+
+> `CUDA_VISIBLE_DEVICES=''` 让 Ollama 探测不到任何 GPU，从而退回到纯 CPU 推理。适合显存实在不够时的应急方案。
+
+### 5. 选择量化 GGUF（量化格式）模型
+
+同一个参数规模的模型，量化版本占用显存明显更少。优先选择 `Q4_K_M`、`Q4_K_S` 等常见 4-bit 量化版本；显存较充足时再考虑 `Q5` 或 `Q6`。
+
+使用 Ollama 模型库时，可直接选择对应的小型量化标签：
+
+```bash
+ollama pull qwen2.5:3b
+ollama run qwen2.5:3b
+```
+
+如果是本地 GGUF 文件，可用 Modelfile 导入（`num_ctx` 是官方支持参数）：
+
+```text
+FROM ./qwen2.5-3b-instruct-q4_k_m.gguf
+PARAMETER num_ctx 2048
+```
+
+保存为 `Modelfile` 后执行：
+
+```bash
+ollama create qwen-local -f Modelfile
+ollama run qwen-local
+```
+
+如果不确定某参数是否官方支持，以 [Ollama 官方 Modelfile 文档](https://docs.ollama.com/modelfile) 的参数表为准。
+
+### 6. 检查并清理其他显存占用
+
+先查看显卡当前状态：
+
+```bash
+nvidia-smi
+```
+
+如果浏览器、游戏、视频编辑器或其他 Python 推理进程占用了大量显存，先关闭它们。也可以查看 Ollama 当前加载的模型：
+
+```bash
+ollama ps
+```
+
+不再使用的模型可以停止：
+
+```bash
+ollama stop qwen2.5:7b
+```
+
+独显显存小于 4GB 时，运行大模型往往不稳定，建议选择更小的量化模型或直接使用纯 CPU 推理，避免反复调整导致系统卡顿。
+
+## 验证是否解决
+
+重新运行模型，同时在另一个终端观察显存：
+
+```bash
+nvidia-smi
+```
+
+重点比较 `Memory-Usage` 和 `GPU-Util`。调整前如果显存接近满载并报 OOM，调整后应保持一定余量；输入较长内容时也不能再次瞬间打满。
+
+查看 Ollama 实际使用的模型和处理器分配：
+
+```bash
+ollama ps
+```
+
+如果显示模型已运行，并且推理过程中不再出现 `CUDA out of memory`，说明当前 GPU 层数和上下文设置基本可用。
+
+## 常见问题 FAQ
+
+### 显存和内存有什么区别？
+
+显存是 GPU 使用的内存，主要存放模型权重、KV cache 和中间计算结果；系统内存是 CPU 使用的内存。缩小 `num_ctx` 上下文、换更小的量化模型，都会减少显存占用而把负担部分转到系统内存和 CPU。两者都不足时，模型仍可能加载失败或严重变慢。
+
+### 怎么实时查看显存占用？
+
+NVIDIA 显卡可以每秒刷新一次：
+
+```bash
+nvidia-smi -l 1
+```
+
+Linux 也可以使用：
+
+```bash
+watch -n 1 nvidia-smi
+```
+
+Windows 用户可在任务管理器的“性能 > GPU”中查看专用 GPU 内存。
+
+### 12GB 显存能跑多大参数的模型？
+
+不能只按参数量下结论。量化格式、上下文大小和操作系统占用都会改变结果。通常应从 7B 级别的 4-bit 量化模型开始测试，再根据 `nvidia-smi` 的剩余显存调整；不要把 12GB 显存直接等同于某个固定的最大参数规模。
+
+> 相关阅读：[Ollama 本地部署教程](/tutorials/ollama-local-deploy)
