@@ -7,4 +7,14 @@ platforms: [Linux]
 license: 开源 (Apache-2.0)
 officialUrl: https://github.com/vllm-project/vllm
 ---
-vLLM 面向多用户并发场景，通过 PagedAttention 等技术提升吞吐。主要用于服务端部署，需要较新的 NVIDIA 显卡与较大显存。
+## 核心定位
+
+当多人同时请求大模型时，个人工具常见的问题不是模型能否启动，而是请求排队、显存碎片和吞吐波动。vLLM 面向服务化推理，通过 PagedAttention（分页注意力）更高效地管理 KV Cache，重点优化并发场景下的资源利用率，并提供 OpenAI 兼容接口。对团队而言，现有客户端、网关和业务代码通常更容易接入，接口兼容本身就具有实测价值。
+
+## 技术亮点与适用场景
+
+vLLM 适合内部模型平台、多人共享 GPU、批量评测和在线 API：连续批处理能让不同长度的请求共同占用计算资源；同时支持多种量化方案，例如 AWQ（Activation-aware Weight Quantization），并可配合多卡部署。但吞吐提升取决于模型规模、上下文长度、并发数、显存和调度参数，不能脱离 workload 直接套用性能数字。个人单机、低并发聊天或频繁切换小模型，Ollama 往往更省心；需要稳定 API、统一鉴权和并发治理时，再评估 vLLM。[vLLM 服务化教程](/tutorials/vllm-serving)
+
+## 局限与对比
+
+vLLM 的门槛也很明确：生产部署通常需要 Linux、兼容的 NVIDIA GPU、匹配的 CUDA/驱动环境，以及足够显存承载权重和 KV Cache。显存不足、上下文过长或参数设置不当，可能导致频繁排队甚至 OOM。还要承担监控、限流、故障恢复和版本验证。选型口诀是：个人使用选 Ollama，团队并发选 vLLM；先测真实请求分布，再决定硬件与配置。

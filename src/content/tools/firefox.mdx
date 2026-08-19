@@ -7,4 +7,18 @@ platforms: [Linux, Windows, macOS]
 license: 开源 (MPL-2.0)
 officialUrl: https://www.mozilla.org/firefox
 ---
-Firefox 是 Linux 发行版默认浏览器之一，同步、扩展生态成熟，隐私保护力度强。
+## 核心定位与开源特性
+
+Firefox 是 Mozilla 推出的开源跨平台浏览器，使用 Mozilla Public License（MPL），源代码可审计，也不依赖 Chromium 内核。它支持 Windows、macOS、Linux、Android 和 iOS；在 Linux 生态中集成成熟，Ubuntu、Fedora 等发行版通常预装或直接提供官方软件包，系统主题、字体与触控板操作适配较自然。
+
+## 隐私保护与功能亮点
+
+实测默认“标准”级别的总跟踪保护（Enhanced Tracking Protection）会隔离跨站 Cookie，并阻止常见社交跟踪器、指纹跟踪脚本等。例如访问嵌入第三方社交按钮的页面时，相关站点较难借 Cookie 串联浏览记录；严格模式拦截更多，但可能影响登录或媒体组件。
+
+Firefox Sync 可同步书签、历史记录、标签页和密码，数据传输采用加密机制，但必须登录 Mozilla 账号。扩展生态规模不及 Chrome 商店，却已覆盖主流需求；uBlock Origin 在 Firefox 上功能完整，Bitwarden、1Password 等密码管理器也有成熟版本。
+
+## 适用场景与使用局限
+
+Firefox 适合希望减少跨站追踪、偏爱开源软件及使用 Linux 桌面的用户，普通网页、视频和办公场景基本稳定。部分国内网银、政企系统或仅针对 Chromium 测试的页面表现偶有差异，可保留 Chrome 或 Edge 作为兜底；大量标签页、复杂 Web 应用及特定硬件加速场景下，性能也可能落后于 Chromium。
+
+一句话结论：Firefox 更适合看重隐私控制、跨平台同步和 Linux 原生体验，同时能接受保留 Chromium 浏览器处理少量兼容页面的人。

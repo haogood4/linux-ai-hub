@@ -7,4 +7,22 @@ platforms: [Linux, Windows, macOS]
 license: 免费
 officialUrl: https://code.visualstudio.com
 ---
-VS Code 官方提供 .deb/.rpm 包与 Snap 版，Remote-SSH 插件非常适合管理远程 Linux 服务器。
+## 安装与一致性
+
+VS Code Linux 版与 Windows 版功能一致，没有功能阉割，设置同步后快捷键、扩展和界面也能快速迁移。Debian/Ubuntu 添加官方仓库后运行 `sudo apt update && sudo apt install code`；Fedora/RHEL 添加仓库后运行 `sudo dnf install code`。.deb、.rpm 便于纳入系统包管理；Snap 用 `sudo snap install code --classic` 安装更省事，但自动更新可能重启应用或中断工作流，不适合严格控制升级时间的环境。
+
+**口诀：官方包求可控，Snap 求省事。**
+
+## 远程开发与生态
+
+安装 Remote-SSH（通过 SSH 在远端运行开发服务）后，可执行 `printf 'Host dev\n  HostName 192.168.1.100\n  User user\n' >> ~/.ssh/config`，先用 `ssh user@192.168.1.100` 验证连接，再从 VS Code 连接 `dev`。打开远程目录后，编辑、搜索、Git、集成终端和调试均在服务器环境执行，本地只负责界面。
+
+Copilot 提供 AI 补全；内置调试器、终端及语言扩展覆盖常见工作流。扩展过多也会拖慢启动：先运行“Developer: Show Running Extensions”，检查耗时，再禁用非项目必需扩展或按工作区启用。
+
+**口诀：代码在远端，体验在本地。**
+
+## 性能与选择
+
+Electron 架构换来一致体验，也意味着内存占用通常高于 Vim。低配置服务器上可用 Vim；重视微软扩展兼容性选 VS Code；偏好开源发行版、能接受部分官方服务差异则选 VSCodium。
+
+**口诀：生态选 VS Code，轻量选 Vim，开源取向看 VSCodium。**

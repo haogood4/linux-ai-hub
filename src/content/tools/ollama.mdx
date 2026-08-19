@@ -7,4 +7,50 @@ platforms: [Linux, Windows, macOS]
 license: 开源 (MIT)
 officialUrl: https://ollama.com
 ---
-Ollama 是目前本地部署大模型的入门首选： 即可开始对话。官方支持 Linux、Windows 与 macOS，显卡自动检测。详见本站[教程](/tutorials/ollama-local-deploy)。
+复杂的 Python 环境、驱动和依赖，常让第一次运行本地大模型的人半途而废。Ollama 把安装、模型下载、对话和 API 调用整合起来，适合在个人电脑上快速入门。
+
+## 为什么选 Ollama
+
+Ollama 支持 macOS、Linux 和 Windows。macOS、Linux 可执行：
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+Windows 可从 [Ollama 官网](https://ollama.com/download/windows) 安装。安装程序可能修改系统路径；若调用失败，重启终端或检查 `ollama` 是否在 `PATH` 中。
+
+## 核心特性
+
+它会自动检测可用显卡并选择运行方式，模型库中可直接使用 Llama、Qwen 等模型。模型通常采用 GGUF 格式，并通过量化（Quantization）降低显存和内存需求。Ollama 还提供 OpenAI 兼容 API，便于接入现有代码。
+
+## 典型使用场景
+
+拉取并运行第一个模型：
+
+```bash
+ollama run qwen2.5:7b
+```
+
+首次运行会下载模型，随后出现对话提示符：
+
+```text
+>>> Send a message (/? for help)
+```
+
+它适合日常问答、写作润色、代码辅助，也适合快速比较不同模型的回答效果。入门选 Ollama，生产上 vLLM。
+
+## API 调用
+
+服务启动后，默认监听本机 `http://localhost:11434`：
+
+```bash
+curl http://localhost:11434/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"qwen2.5:7b","messages":[{"role":"user","content":"用三句话解释量化"}]}'
+```
+
+返回结果是 JSON，可被 Python、JavaScript 或桌面工具继续处理。只开放本机端口即可满足个人使用；若修改监听地址或开放端口，必须配置防火墙，并确认网络访问权限。
+
+## 局限与替代方案
+
+Ollama 定位是单机、单用户体验，高并发接口服务应考虑 vLLM。模型越大，显存和内存压力越高；显存不足时优先选择 `qwen2.5:3b` 等小模型或[量化版本](/blog/vram-quantization-gguf)，必要时允许部分计算落到 CPU，速度会受影响。遇到安装、驱动或端口问题，先看本站教程：[/tutorials/ollama-local-deploy](/tutorials/ollama-local-deploy)。

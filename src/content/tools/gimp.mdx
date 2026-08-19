@@ -7,4 +7,24 @@ platforms: [Linux, Windows, macOS]
 license: 开源 (GPL-3.0)
 officialUrl: https://www.gimp.org
 ---
-GIMP 支持图层、蒙版、滤镜与脚本化（Python 插件），处理网页素材、海报等日常需求足够。
+## 功能覆盖
+
+结论很直接：处理网页素材、社交媒体配图和 AI 生图后期时，GIMP 可以替代 Photoshop；涉及商业印刷、复杂智能对象或 Adobe 协作流程时，不能完全替代。
+
+GIMP 具备图层 (Layer)、蒙版 (Mask)、通道 (Channel)、选区、曲线、色阶、混合模式、文字和常用滤镜。抠图、尺寸裁切、局部修复、调色、锐化及导出 WebP 等任务都能完成。PSD 可以打开，但复杂效果、文字排版和智能对象可能丢失或发生偏差。
+
+## 实用亮点
+
+GIMP 可免费商用，支持 Windows、macOS 与 Linux，无订阅费用。它能处理 JPEG、PNG、GIF、TIFF、WebP、PSD 等格式，并可借助 Python 插件或命令行组织批量缩放、加水印和格式转换；使用脚本前应确认 GIMP 版本与插件 API 是否兼容。
+
+Linux 安装验证较直接：Debian/Ubuntu 运行 `sudo apt install gimp`，Fedora 运行 `sudo dnf install gimp`，Arch 运行 `sudo pacman -S gimp`；安装后执行 `gimp --version` 检查版本，再启动程序确认图形界面。版本与更新速度取决于发行版仓库。官网：[gimp.org](https://www.gimp.org)。
+
+## 使用限制
+
+界面布局、快捷键和 Photoshop 差异明显，需要重新适应。非破坏性编辑能力仍有缺口，缺少与智能对象、调整图层相当的完整工作流，反复修改大型项目不够方便。
+
+必须明确警告：CMYK 色彩模式支持不完整，商业印刷请用专业软件。需要精准印前、复杂 PSD 交付、Adobe 字体与团队协作时，不建议使用 GIMP 作为主工具。
+
+GIMP 的定位：零成本的跨平台位图编辑器。  
+适合：网页、社媒素材与 AI 图片调色修整。  
+不适合：专业印刷和高度依赖 Adobe 工作流的项目。
