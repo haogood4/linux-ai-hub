@@ -40,11 +40,16 @@ const {
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://tuxai.cn/og-image.png" />
-    <script is:inline async defer data-domain="tuxai.cn" src="https://plausible.io/js/script.js"></script>
+    <!-- Privacy-friendly analytics by Plausible -->
+    <script is:inline async src="https://plausible.io/js/pa-wFz4X4vBCBbt4kUfZm10j.js"></script>
     <script is:inline>
       window.plausible = window.plausible || function () {
         (plausible.q = plausible.q || []).push(arguments);
       };
+      window.plausible.init = window.plausible.init || function (i) {
+        window.plausible.o = i || {};
+      };
+      window.plausible.init();
     </script>
   </head>
   <body class="min-h-screen flex flex-col">
