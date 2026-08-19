@@ -1,0 +1,207 @@
+---
+title: llama.cpp llama-server 怎么部署 API 服务？
+slug: llama-cpp-server-api-deployment
+author: TuxAI
+date: 2026-08-19
+tags: [ai, llama.cpp, llama-server, API, 部署, 服务]
+estimatedReadTime: 3
+environment: [服务器, GPU]
+---
+
+## 问题现象
+
+直接运行命令行推理时，一次命令通常只处理一次输入，其他程序无法通过 HTTP 远程调用。关闭终端后进程也会退出，多个前端或脚本更无法共享同一个模型服务。
+
+## 根本原因
+
+命令行推理是一次性进程，而 `llama-server` 会加载模型后持续监听 HTTP 端口，并提供兼容 OpenAI API 风格的接口。要用于生产环境，还需要配置监听地址、API 鉴权、后台运行和开机自启。
+
+## 解决方案
+
+### 方法一：直接启动 llama-server
+
+假设已经编译好 llama.cpp，模型文件位于 `/opt/models/llama-3.1-8b-instruct.Q4_K_M.gguf`，执行：
+
+```bash
+/opt/llama.cpp/build/bin/llama-server \
+  --host 127.0.0.1 \
+  --port 8080 \
+  --api-key sk-llama-local-2024 \
+  -m /opt/models/llama-3.1-8b-instruct.Q4_K_M.gguf \
+  -ngl 999 \
+  -c 8192 \
+  --alias llama-local
+```
+
+参数含义如下：
+
+- `--host 127.0.0.1`：只监听本机，默认适合先在服务器上验证。
+- `--port 8080`：HTTP 服务端口。
+- `--api-key sk-llama-local-2024`：客户端请求必须携带的鉴权密钥。
+- `-m`：指定 GGUF 模型文件。
+- `-ngl 999`：尽可能把模型层卸载到 GPU；显存不足时应降低数值。
+- `-c 8192`：上下文长度（Context Size），数值越大通常占用越多显存。
+- `--alias llama-local`：对外显示的模型名称，便于客户端固定使用。此类进阶参数请以当前版本 `--help` 为准。
+
+查看当前版本支持的参数：
+
+```bash
+/opt/llama.cpp/build/bin/llama-server --help
+```
+
+如果需要让局域网其他机器访问，可将监听地址改为 `0.0.0.0`，但不要直接把该端口暴露到公网：
+
+```bash
+/opt/llama.cpp/build/bin/llama-server \
+  --host 0.0.0.0 \
+  --port 8080 \
+  --api-key sk-llama-local-2024 \
+  -m /opt/models/llama-3.1-8b-instruct.Q4_K_M.gguf \
+  -ngl 999 \
+  -c 8192 \
+  --alias llama-local
+```
+
+### 方法二：使用 systemd 后台运行并开机自启
+
+先创建专用用户，并确保它能读取模型和执行文件：
+
+```bash
+sudo useradd --system --home /opt/llama.cpp --shell /usr/sbin/nologin llama
+sudo chown -R llama:llama /opt/llama.cpp /opt/models
+```
+
+创建 `/etc/systemd/system/llama-server.service`：
+
+```ini
+[Unit]
+Description=llama.cpp llama-server API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=llama
+Group=llama
+Environment="LLAMA_HOME=/opt/llama.cpp"
+Environment="LLAMA_MODEL=/opt/models/llama-3.1-8b-instruct.Q4_K_M.gguf"
+Environment="LLAMA_API_KEY=sk-llama-local-2024"
+ExecStart=/bin/bash -lc 'exec "$LLAMA_HOME/build/bin/llama-server" --host 127.0.0.1 --port 8080 --api-key "$LLAMA_API_KEY" -m "$LLAMA_MODEL" -ngl 999 -c 8192 --alias llama-local'
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
+```
+
+加载配置并启动：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now llama-server
+sudo systemctl status llama-server
+```
+
+查看实时日志：
+
+```bash
+sudo journalctl -u llama-server -f
+```
+
+不使用 systemd 时，可以临时后台运行：
+
+```bash
+nohup /opt/llama.cpp/build/bin/llama-server \
+  --host 127.0.0.1 \
+  --port 8080 \
+  --api-key sk-llama-local-2024 \
+  -m /opt/models/llama-3.1-8b-instruct.Q4_K_M.gguf \
+  -ngl 999 \
+  -c 8192 \
+  --alias llama-local \
+  > /tmp/llama-server.log 2>&1 &
+```
+
+也可以使用 `screen` 保持会话：
+
+```bash
+screen -S llama
+/opt/llama.cpp/build/bin/llama-server --host 127.0.0.1 --port 8080 --api-key sk-llama-local-2024 -m /opt/models/llama-3.1-8b-instruct.Q4_K_M.gguf -ngl 999 -c 8192 --alias llama-local
+```
+
+按 `Ctrl+A`、再按 `D` 可退出 screen 但保留进程。
+
+## 验证是否解决
+
+使用 `curl` 请求 OpenAI 兼容接口：
+
+```bash
+curl http://127.0.0.1:8080/v1/chat/completions \
+  -H "Authorization: Bearer sk-llama-local-2024" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "llama-local",
+    "messages": [
+      {"role": "user", "content": "用一句话解释什么是 HTTP API"}
+    ],
+    "temperature": 0.7,
+    "max_tokens": 128
+  }'
+```
+
+Python 客户端可以直接使用 `openai` SDK：
+
+```bash
+python3 -m pip install openai
+```
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://127.0.0.1:8080/v1",
+    api_key="sk-llama-local-2024",
+)
+
+response = client.chat.completions.create(
+    model="llama-local",
+    messages=[
+        {"role": "user", "content": "请介绍 llama.cpp 的用途"}
+    ],
+    temperature=0.7,
+    max_tokens=128,
+)
+
+print(response.choices[0].message.content)
+```
+
+生产环境中，本机服务优先监听 `127.0.0.1`，由 Nginx、Caddy 等反向代理（Reverse Proxy）负责 HTTPS、域名和访问控制。远程管理也可以使用 SSH 隧道：
+
+```bash
+ssh -N -L 8080:127.0.0.1:8080 user@your-server
+```
+
+口诀：**本机 `127.0.0.1`，远程必加 `--api-key` + 反向代理。**
+
+不要裸露 `0.0.0.0:8080` 到公网；若必须局域网访问，应限制防火墙来源 IP。单张 GPU 的显存和计算能力会限制并发请求数量，多客户端请求可能排队，不能只通过增加客户端数量获得更高吞吐。并发参数请以当前版本 `--help` 为准，并根据显存、上下文长度和实际请求量压测。
+
+## 常见问题 FAQ
+
+### llama-server 和 Ollama 有什么区别？
+
+`llama-server` 更接近底层推理服务，模型路径、GPU 层数、上下文长度和 HTTP 参数都由你直接控制，适合自建 API。Ollama 提供模型管理、拉取和更高层的命令行体验，配置更简单，但底层控制项不同。
+
+### 能接入 OpenAI 生态工具吗？
+
+可以。`/v1/chat/completions` 使用 OpenAI 风格的请求格式，通常只需把 SDK 的 `base_url` 指向 `http://127.0.0.1:8080/v1`，并把 `api_key` 改成本地配置的密钥。具体工具是否支持，还要看它是否允许自定义 API 地址。
+
+### 多进程能同时使用同一个模型文件吗？
+
+可以读取同一个模型文件，但每个进程都会独立占用内存和显存，可能导致显存不足，也不能自然共享推理缓存。通常应运行一个 `llama-server`，让多个客户端复用它；端口冲突时检查：
+
+```bash
+ss -ltnp | grep ':8080'
+```
+
+停止占用端口的服务后再启动，或为新的实例配置其他端口。模型加载和启动方式可继续参考[llama.cpp 推理完整教程](/tutorials/llama-cpp-inference)。
