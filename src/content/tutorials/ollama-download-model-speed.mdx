@@ -1,0 +1,249 @@
+---
+title: Ollama 下载模型太慢怎么办？
+slug: ollama-download-model-speed
+author: TuxAI
+date: 2026-08-19
+tags: [ai, ollama, 下载, 网络, 加速]
+estimatedReadTime: 5
+environment: [服务器, GPU]
+---
+
+## 问题现象
+
+执行 `ollama pull llama3.1:8b` 后，进度长时间停在某个百分比，速度只有几十 KB/s，甚至下载到一半反复失败、重连。国内网络环境下，这通常不是电脑性能问题，而是模型下载链路不稳定。
+
+## 根本原因
+
+Ollama 默认从官方 **Ollama Registry** 下载模型。官方目前没有面向国内用户的统一官方镜像，模型文件又通常有几 GB 到十几 GB，网络延迟、连接重置或超时都会导致下载极慢。
+
+可以先查看 Ollama 版本：
+
+```bash
+ollama --version
+```
+
+相关的本地服务配置也可以参考 [Ollama 本地部署教程](/tutorials/ollama-local-deploy)。
+
+## 解决方案
+
+### 方法一：设置 HTTPS_PROXY 代理
+
+这是 Ollama 官方 FAQ 确认的代理方法。代理地址需要替换为你实际可用的 HTTP/HTTPS 代理。
+
+#### Linux systemd 服务
+
+编辑 Ollama 服务配置：
+
+```bash
+sudo systemctl edit ollama
+```
+
+填入：
+
+```ini
+[Service]
+Environment="HTTPS_PROXY=http://127.0.0.1:7890"
+```
+
+如果代理需要账号密码，格式如下：
+
+```ini
+[Service]
+Environment="HTTPS_PROXY=http://username:password@127.0.0.1:7890"
+```
+
+保存后重新加载并重启服务：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart ollama
+```
+
+然后重新执行：
+
+```bash
+ollama pull llama3.1:8b
+```
+
+注意：代理软件和第三方代理服务可能存在隐私、稳定性与合规风险，不要使用来源不明的节点，也不要把代理账号密码提交到脚本或公开仓库。
+
+#### 命令行前台运行
+
+如果你不是通过 systemd 启动 Ollama，可以在当前终端设置环境变量：
+
+```bash
+export HTTPS_PROXY=http://127.0.0.1:7890
+ollama serve
+```
+
+保持该终端运行，再打开另一个终端执行：
+
+```bash
+ollama pull llama3.1:8b
+```
+
+仅执行 `export` 不会自动改变已经运行的 Ollama 服务；服务已经启动时，必须重启服务才能使新变量生效。
+
+### 方法二：配置 `OLLAMA_REGISTRY_URL`
+
+`OLLAMA_REGISTRY_URL` 不是所有 Ollama 版本都支持的稳定公共参数，是否可用取决于版本、发行包和服务实现。只有在你使用的企业镜像明确要求该变量，并且版本文档确认支持时才使用，不能把任意网站地址直接填进去。
+
+例如企业内部 Registry 地址为 `https://registry.example.com`，systemd 配置可以写成：
+
+```bash
+sudo systemctl edit ollama
+```
+
+```ini
+[Service]
+Environment="OLLAMA_REGISTRY_URL=https://registry.example.com"
+```
+
+应用配置：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart ollama
+```
+
+命令行启动时：
+
+```bash
+export OLLAMA_REGISTRY_URL=https://registry.example.com
+ollama serve
+```
+
+如果设置后仍然连接官方地址，或服务启动报未知环境变量错误，应删除该配置，改用代理或 Hugging Face 方案。不要把没有认证、没有明确文档的所谓“国内镜像”当作官方源。
+
+### 方法三：从 Hugging Face 下载 GGUF，再用 Modelfile 导入
+
+这是没有代理时更可靠的绕过方案。**GGUF (GPT-Generated Unified Format)** 是常见的量化模型文件格式，**Modelfile** 是 Ollama 用来描述本地模型的配置文件。
+
+先安装 Hugging Face 官方命令行组件。该组件会从网络下载 Python 依赖，安装前应确认 Python 环境和软件来源可信：
+
+```bash
+python3 -m pip install -U huggingface_hub
+```
+
+以 Llama 3.1 8B 的 GGUF 仓库为例，下载一个较常用的 Q4_K_M 量化文件：
+
+```bash
+mkdir -p ~/ollama-models/llama31
+hf download bartowski/Meta-Llama-3.1-8B-Instruct-GGUF \
+  --include '*Q4_K_M.gguf' \
+  --local-dir ~/ollama-models/llama31
+```
+
+确认文件名：
+
+```bash
+ls -lh ~/ollama-models/llama31
+```
+
+创建 Modelfile：
+
+```bash
+cd ~/ollama-models/llama31
+printf 'FROM %s\n' "$PWD/Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf" > Modelfile
+```
+
+导入为 Ollama 模型：
+
+```bash
+ollama create llama31-local -f Modelfile
+```
+
+查看并运行：
+
+```bash
+ollama list
+ollama run llama31-local
+```
+
+实际文件名可能因仓库版本变化而不同。如果 `FROM` 指向的文件不存在，把命令中的文件名改成 `ls` 显示的实际 `.gguf` 文件名。还要确认模型许可证允许你的使用场景。
+
+### 方法四：避免重复下载
+
+先查看本机是否已经存在目标模型：
+
+```bash
+ollama list
+```
+
+模型名称和 tag 必须完全匹配。例如：
+
+```bash
+ollama pull llama3.1:8b
+ollama pull llama3.1:latest
+```
+
+这两个 tag 不一定指向同一个本地条目。下载失败后不要随意执行删除操作，Ollama 通常会保留已经完成的层，重试时可能继续利用已有内容：
+
+```bash
+ollama pull llama3.1:8b
+```
+
+只有确认模型损坏或磁盘空间不足时，再删除后重新下载：
+
+```bash
+ollama rm llama3.1:8b
+ollama pull llama3.1:8b
+```
+
+## 验证是否解决
+
+下载时观察速度是否从 KB/s 提升，并等待命令正常返回。随后确认模型已经登记：
+
+```bash
+ollama list
+```
+
+再运行一个简单测试：
+
+```bash
+ollama run llama3.1:8b "请用一句话说明 GGUF 是什么"
+```
+
+如果使用了代理，重启代理服务后再次执行 `ollama pull`，可以验证失败是否确实来自代理链路。若代理不可用，直接改用 Hugging Face 下载 GGUF，再执行 `ollama create`。
+
+口诀：**代理最快、HF 最稳、环境变量记得重启服务。**
+
+## 常见问题 FAQ
+
+### Q1：`OLLAMA_REGISTRY_URL` 是官方参数吗，怎么设置？
+
+它不是所有版本都保证支持的通用官方参数。必须先查看当前版本文档或企业镜像说明，确认版本要求和地址格式。支持时，可通过 systemd 的 `Environment=` 设置，并执行 `daemon-reload` 和 `restart`；不支持时不要强行配置。
+
+### Q2：下载一半中断能断点续传吗？
+
+可以先直接重试：
+
+```bash
+ollama pull llama3.1:8b
+```
+
+Ollama 会尽量复用已经成功下载的内容，但如果服务端、代理或本地缓存层损坏，可能需要重新获取某个文件。Hugging Face 的 `hf download` 也支持利用本地已下载文件继续完成。
+
+### Q3：模型文件存在哪里，占多大空间？
+
+Linux 默认通常位于：
+
+```text
+/usr/share/ollama/.ollama/models
+```
+
+macOS 通常位于：
+
+```text
+~/.ollama/models
+```
+
+Windows 通常位于：
+
+```text
+C:\Users\你的用户名\.ollama\models
+```
+
+实际路径可以通过 `OLLAMA_MODELS` 自定义。模型大小取决于参数量和量化等级，8B 模型可能占用约 5 GB 到 10 GB，下载前应预留更多磁盘空间。
+
+更多 Ollama 本地部署技巧见 [Ollama 本地部署教程](/tutorials/ollama-local-deploy)
